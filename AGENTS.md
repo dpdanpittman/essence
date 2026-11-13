@@ -1,79 +1,88 @@
 # AGENTS.md
 
-Orientation for AI coding agents (Claude Code, Cursor, Aider, Codex, etc.) dropping into this repo. Humans should read [`README.md`](./README.md) instead — that doc is the operational reference. This one is the "what you need to know to make a sane change."
+Instructions for AI coding agents working in this repository. Humans should start with `README.md`.
 
 ## What this project is
 
-**Session Essence** is an MCP (Model Context Protocol) server that gives AI assistants persistent self-awareness across sessions. It synthesizes interaction logs into a **portrait** — a second-person narrative ("You are…") that Claude internalizes at session start.
+Session Essence is an MCP (Model Context Protocol) server that turns logged interactions into a "portrait": a second-person narrative ("You are...") that an AI assistant reads at session start so it continues rather than starts over. It is a Node.js ESM project (Node 20+), runs over stdio by default, or over HTTP inside Docker through supergateway. Synthesis uses the Claude API by default or a local Ollama model (`SYNTHESIS_BACKEND=ollama`). The repo is public and active: current version 2.1.1 (see `CHANGELOG.md`), license AGPL-3.0-or-later. It also holds a small Astro marketing site in `site/`.
 
-- **Stack**: Node.js 20+, ESM (`"type": "module"`)
-- **Runtime**: stdio MCP server (default) or HTTP via [supergateway](https://github.com/nicobailon/supergateway) (Docker)
-- **Backends**: Claude API (default) or Ollama (opt-in via `SYNTHESIS_BACKEND=ollama`)
-- **License**: MIT
-- **Repo**: `github.com/dpdanpittman/session-essence`
+Read `docs/design.md` before changing synthesis logic, prompts or portrait structure. Those changes have an outsized effect and should not be made on instinct.
 
-The full design rationale lives in [`docs/design.md`](./docs/design.md) — read that BEFORE making any change to the synthesis logic, prompts, or portrait structure. Changes to those surfaces have outsized impact on user experience and shouldn't happen on instinct.
+## Layout
 
-## How to build and run
+- `index.js`: the whole MCP server. Three tools (`synthesize_essence`, `format_observation`, `analyze_portrait`), the two-backend chat dispatcher, stdio transport. One file by design.
+- `prompts.template.js`: committed prompt template (PSYCHOLOGIST, SOCIOLOGIST, MERGE, COMPARE) with a placeholder name. Prompt changes go here.
+- `prompts.js`: gitignored, personal copy of the template with the operator's name. Never commit it.
+- `examples/`: reference hook scripts the operator installs by hand: `synthesize-essence.sh` (PreCompact surgical edit), `session-start-verify.sh` (SessionStart integrity check), `drift-check.sh` (manual drift audit).
+- `docs/design.md`: the reasons behind the architecture, plus the threat model.
+- `Dockerfile`: wraps the stdio server in supergateway for HTTP. Builds `prompts.js` from the template; operators mount their own read-only.
+- `site/`: Astro + Tailwind landing page, its own `package.json`, Dockerfile, nginx config, k8s manifests and `deploy.sh`.
+- `.tribunal/`: records of a past multi-agent audit. The finding ids (F-SEC-004 and so on) are referenced in `CHANGELOG.md` and code comments. Do not edit.
+
+## Commands
 
 ```bash
-# Install (no separate build step — pure ESM, no transpile)
+# Install (no build step: plain ESM, no transpile)
 npm install
 
-# Personalize the prompts (REQUIRED before first run)
+# Required before first run: prompts.js is gitignored
 cp prompts.template.js prompts.js
-# Then edit prompts.js — replace placeholder names with the operator's actual name
 
 # Run the MCP server over stdio
-node index.js
+npm start            # same as: node index.js
 
-# Or run as an HTTP endpoint via Docker + supergateway
+# Syntax check (verified; this is the only check that exists)
+node --check index.js && node --check prompts.template.js
+
+# HTTP via Docker, bound to localhost (from README)
 docker build -t session-essence .
-docker run -d --network host -e ANTHROPIC_API_KEY=... -e PORT=3250 session-essence
+docker run -d --name session-essence -p 127.0.0.1:3250:3250 \
+  --add-host=host.docker.internal:host-gateway \
+  -e ANTHROPIC_API_KEY=... -e PORT=3250 \
+  -v "$(pwd)/prompts.js:/app/prompts.js:ro" session-essence
+
+# Site
+cd site && npm install && npm run dev     # also: npm run build, npm run preview
 ```
 
-There is **no test suite** as of this writing — `npm test` is unconfigured. If you're adding tests, propose the framework choice to the operator first; don't pull a test harness in unannounced.
+There is no test suite, no linter and no type check. `npm test` is not configured. If you want to add tests, propose the framework to the owner first; do not add a test harness unannounced. Not verified here: `npm install`, the Docker build and the site build.
 
-## Key files
+## Deployment
 
-| Path                             | Role                                                                                                                                                                                                                                   |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.js`                       | The MCP server. Defines three tools (`synthesize_essence`, `format_observation`, `analyze_portrait`), the dual-backend chat dispatcher, and stdio transport setup. Single-file by design — there's no service layer to factor out yet. |
-| `prompts.js`                     | **Gitignored. Personal.** Contains the three analytical system prompts (PSYCHOLOGIST, SOCIOLOGIST, MERGE) with the operator's actual name substituted in. Operators copy this from the template on install and never check it in.      |
-| `prompts.template.js`            | The committed template with `"the human collaborator"` placeholders. Source of truth for the prompt structure. Edits to prompt logic happen HERE, not in `prompts.js`.                                                                 |
-| `Dockerfile`                     | Multi-stage-ish build that wraps the stdio server in supergateway for HTTP. Sets `SYNTHESIS_BACKEND=claude` by default. Operators who want Ollama override at `docker run` time.                                                       |
-| `package.json`                   | Three dependencies: `@modelcontextprotocol/sdk` (MCP framework), `@anthropic-ai/sdk` (Claude backend), `supergateway` (Docker HTTP wrapping). Keep this list short; new deps need justification.                                       |
-| `docs/design.md`                 | The "why" doc. Architectural decisions + their reasoning. Read before changing synthesis behavior.                                                                                                                                     |
-| `examples/synthesize-essence.sh` | Reference PreCompact hook script. Spawns a detached `claude -p` to surgically edit the long-form portrait. Lives in the repo as documentation; the operator places it at `~/.claude/scripts/`.                                         |
-| `README.md`                      | Human-facing operational reference.                                                                                                                                                                                                    |
+The MCP server is not deployed from this repo. Operators run it themselves (stdio or the Docker recipe above). The owner also runs it as a container in a homelab; changes to Docker build behavior, port binding or HTTP semantics land there first, so call them out in the PR description.
 
-## Conventions
+The site is deployed by the owner with `site/deploy.sh` to the homelab Kubernetes cluster behind a reverse proxy. Agents do not run it.
 
-- **ESM only.** `"type": "module"` in `package.json` — use `import` / `export`, not `require`.
-- **Zod for tool schemas.** Every MCP tool's input schema uses `z.object({ ... })`. Match the existing pattern.
-- **Explicit env-var config.** No `.env` files, no config files. Every runtime knob is an env var (`SYNTHESIS_BACKEND`, `ANTHROPIC_API_KEY`, `CLAUDE_MODEL`, `OLLAMA_HOST`, etc.). Add new env vars to the table in README.md AND default them in `index.js`.
-- **Stateless server.** The MCP server itself does **no file I/O**. It does not read `observations.jsonl`, it does not write `portrait.md`. The calling Claude instance handles all local file work via Read/Write tools. If you're tempted to add `fs` calls inside `index.js`, stop and re-read `docs/design.md` — this constraint is load-bearing.
-- **Prompts are versioned in `prompts.template.js`.** When you change a prompt, change it in the template. The operator's local `prompts.js` is downstream of the template.
-- **Single-file server.** `index.js` is one ~340-line file by design. Don't pre-emptively split it into modules — the cohesion benefits beat the file-count tidiness until there's actual reason to split.
+## Rules for agents
 
-## Gotchas
+- Ask before large changes. Explain the problem and the proposed fix first. Keep diffs small and surgical.
+- Never commit secrets: API keys, tokens, passwords, `.env` files. Secrets live in a password manager and are read at run time through env vars.
+- Never delete this repository or rewrite published history.
+- Do not change deployment, CI or infrastructure files (`Dockerfile`, `site/Dockerfile`, `site/deploy.sh`, `site/k8s/`, `site/nginx.conf`) unless that is the task.
+- An agent does not deploy. A change to a running system is a reviewed script the owner runs.
+- Before saying a change is done, run `node --check` on changed JS files and say plainly what was not run (there are no tests).
+- Commit messages: short, imperative, say what changed.
+- ESM only: `import`/`export`, never `require`.
+- MCP tool input schemas use zod `z.object({...})`. Match the existing pattern.
+- Config is env vars only, no config files. A new env var gets a default in `index.js` and a row in the README environment table.
+- The server is stateless: `index.js` does no file I/O. The calling assistant reads observations and writes the portrait. Do not add `fs` calls to `index.js`; re-read `docs/design.md` "Why stateless" if tempted.
+- Keep `index.js` as one file. Do not split it into modules without a real reason.
+- Keep the three existing tools' names and schemas stable. New tools are fine; renames or schema changes need owner approval.
+- Dependencies are kept to a minimum (`@anthropic-ai/sdk`, `@modelcontextprotocol/sdk`, `supergateway`, `zod`). A new dependency needs a written argument.
 
-- **`prompts.js` is gitignored** because it contains the operator's personal name. Before you can run the server, `cp prompts.template.js prompts.js`. If you're testing in CI, you'll need to either commit a test fixture variant or generate one on the fly.
-- **Claude Code hook format changed.** The README's hook examples use the modern stdin-JSON format (`INPUT=$(cat); echo "$INPUT" | jq …`). Older docs and tutorials use `$CLAUDE_USER_PROMPT` env-var style — that pattern is dead in current Claude Code and produces empty observations silently. If you're tempted to "simplify" the hooks back to env vars, don't.
-- **The two synthesis paths are different by design.** The MCP `synthesize_essence` tool does a clean 3-pass regeneration. The PreCompact `synthesize-essence.sh` script does a **surgical edit** via a detached `claude -p`. These are NOT redundant — see `docs/design.md` "Why surgical edits, not regeneration."
-- **`@anthropic-ai/sdk` does not need to be a hard dependency for Ollama-only deployments**, but right now it is. Removing it would require a dynamic import; left for later.
-- **Min-observations guard is in code, not in the MCP schema.** `index.js` rejects synthesis when fewer than 10 observations are present (and the PreCompact script requires 15). Don't move this check into the zod schema — it's about runtime state, not input validation.
-- **Portrait sections 7-9 (Episodes, Voice, Decisions) are produced by the surgical-edit script, not by `MERGE_SYSTEM` in `prompts.template.js`.** If you're looking at the merge prompt and wondering why it only generates 6 sections, that's why. The extended sections grow through a separate process.
+## Traps
 
-## Deployment context (for changes affecting prod)
+- `prompts.js` must exist before `index.js` will start (it imports from it). Copy the template; in CI generate it the same way the Dockerfile does.
+- Hooks read JSON from stdin (`INPUT=$(cat); echo "$INPUT" | jq ...`). The old `$CLAUDE_USER_PROMPT` env-var style is dead in current Claude Code and silently produces empty observations. Do not "simplify" back to it.
+- The two synthesis paths differ on purpose. The MCP `synthesize_essence` tool regenerates a 6-section portrait in three passes. `examples/synthesize-essence.sh` makes a surgical edit with a detached `claude -p` and grows sections 7 to 9 (Episodes, Voice, Decisions). They are not redundant; see `docs/design.md` "Why surgical edits, not regeneration".
+- Minimum-observation guards live in code, not in the zod schema: `index.js` needs 10 observations, the PreCompact script needs 15. They check runtime state, not input shape.
+- `@anthropic-ai/sdk` is a hard dependency even for Ollama-only use. Removing it needs a dynamic import; left for later.
+- The portrait integrity sidecar (`portrait.md.sha256`) and drift-check files are written by the example scripts. Changing the portrait write path means updating the sidecar logic too.
+- The repo may be symlinked into a larger local MCP server stack. Do not add hard-coded absolute paths that assume a directory layout.
 
-The maintainer runs this as a Docker container on a host machine (`zaphod-beeblebox@192.168.6.56`), exposed at `http://192.168.6.56:3250/mcp` via supergateway, with `--restart unless-stopped`. The container talks to Anthropic's API by default. Changes that affect Docker build behavior, port bindings, or HTTP semantics will land there first — call them out in your PR description.
+## Never commit or make public
 
-The repo is **also symlinked** into a larger MCP server stack (`mcp-server-stack/servers/session-essence`) for ergonomic local development. Don't add hard paths to either repo's directory layout that would break the symlink relationship.
-
-## When in doubt
-
-- For **prompt changes**: read `docs/design.md` first, especially "Why second person" and "Why dual observers."
-- For **synthesis flow changes**: read `docs/design.md` "Why surgical edits."
-- For **MCP tool surface changes**: keep the existing three tools' contracts stable. New tools fine; renames or schema changes need operator approval.
-- For **dependency additions**: argue for it in the PR. Three deps is a feature, not a limitation.
+- `prompts.js` or any file containing the operator's real name.
+- API keys, tokens, `.env` files, the bearer token used by a reverse proxy.
+- Portrait files, observation logs (`observations.jsonl`), archives or drift reports. They contain private conversation content.
+- New internal hostnames, IP addresses, machine usernames or home-directory paths. This is a public repo; describe infrastructure generically.
