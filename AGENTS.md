@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## What this project is
 
-Session Essence is an MCP (Model Context Protocol) server that turns logged interactions into a "portrait": a second-person narrative ("You are...") that an AI assistant reads at session start so it continues rather than starts over. It is a Node.js ESM project (Node 20+), runs over stdio by default, or over HTTP inside Docker through supergateway. Synthesis uses the Claude API by default or a local Ollama model (`SYNTHESIS_BACKEND=ollama`). The repo is public and active: current version 2.1.1 (see `CHANGELOG.md`), license AGPL-3.0-or-later. It also holds a small Astro marketing site in `site/`.
+Session Essence is an MCP (Model Context Protocol) server that turns logged interactions into a "portrait": a second-person narrative ("You are...") that an AI assistant reads at session start so it continues rather than starts over. It is a Node.js ESM project (Node 20+), runs over stdio by default, or over HTTP inside Docker through supergateway. Synthesis uses the Claude API by default or a local Ollama model (`SYNTHESIS_BACKEND=ollama`). The repo is public and active: the newest `CHANGELOG.md` entry is 2.1.1, but `package.json` and the server `version` in `index.js` still say 2.1.0; bump all three together, license AGPL-3.0-or-later. It also holds a small Astro marketing site in `site/`.
 
 Read `docs/design.md` before changing synthesis logic, prompts or portrait structure. Those changes have an outsized effect and should not be made on instinct.
 
@@ -63,7 +63,7 @@ The site is deployed by the owner with `site/deploy.sh` to the homelab Kubernete
 - Before saying a change is done, run `node --check` on changed JS files and say plainly what was not run (there are no tests).
 - Commit messages: short, imperative, say what changed.
 - ESM only: `import`/`export`, never `require`.
-- MCP tool input schemas use zod `z.object({...})`. Match the existing pattern.
+- MCP tool input schemas are passed to `server.tool()` as a plain object of zod fields (`{ observations: z.string()... }`), not wrapped in `z.object`. Match the existing pattern.
 - Config is env vars only, no config files. A new env var gets a default in `index.js` and a row in the README environment table.
 - The server is stateless: `index.js` does no file I/O. The calling assistant reads observations and writes the portrait. Do not add `fs` calls to `index.js`; re-read `docs/design.md` "Why stateless" if tempted.
 - Keep `index.js` as one file. Do not split it into modules without a real reason.
