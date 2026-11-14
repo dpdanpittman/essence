@@ -13,7 +13,7 @@ First Tribunal audit of the `session-essence` repo. Goal: shake out defects the 
   - `format_observation` — emits a JSONL observation line for manual logging
   - `analyze_portrait` — diffs two portraits
 - **Three system prompts**: `PSYCHOLOGIST_SYSTEM`, `SOCIOLOGIST_SYSTEM`, `MERGE_SYSTEM` (in `prompts.template.js`, personalized into local `prompts.js`).
-- **Deployment**: standalone stdio, or Dockerized with `supergateway` exposing the MCP server as HTTP at `:3250`. Maintainer runs it as a long-lived container on `192.168.6.56`.
+- **Deployment**: standalone stdio, or Dockerized with `supergateway` exposing the MCP server as HTTP at `:3250`. Maintainer runs it as a long-lived container on a host on the private network.
 
 ## What's expected to be true
 

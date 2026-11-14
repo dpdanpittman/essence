@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Deploy session-essence-site to k8s — pinned to zaphod node (most memory).
+# Deploy session-essence-site to k8s, pinned to the build node.
 #
 # Pattern matches tribunal-site:
-#   1. rsync site source to ~/session-essence-site on zaphod (skip node_modules/dist)
-#   2. docker build on zaphod
-#   3. docker save + ctr import into k8s.io containerd namespace (needs sudo on zaphod)
+#   1. rsync site source to ~/session-essence-site on the build node (skip node_modules/dist)
+#   2. docker build on the build node
+#   3. docker save + ctr import into k8s.io containerd namespace (needs sudo on the build node)
 #   4. kubectl apply manifests via .6
 #   5. kubectl rollout restart
 #
@@ -13,12 +13,12 @@
 
 set -euo pipefail
 
-REMOTE_USER="zaphod-beeblebox"
-REMOTE_HOST="192.168.6.56"
-REMOTE_DIR="/home/${REMOTE_USER}/session-essence-site"
+REMOTE_USER="${REMOTE_USER:?set REMOTE_USER (login on the build node)}"
+REMOTE_HOST="${REMOTE_HOST:?set REMOTE_HOST (the build node)}"
+REMOTE_DIR="${REMOTE_DIR:-session-essence-site}"
 IMAGE_NAME="session-essence-site"
-NAMESPACE="zaphod"
-KCTL_HOST="claude@192.168.1.6"
+NAMESPACE="${NAMESPACE:-zaphod}"
+KCTL_HOST="${KCTL_HOST:?set KCTL_HOST (login on the control-plane node)}"
 KCTL='sudo kubectl --kubeconfig=/etc/kubernetes/admin.conf'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -32,7 +32,7 @@ rsync -avz --delete \
 echo "==> docker build on ${REMOTE_HOST}"
 ssh "${REMOTE_USER}@${REMOTE_HOST}" "cd ${REMOTE_DIR} && docker build -t ${IMAGE_NAME}:latest ."
 
-echo "==> import into containerd (k8s.io namespace) — may prompt for sudo password on zaphod"
+echo "==> import into containerd (k8s.io namespace) — may prompt for sudo password on the build node"
 ssh -t "${REMOTE_USER}@${REMOTE_HOST}" "docker save ${IMAGE_NAME}:latest -o /tmp/${IMAGE_NAME}.tar && sudo ctr -n k8s.io images import /tmp/${IMAGE_NAME}.tar && rm /tmp/${IMAGE_NAME}.tar"
 
 echo "==> ensure namespace exists"

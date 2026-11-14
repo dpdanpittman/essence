@@ -4,11 +4,11 @@
 # the same vanilla-nginx + hostPath pattern used by mabus-website-v2 and
 # (formerly) swarm-website. Future updates are just:
 #
-#   rsync source -> zaphod
-#   ssh zaphod 'cd ~/src/session-essence/site && npm run build'
+#   rsync source -> the node
+#   ssh <node> 'cd ~/src/session-essence/site && npm run build'
 #   # pod auto-picks up dist/ on next request, no restart needed
 #
-# Served at hostPort 3401, mounted from /home/zaphod-beeblebox/src/session-essence/site/dist
+# Served at hostPort 3401, mounted from the site/dist folder on the node (set the hostPath below)
 # Routed by Caddy: essence.mabus.ai (after the existing block is restructured)
 
 ---
@@ -102,7 +102,7 @@ spec:
       volumes:
         - name: site-content
           hostPath:
-            path: /home/zaphod-beeblebox/src/session-essence/site/dist
+            path: /srv/session-essence/site/dist  # set to where site/dist lives on your node
             type: Directory
         - name: nginx-config
           configMap:

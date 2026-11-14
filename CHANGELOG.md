@@ -74,7 +74,7 @@ Post-audit security + correctness fixes addressing the findings from `P-session-
 These are substantive features rather than fixes, deferred to a follow-up release:
 
 - **F-SEC-002 — Portrait integrity sidecar.** A `.portrait.sha256` sidecar + SessionStart fingerprint display + `analyze_portrait` invocation on hash mismatch. Requires changes to the SessionStart hook in the operator's `~/.claude/settings.json`, so deferring to a coordinated rollout.
-- **F-SEC-004 — Docker localhost-default binding + bearer-token auth.** Requires deployment-side change (new env var `MCP_AUTH_TOKEN`, supergateway auth headers); the current deployment at `192.168.6.56:3250` is LAN-trusted by operator policy. Will land when bearer-token auth is plumbed through.
+- **F-SEC-004 — Docker localhost-default binding + bearer-token auth.** Requires deployment-side change (new env var `MCP_AUTH_TOKEN`, supergateway auth headers); the current deployment at `<host>:3250` is LAN-trusted by operator policy. Will land when bearer-token auth is plumbed through.
 - **F-OPUS-005 — Portrait-drift detection.** Periodic full-regeneration comparison against the surgical-edited live portrait. Substantial feature requiring archive-iteration logic.
 - **F-OPUS-009 — `ESSENCE_DIR` env var + multi-instance support.** Currently `~/.claude/essence/` is hardcoded across the hooks and the surgical-edit script.
 
