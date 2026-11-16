@@ -14,7 +14,7 @@ const steps = [
   },
   {
     title: 'Supervisor check',
-    body: 'A supervisor script checks the result. All eleven section headings must be present and in order. The file size must be sane. The identity section must be untouched. If any check fails, the script puts the saved copies back. Then it updates the checksum and records how far the transcript was read.',
+    body: 'A supervisor script checks the result. All eleven section headings must be present and in order. The identity section must be untouched. The files must stay under hard size caps. Every added line is scanned for text that looks planted: an instruction, a way to send data out, a secret, an unknown web address. If any check fails, the script puts the saved copies back. Then it updates the checksum, commits the change to a local history and records how far the transcript was read.',
   },
 ];
 ---

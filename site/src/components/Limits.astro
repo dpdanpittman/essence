@@ -1,28 +1,58 @@
 ---
 const limits = [
-  'So far it is built for one person and one agent.',
-  'The code is private.',
-  'This page says what it is, not how it is built.',
+  'It is built for one person and one agent.',
+  'The public repository holds the hooks, the templates and the tests.',
+  'Synthesis is no longer local. It uses the model provider the agent already runs on. The files stay on the owner\'s machine.',
 ];
 ---
 
 <section class="border-b border-border/40">
   <div class="mx-auto max-w-4xl px-6 py-24">
     <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      06 · Limits
+      11 · Limits and code
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
       What it is not.
     </h2>
-    <ul class="space-y-4 text-ink-dim leading-relaxed max-w-2xl">
-      {
-        limits.map((l) => (
-          <li class="flex gap-3">
-            <span class="text-accent shrink-0">·</span>
-            <span>{l}</span>
-          </li>
-        ))
-      }
-    </ul>
+
+    <div class="grid md:grid-cols-2 gap-10">
+      <ul class="space-y-4 text-ink-dim leading-relaxed">
+        {
+          limits.map((l) => (
+            <li class="flex gap-3">
+              <span class="text-accent shrink-0">·</span>
+              <span>{l}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="rounded-md border border-border/60 bg-panel-2/60 p-6 text-sm text-ink-dim leading-relaxed space-y-4">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent">The repository</p>
+        <p>
+          The repository holds the hooks, the templates and the tests.
+          Its README has the install steps.
+        </p>
+        <p>
+          Its old name was session-essence.
+        </p>
+        <p>
+          The hooks are wired in
+          <code class="font-mono text-xs text-ember">~/.claude/settings.json</code>.
+          The files live in
+          <code class="font-mono text-xs text-ember">~/.claude/essence/</code>.
+        </p>
+        <p class="pt-1">
+          <a
+            href="https://github.com/dpdanpittman/essence"
+            target="_blank"
+            rel="noopener"
+            class="text-accent hover:text-ember underline underline-offset-4 decoration-accent/40 hover:decoration-ember"
+          >
+            github.com/dpdanpittman/essence →
+          </a>
+        </p>
+      </div>
+    </div>
   </div>
 </section>
