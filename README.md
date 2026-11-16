@@ -89,6 +89,14 @@ A rule written in the portrait does not act. The agent read it hours ago, and a 
 
 The rules for the check live in a private file, `~/.claude/essence/checks.json`. Start from `examples/checks-example.json`. The full idea, and which rules deserve a hook, is in [docs/superego.md](docs/superego.md).
 
+## Guarding the memory itself
+
+The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
+
+- **A scan of what was added** (`hooks/essence-scan.py`). After a run, every added line is checked for text that reads like a planted instruction, a way to send data out, a secret, an unknown web address or hidden characters. A hit rejects the run and restores the files.
+- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 20000) is undone for that file.
+- **A local history.** Run `git init` in `~/.claude/essence` and keep it local. Each run then makes two commits: what changed by hand before the run, and what the run changed. A real portrait holds private things, so do not push this history anywhere public.
+
 ## The writing rules
 
 The rules come from ASD-STE100 Simplified Technical English, the controlled language of aircraft maintenance manuals.
@@ -110,7 +118,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    ```bash
    mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes
-   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py ~/.claude/scripts/
+   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py ~/.claude/scripts/
    chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py
    ```
 

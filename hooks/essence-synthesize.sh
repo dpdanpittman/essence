@@ -33,6 +33,8 @@ REAL_DIR="${ESSENCE_DIR:-$HOME/.claude/essence}"
 SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL="${ESSENCE_MODEL:-opus}"
 MIN_PERSON="${ESSENCE_MIN_MESSAGES:-3}"    # fewer new messages from the person than this: nothing to learn, skip
+PORTRAIT_MAX="${ESSENCE_PORTRAIT_MAX:-160000}"    # hard cap in bytes: a run that grows the portrait past it is refused
+LANDSCAPE_MAX="${ESSENCE_LANDSCAPE_MAX:-20000}"  # hard cap in bytes for one landscape: an edit past it is undone
 PERSON="${ESSENCE_PERSON:-the person}"
 AGENT="${ESSENCE_AGENT:-the agent}"
 TRANSCRIPT=""; DRY=0; WAIT=0
@@ -110,6 +112,19 @@ cp -p "$PORTRAIT" "$BEFORE"
 BEFORE_BYTES=$(stat -c %s "$PORTRAIT")
 LAND_BEFORE="$RUN_DIR/landscapes-$TS"
 mkdir -p "$LAND_BEFORE"; cp -p "$LAND_DIR"/*.md "$LAND_BEFORE/" 2>/dev/null || true
+
+# --- history: if the essence folder is a git repository (git init there; keep it local), what changed since the last
+# commit was changed by hand or by the session itself: commit it first, so the synthesis run is a commit of its own. ---
+gitc() {   # gitc MESSAGE: commit the tracked essence files if they changed. Never fails the run.
+  [ "$DRY" = 0 ] && [ -d "$ESSENCE_DIR/.git" ] || return 0
+  local p paths=()
+  for p in portrait.md portrait.md.sha256 landscapes checks.json .gitignore; do [ -e "$ESSENCE_DIR/$p" ] && paths+=("$p"); done
+  [ ${#paths[@]} -gt 0 ] || return 0
+  git -C "$ESSENCE_DIR" add -A -- "${paths[@]}" >/dev/null 2>&1 || return 0
+  git -C "$ESSENCE_DIR" diff --cached --quiet 2>/dev/null && return 0
+  git -C "$ESSENCE_DIR" -c user.name=Essence -c user.email=essence@localhost commit -q -m "$1" >/dev/null 2>&1 || true
+}
+gitc "Before synthesis $TS: changes made by hand or in the session"
 
 # --- the prompt (single-quoted: nothing in it is expanded by the shell; @DIR@, @SLICE@, @PERSON@ and @AGENT@ are filled in below) ---
 read -r -d '' PROMPT << 'SYNTHESIS_PROMPT' || true
@@ -231,8 +246,23 @@ supervise() {
   after=$(stat -c %s "$PORTRAIT" 2>/dev/null || echo 0)
   if [ "$heads" != "1 2 3 4 5 6 7 8 9 10 11 " ]; then verdict="bad headings ($heads)"
   elif [ "$after" -lt $((BEFORE_BYTES * 8 / 10)) ]; then verdict="portrait shrank from $BEFORE_BYTES to $after bytes"
-  elif [ "$after" -gt 200000 ]; then verdict="portrait grew to $after bytes"
+  elif [ "$after" -gt "$PORTRAIT_MAX" ] && [ "$after" -gt "$BEFORE_BYTES" ]; then verdict="portrait would grow past its cap ($after bytes, cap $PORTRAIT_MAX)"
   elif ! diff -q <(sed -n '/^### 1\. /,/^### 2\. /p' "$BEFORE") <(sed -n '/^### 1\. /,/^### 2\. /p' "$PORTRAIT") >/dev/null; then verdict="section 1 was changed"
+  fi
+  # second look at what the run ADDED: text that reads like a planted instruction, a way to send data out, a secret,
+  # an unknown web address or hidden characters rejects the whole run (see essence-scan.py).
+  if [ "$verdict" = ok ]; then
+    local known=() f b found
+    for f in "$LAND_BEFORE"/*.md; do [ -e "$f" ] && known+=(--known-hosts "$f"); done
+    found=$(python3 "$SCRIPTS/essence-scan.py" --kind portrait "${known[@]}" "$BEFORE" "$PORTRAIT" 2>/dev/null) || {
+      verdict="scan: the portrait edit has text that looks planted"; echo "Essence: scan of portrait.md: $found" >> "$LOG"; }
+    for f in "$LAND_DIR"/*.md; do
+      [ -e "$f" ] || continue
+      b="$LAND_BEFORE/$(basename "$f")"; [ -e "$b" ] || b=/dev/null
+      cmp -s "$f" "$b" 2>/dev/null && continue
+      found=$(python3 "$SCRIPTS/essence-scan.py" --kind landscape --known-hosts "$BEFORE" "${known[@]}" "$b" "$f" 2>/dev/null) || {
+        verdict="scan: the edit of $(basename "$f") has text that looks planted"; echo "Essence: scan of $(basename "$f"): $found" >> "$LOG"; }
+    done
   fi
   if [ "$verdict" != ok ]; then
     cp -p "$BEFORE" "$PORTRAIT"
@@ -250,8 +280,16 @@ supervise() {
     fi
     for f in "$LAND_DIR"/*.md; do
       [ -e "$f" ] || continue
-      cmp -s "$f" "$LAND_BEFORE/$(basename "$f")" 2>/dev/null || echo "Essence: landscape changed: $(basename "$f")" >> "$LOG"
+      cmp -s "$f" "$LAND_BEFORE/$(basename "$f")" 2>/dev/null && continue
+      if [ "$(stat -c %s "$f")" -gt "$LANDSCAPE_MAX" ] && [ -e "$LAND_BEFORE/$(basename "$f")" ] \
+         && [ "$(stat -c %s "$f")" -gt "$(stat -c %s "$LAND_BEFORE/$(basename "$f")")" ]; then
+        cp -p "$LAND_BEFORE/$(basename "$f")" "$f"
+        echo "Essence: landscape $(basename "$f") would grow past its cap ($LANDSCAPE_MAX bytes): that edit was undone" >> "$LOG"
+      else
+        echo "Essence: landscape changed: $(basename "$f")" >> "$LOG"
+      fi
     done
+    gitc "Synthesis $TS: edits from the session transcript"
     if [ "$rc" = 0 ] && [ "$DRY" = 0 ]; then      # remember how far this transcript was read
       python3 - "$STATE" "$TRANSCRIPT" "$END" <<'PY'
 import json, os, sys, tempfile

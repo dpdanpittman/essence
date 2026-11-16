@@ -2,6 +2,18 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.2.0] - 2026-11-16
+
+### Added
+
+- `hooks/essence-scan.py`: scans the lines a synthesis run added for planted instructions, exfiltration, secrets, unknown web addresses and hidden characters. A hit rejects the run.
+- Hard size caps in `hooks/essence-synthesize.sh`: `ESSENCE_PORTRAIT_MAX` and `ESSENCE_LANDSCAPE_MAX`.
+- Local git history: when `~/.claude/essence` is a git repository, each run commits hand edits first and its own edits second.
+
+### Changed
+
+- `hooks/essence-check.py`: no change in behaviour. Its rules were already in a private file.
+
 ## [3.1.0] - 2026-11-15
 
 ### Added
