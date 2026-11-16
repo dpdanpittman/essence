@@ -1,418 +1,203 @@
-# Session Essence
+# Essence
 
-An MCP server that gives AI assistants persistent self-awareness across sessions.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of four Claude Code hooks and two kinds of markdown files. The project was called `session-essence` before.
 
-Session Essence observes interactions during a Claude Code session, then synthesizes a **portrait** — a second-person narrative that captures who the AI has become, how the collaboration works, and what context matters. When loaded at the start of the next session, the portrait lets Claude pick up as a continuation rather than a stranger.
+- Repository: https://github.com/dpdanpittman/essence
+- Website: https://essence.mabus.ai
 
-## How It Works
+## What it is
 
-Session Essence uses a **3-pass dual-observer synthesis** via either the Claude API (default) or a local Ollama model (opt-in fallback):
+Each new session of a coding agent starts as a stranger. Essence closes that gap with two kinds of files that live on the owner's machine, in `~/.claude/essence/`:
 
-1. **Psychologist pass** — analyzes Claude's cognitive patterns: confidence map, personality traits, error handling, attention quality
-2. **Sociologist pass** — analyzes the collaborative dynamic: trust levels, communication shorthand, role dynamics, shared knowledge
-3. **Merge pass** — fuses both reports into a structured second-person portrait
+- **The portrait.** One markdown file with eleven sections. It tells each new session who the agent is and how to work with its person.
+- **The landscapes.** One markdown file per area of work. A landscape says what is true now in that area. A separate running diary file keeps the history.
+
+Four hooks keep the files loaded and current. Nothing else runs: no server, no database, no background service.
+
+## The two kinds of files
 
 ### The portrait
 
-The MCP `synthesize_essence` tool produces a **6-section portrait**:
+The portrait has eleven sections, in this order:
 
-1. **Identity** — who Claude is in this collaboration
-2. **Communication** — shorthand, tone, detail levels
-3. **Trust & Autonomy** — what Claude can do freely vs. needs checking
-4. **Active Context** — current work, parked tasks, priorities
-5. **Lessons** — corrections, patterns to avoid, hard-won insights
-6. **Edges** — where to push harder
+1. **Identity.** Who the agent is, in the first person. The person and the agent write it together. Synthesis never edits it.
+2. **Communication.** How the person wants to be spoken to.
+3. **Trust and autonomy.** What the agent may do alone and what needs a check first.
+4. **Active context.** Facts that stay true for weeks, each with a date.
+5. **Lessons.** A mistake or a success, its date, and the rule it taught.
+6. **Edges.** Hard limits and the places where the agent tends to go wrong.
+7. **Episodes.** Moments that mattered, each with a short quote.
+8. **Voice.** Writing rules and a few example exchanges.
+9. **Decisions.** Standing decisions with the reason, and a group for superseded ones.
+10. **Context history.** A dated timeline of facts that left section 4.
+11. **Landscapes.** How to use the landscapes, and the list of them with their trigger words.
 
-The recommended PreCompact integration (see `~/.claude/scripts/synthesize-essence.sh` in this repo's docs) extends the portrait with three more sections that grow over time via surgical edits rather than full regeneration:
+### The landscapes
 
-7. **Episodes** — specific moments that shifted something
-8. **Voice** — exchange samples capturing the collaborative tone
-9. **Decisions** — architectural / design decisions and their rationale
+A landscape has six parts:
 
-The 6-section form is the immediate output of one synthesis run; the 9-section form is the living document Claude reads at session start.
+1. What it is and who cares
+2. How it works
+3. Traps
+4. Decisions
+5. Open threads
+6. Where things live
 
-### Two backends, one tool
+Every line has the form `- fact (date, checked|record|assumed)`. "Checked" means seen first hand. "Record" means taken from a document or a message. "Assumed" means not yet confirmed. When a fact stops being true, the line goes. History belongs in the running diary file.
 
-| Backend                  | Default? | When to use                                                                                                                              |
-| ------------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `claude` (Anthropic API) | yes      | Reliable, high-quality synthesis. Costs ~a few cents per run with Haiku. Requires `ANTHROPIC_API_KEY`.                                   |
-| `ollama` (local)         | no       | Free, private, runs on your hardware. Requires a capable model (`qwq:32b` recommended). Smaller models will produce shallower portraits. |
+## How a session starts
 
-Set `SYNTHESIS_BACKEND=ollama` to switch.
+The SessionStart hook (`hooks/session-start-verify.sh`) runs at startup and after every compaction. It does three things:
 
-## Architecture
+1. It checks the portrait against its checksum file (`portrait.md.sha256`). On a mismatch it prints a warning above everything else.
+2. It prints the identity section.
+3. It tells the agent to read the whole portrait now, with exact Read ranges.
 
-```
-Claude Code hooks ──→ observations.jsonl ──→ synthesize_essence ──→ portrait.md
-  (UserPromptSubmit,    (append-only log)     (3-pass synthesis     (loaded at
-   PostToolUse,                                via claude or         session start
-   Stop, PreCompact,                          ollama backend)        via SessionStart
-   SessionStart)                                                     hook)
-```
+Hook output is capped, so a plain `cat` of the portrait gets cut. The hook prints only section 1 and gives the agent the Read calls for the rest.
 
-- **Stateless server** — all file I/O (reading observations, writing portraits) is handled by the calling Claude instance
-- **MCP protocol** — runs as a standard MCP server (stdio or HTTP via supergateway)
-- **Pluggable backend** — Claude API by default; Ollama for fully-local inference. Same prompts, same output shape
+## How landscapes are read and written
 
-For the philosophical underpinnings — why second-person portraits, why dual-observer, why surgical edits — see [`docs/design.md`](./docs/design.md).
+Section 11 of the portrait lists each landscape with its trigger words. When work starts in one of those areas, the agent reads that landscape whole before it acts.
 
-## Prerequisites
+A landscape can only be written well by the session that built the understanding. The UserPromptSubmit hook (`hooks/essence-nudge.py`) watches how much the session transcript has grown since the last compaction. Past a threshold (6 MB by default, then every 3 MB), it adds one short reminder to the next prompt: update the landscapes you worked in and the running diary file, in this turn. The synthesis run also updates landscapes whose subject shows in the conversation.
 
-- [Node.js](https://nodejs.org/) 20+
-- One synthesis backend:
-  - **Claude API** (default): an `ANTHROPIC_API_KEY` with Messages-API access
-  - **Ollama** (opt-in): [Ollama](https://ollama.com/) with a capable model (default: `qwq:32b`)
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (or any MCP client)
+## How synthesis works
 
-## Installation
+The PreCompact and SessionEnd hooks run `hooks/essence-synthesize.sh`. The hook returns at once. The work runs in the background:
 
-### 1. Clone and install
+1. It takes a lock, so only one synthesis runs at a time.
+2. `hooks/essence-reduce.py` cuts the unread part of the session transcript down to a plain-text slice: the person's messages and the agent's replies in full, each tool call on one line, each tool result trimmed. Thinking, system reminders and sub-agent messages are left out.
+3. If the slice holds fewer than three new messages from the person, the run stops.
+4. It saves a copy of the portrait and of every landscape.
+5. It starts one `claude -p` run with only the Read and Edit tools. The prompt tells the model to make small, surgical edits under the shape rules. The model has no shell and no network. The slice is marked as untrusted data.
+6. A supervisor checks the result. It puts the saved copies back if any of these is true:
+   - a `### N.` heading is missing, repeated or out of order,
+   - the portrait shrank by more than 20 percent,
+   - the portrait grew past 200 KB,
+   - section 1 changed.
+7. If the run passes, the supervisor saves a copy of the new portrait, updates the checksum, records how far the transcript was read and deletes the slice.
 
-```bash
-git clone https://github.com/dpdanpittman/session-essence.git
-cd session-essence
-npm install
-```
+The agent run starts without the user's other hooks (`--setting-sources project,local`). A formatter hook once rewrote the portrait's quotes during a dry run.
 
-### 2. Personalize the prompts
+## The writing rules
 
-The analysis prompts reference your name so the AI observers can identify the human collaborator in the logs. Copy the template and replace the placeholder:
+The rules come from ASD-STE100 Simplified Technical English, the controlled language of aircraft maintenance manuals.
 
-```bash
-cp prompts.template.js prompts.js
-```
+- One rule or fact per line.
+- The reason in one clause, or the person's own words quoted exactly.
+- Rules say what to do.
+- Condition first, then the instruction.
+- At most 20 words per instruction, 25 for other sentences.
+- Active voice.
+- Every fact dated.
+- No em dashes, no semicolons, no filler words.
 
-Edit `prompts.js` and replace `"the human collaborator"` / `"the human"` / `"a human collaborator"` with your name throughout. This personalizes the analysis — the observers will reference you by name in their reports, producing more specific and useful portraits.
+## Install
 
-### 3. Set up your backend
+You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the `claude` command on your PATH. The scripts use only the Python standard library.
 
-**Claude API** (default — no extra setup beyond exporting the key):
+1. Copy the hooks:
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-```
+   ```bash
+   mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes
+   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py ~/.claude/scripts/
+   chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py
+   ```
 
-Default model is `claude-haiku-4-5-20251001` — fast, cheap, plenty good for synthesis. Override via `CLAUDE_MODEL`.
+   `essence-synthesize.sh` finds `essence-reduce.py` in its own folder. Keep them together.
 
-**Ollama** (alternative, fully local):
+2. Start the portrait from the template and write section 1 with your agent:
 
-```bash
-ollama pull qwq:32b
-export SYNTHESIS_BACKEND=ollama
-```
+   ```bash
+   cp templates/portrait.md ~/.claude/essence/portrait.md
+   ```
 
-Any capable model works. Smaller models (e.g., `llama3:8b`) will produce shallower portraits. Configure with `OLLAMA_MODEL`.
+   Keep the eleven `### N.` headings. The synthesis rejects any run that breaks them.
 
-### Running standalone (stdio)
+3. Add a landscape for each area of work, and list it in section 11 of the portrait:
 
-```bash
-node index.js
-```
+   ```bash
+   cp templates/landscape.md ~/.claude/essence/landscapes/my-area.md
+   ```
 
-### Running as HTTP endpoint (Docker)
+   `examples/portrait-example.md` and `examples/landscape-example.md` show both files filled in for an invented agent and an invented class.
 
-**Localhost-only (default; v2.1 recommended):**
+4. Wire the hooks. `examples/settings-hooks.json` holds the hooks block. This command adds its entries to your existing settings and keeps your other hooks:
 
-```bash
-docker build -t session-essence .
-docker run -d \
-  --name session-essence \
-  --restart unless-stopped \
-  -p 127.0.0.1:3250:3250 \
-  --add-host=host.docker.internal:host-gateway \
-  -e ANTHROPIC_API_KEY=sk-ant-... \
-  -e PORT=3250 \
-  -v "$(pwd)/prompts.js:/app/prompts.js:ro" \
-  session-essence
-```
+   ```bash
+   cp ~/.claude/settings.json ~/.claude/settings.json.bak
+   jq -s '.[0] as $a | .[1].hooks as $b
+     | $a + {hooks: (reduce ($b | keys[]) as $k (($a.hooks // {}); .[$k] = ((.[$k] // []) + $b[$k])))}' \
+     ~/.claude/settings.json.bak examples/settings-hooks.json > ~/.claude/settings.json
+   ```
 
-The `-p 127.0.0.1:3250:3250` binds the port to localhost only — no LAN exposure. `--add-host=host.docker.internal:host-gateway` lets the container reach Ollama running on the host. The `-v` mount lets your personalized `prompts.js` override the template `prompts.js` baked into the image.
+   If you have no `~/.claude/settings.json` yet, copy `examples/settings-hooks.json` to that path.
 
-For the Ollama backend, swap `-e ANTHROPIC_API_KEY=...` for `-e SYNTHESIS_BACKEND=ollama -e OLLAMA_HOST=http://host.docker.internal:11434 -e OLLAMA_MODEL=qwq:32b`.
+5. Set the two names. The synthesis prompt and the hook notes use them. Add them to the `env` block of `~/.claude/settings.json`:
 
-**LAN exposure with auth (advanced):**
+   ```json
+   "env": { "ESSENCE_PERSON": "Alex", "ESSENCE_AGENT": "Robin" }
+   ```
 
-The v2.0.0 release exposed `synthesize_essence` as an unauthenticated LAN-reachable endpoint by default (`F-SEC-004`). v2.1 fixes this via localhost-default binding. If you need LAN exposure — multiple machines hitting one synthesis server — put a reverse proxy with bearer-token auth in front:
+   Without them the text says "the person" and "the agent".
 
-```
-operator devices → reverse proxy (Caddy / nginx with Bearer-token check) → 127.0.0.1:3250 (session-essence)
-```
+6. Start a new session. The agent should read its portrait and say so in one line.
 
-Example Caddy snippet:
-
-```caddy
-session-essence.your-domain {
-    reverse_proxy 127.0.0.1:3250
-    @noauth not header Authorization "Bearer {env.SESSION_ESSENCE_TOKEN}"
-    respond @noauth "Unauthorized" 401
-}
-```
-
-Then `claude mcp add session-essence --transport http --header "Authorization: Bearer ..." https://session-essence.your-domain/mcp`.
-
-In-image bearer-token auth is tracked as a possible follow-up. For now, the reverse-proxy pattern is the supported path for authenticated LAN exposure.
-
-The container uses [supergateway](https://github.com/nicobailon/supergateway) to expose the stdio MCP server as a streamable HTTP endpoint.
-
-### Register with Claude Code
-
-For stdio:
+To try a synthesis without touching the real files, run it on a copy:
 
 ```bash
-claude mcp add session-essence node /path/to/session-essence/index.js
+bash ~/.claude/scripts/essence-synthesize.sh --transcript ~/.claude/projects/<project>/<session>.jsonl --dry
 ```
 
-For HTTP (if running via Docker/supergateway):
+This calls the real `claude` command on a temporary copy of the essence folder and prints the log.
+
+### Settings
+
+| Variable | Default | Used by |
+| --- | --- | --- |
+| `ESSENCE_DIR` | `~/.claude/essence` | all four hooks |
+| `ESSENCE_PERSON` | `the person` | synthesis prompt, session-start notes |
+| `ESSENCE_AGENT` | `the agent` | synthesis prompt |
+| `ESSENCE_MODEL` | `opus` | synthesis |
+| `ESSENCE_MIN_MESSAGES` | `3` | synthesis (fewer new messages from the person: skip) |
+| `ESSENCE_NUDGE_MB` | `6` | nudge (first reminder) |
+| `ESSENCE_NUDGE_AGAIN_MB` | `3` | nudge (each reminder after that) |
+
+## Tests
+
+The tests run offline. A fake `claude` stands in for the model.
 
 ```bash
-claude mcp add session-essence --transport http http://localhost:3250/mcp
+python3 -m unittest discover -s tests -v
 ```
 
-## MCP Tools
+They cover the reducer on a tiny transcript, the nudge decision, and the synthesis wrapper: a good edit is kept, a run that removes a heading is rolled back, a run that changes section 1 is rolled back, and a run with too little new conversation is skipped.
 
-### `synthesize_essence`
+## The cold test
 
-Runs the full 3-pass synthesis. Pass the contents of your observations log and optionally a previous portrait for continuity.
+Start a cold session. Ask it ten questions about one area of work. It should answer from the landscape alone. If it cannot, the landscape is missing something.
 
-**Parameters:**
+## Limits
 
-- `observations` (string, required) — contents of observations.jsonl
-- `previous_portrait` (string, optional) — previous portrait for continuity
+- Essence is built for one person and one agent.
+- It is not a product.
+- Synthesis is not local. It uses the model provider the agent already runs on.
+- The files stay on the owner's machine. Nothing in this repository sends them anywhere.
+- It runs on Claude Code hooks and assumes Claude Code's transcript format.
+- The session-start hook tells the agent to read `~/.claude/essence/portrait.md`, even when `ESSENCE_DIR` points elsewhere.
 
-**Returns:** A structured portrait with the merged result, plus detailed psychologist and sociologist reports in a collapsible section.
+## History
 
-### `format_observation`
+Dan built Essence with his Claude Code agent, which took the name Mabus in the session that produced the first portrait.
 
-Formats a manual observation as a JSONL line. Use this when you notice something the hooks wouldn't capture — a shift in tone, an important realization, a moment of particularly good or bad collaboration.
+- **Version 1 (March 2026).** An MCP server plus hooks that logged observations. A three-pass synthesis ran on a local model: a "psychologist" pass, a "sociologist" pass and a merge. The local model invented content, so synthesis moved to Claude.
+- **Surgical edits.** Each full rewrite of the portrait lost signal. Synthesis became small, surgical edits.
+- **Too big to read.** The portrait grew to 668 KB. In November 2026 it was reworked to about 140 KB, with one rule or fact per line and rules borrowed from ASD-STE100 Simplified Technical English.
+- **Version 3 (2026-11-15).** The observation log held only clipped snippets, and one logger silently dropped most lines. The synthesis now reads the session transcript. The observation log and its hooks were removed.
+- **Landscapes (2026-11-15).** One file per area of work, read at the start of work in that area.
 
-**Parameters:**
-
-- `category` (enum: personality, communication, trust, correction, insight, context)
-- `note` (string) — the observation content
-
-### `analyze_portrait`
-
-Compares two portraits to identify what changed between syntheses.
-
-**Parameters:**
-
-- `old_portrait` (string) — the earlier portrait
-- `new_portrait` (string) — the more recent portrait
-
-## Observation Hooks
-
-Session Essence works best when Claude Code is configured with hooks that automatically log interactions, trigger synthesis on context compaction, and re-inject the portrait at session start.
-
-Claude Code's modern hook format passes the event payload as JSON on stdin (not as `$CLAUDE_*` env vars — that pattern is from an older Claude Code version and will silently produce empty observations). Drop this into `~/.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); echo \"$INPUT\" | jq -c '{ts: (now|todate), e: \"user\", d: {prompt: .prompt[0:2000]}}' >> ~/.claude/essence/observations.jsonl 2>/dev/null; true"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "INPUT=$(cat); echo \"$INPUT\" | jq -c '{ts: (now|todate), e: \"tool\", d: {tool: .tool_name, input: (.tool_input|tostring|.[0:500]), response: (.tool_response|tostring|.[0:300])}}' >> ~/.claude/essence/observations.jsonl 2>/dev/null; true"
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/synthesize-essence.sh"
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ~/.claude/scripts/session-start-verify.sh"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-`session-start-verify.sh` (in `examples/`) replaces the bare `cat portrait.md` from prior versions. It still injects the portrait but additionally:
-
-- Verifies the portrait's sha256 against the `portrait.md.sha256` sidecar the PreCompact pipeline writes; warns loudly if they don't match (`F-SEC-002` — out-of-band edits, restored backups, or attacker writes are detectable).
-- Announces when a manual drift check is due (every 10 synthesis cycles by default, configurable via `DRIFT_CHECK_INTERVAL`; F-OPUS-005).
-- Surfaces the last synthesis status — if recent PreCompact runs silently no-op'd, the operator sees that at session start instead of weeks later.
-
-Then create the storage layout:
-
-```bash
-mkdir -p ~/.claude/essence/archive ~/.claude/essence/portraits ~/.claude/essence/drift-reports
-```
-
-Install the helper scripts:
-
-```bash
-cp examples/synthesize-essence.sh ~/.claude/scripts/synthesize-essence.sh
-cp examples/session-start-verify.sh ~/.claude/scripts/session-start-verify.sh
-cp examples/drift-check.sh ~/.claude/scripts/drift-check.sh
-chmod +x ~/.claude/scripts/*.sh
-```
-
-### What each hook does
-
-- **`UserPromptSubmit`** — appends a `{"e":"user"}` line per user message
-- **`PostToolUse`** — appends a `{"e":"tool"}` line per tool call (tool name + truncated input + truncated response)
-- **`PreCompact`** — triggers the synthesis script (see next section) before context auto-compaction kicks in, so the session's observations get distilled into the portrait while they're still recallable
-- **`SessionStart`** — injects the current portrait into Claude's startup context. This is what closes the loop — without it, the portrait sits unread on disk
-
-### The PreCompact synthesis script
-
-The reference `synthesize-essence.sh` (place at `~/.claude/scripts/`) does NOT call the MCP tool directly. It spawns a detached `claude -p --model haiku` instance that surgically edits the long-form portrait in place — extending sections 7–9 (Episodes, Voice, Decisions) with this session's signal rather than regenerating from scratch. Surgical edits preserve hard-won continuity that a clean regeneration would wipe.
-
-The MCP `synthesize_essence` tool remains the right call for **first synthesis** (no prior portrait) or **full rebuild** (after major project pivots). Use the PreCompact script for ongoing maintenance.
-
-A copy of the script ships at `examples/synthesize-essence.sh` in this repo.
-
-## Synthesis Workflow
-
-The full lifecycle, with the hooks above wired:
-
-1. **Session runs** — `UserPromptSubmit` + `PostToolUse` hooks append observations to `~/.claude/essence/observations.jsonl`
-2. **Context fills** — Claude Code is about to auto-compact (or you ran `/compact`); `PreCompact` fires `synthesize-essence.sh`
-3. **Synthesis** — the script reads observations + the current portrait, surgically edits the portrait, archives `observations.jsonl` to `~/.claude/essence/archive/<timestamp>.jsonl`, clears the live observations file
-4. **Next session** — `SessionStart` hook prints the portrait into Claude's startup context
-
-Synthesis runtime: 30s–2min with the Claude backend on Haiku; 1–3min on the Ollama backend with `qwq:32b` on a 24GB GPU.
-
-The MCP tool path (calling `synthesize_essence` manually) is parallel to this — useful for the first portrait, for full rebuilds after major project pivots, or as a one-shot synthesis when you don't want the surgical-edit behavior.
-
-## Storage Layout
-
-```
-$ESSENCE_DIR/                 # default: ~/.claude/essence/
-  observations.jsonl          # live log, cleared after each synthesis
-  portrait.md                 # current portrait (SessionStart reads this)
-  portrait.md.sha256          # integrity sidecar (v2.1+); F-SEC-002
-  synthesis-status.json       # last-run snapshot (cycle count + status); F-OPUS-011
-  .synthesis-running          # lock file (auto-cleaned via atomic acquire)
-  .cycle-count                # PreCompact cycle counter (drift-check schedule)
-  .drift-check-due            # flag set when drift check is queued
-  last-synthesis.log          # output of the most recent PreCompact run
-  last-drift-check.log        # output of the most recent drift-check.sh run
-  archive/
-    <timestamp>.jsonl         # one file per synthesis cycle
-  drift-reports/
-    <timestamp>.md            # one file per drift-check.sh run; v2.1+
-  portraits/
-    <timestamp>.md            # optional historical portraits (manual archiving)
-```
-
-The `archive/` directory grows monotonically — useful for going back and asking "when did the trust calibration around X actually shift?". Prune it on whatever cadence makes sense; the live `portrait.md` doesn't reference it.
-
-Set `ESSENCE_DIR=/custom/path` to use a non-default location. All three helper scripts (`synthesize-essence.sh`, `session-start-verify.sh`, `drift-check.sh`) honor it. This is how you run multiple isolated session-essence instances on one machine (one per Claude Code worktree, say) without their portraits colliding (F-OPUS-009 — the multi-instance fix the audit called for).
-
-## Drift Detection
-
-The surgical-edit pipeline is an **open-loop integrator**. Every PreCompact cycle nudges the portrait a small distance based on this session's observations; over many cycles, those small nudges could drift the portrait from the relationship reality without any single cycle being visibly wrong. v2.1 adds a manual calibration check (`F-OPUS-005`).
-
-Every `DRIFT_CHECK_INTERVAL` cycles (default 10), the PreCompact wrapper sets a `.drift-check-due` flag. The SessionStart hook (via `session-start-verify.sh`) announces this at the top of your next session's context. Run the check at your convenience:
-
-```bash
-bash ~/.claude/scripts/drift-check.sh
-```
-
-This spawns a fresh `claude -p` instance with `--allowedTools "Read Write"` (one specific output path) that:
-
-1. Reads the live `portrait.md` (the surgical-edited current state).
-2. Reads the last 5 archive files (oldest first; configurable via `DRIFT_ARCHIVE_LOOKBACK`).
-3. Audits each portrait section against archive evidence — alignment vs. drift vs. anomaly.
-4. Writes a structured drift report to `$ESSENCE_DIR/drift-reports/<timestamp>.md`.
-
-Review the report with `less`. Three verdicts:
-
-- **ALIGNED** — portrait still accurately models the relationship the archives document. Continue as-is.
-- **DRIFTED** — sections have moved away from archive evidence over many cycles. Manual portrait edits or a full re-synthesis recommended.
-- **ANOMALOUS** — content in the portrait not traceable to ANY archive observation. Possible synthesis hallucination, prompt-injection footprint, or out-of-band edit. Investigate before continuing to trust the portrait.
-
-The `.drift-check-due` flag clears automatically when the report lands.
-
-## Environment Variables
-
-### Server (MCP process)
-
-| Variable            | Default                     | Description                                                     |
-| ------------------- | --------------------------- | --------------------------------------------------------------- |
-| `SYNTHESIS_BACKEND` | `claude`                    | `claude` or `ollama` — which backend the MCP tool dispatches to |
-| `ANTHROPIC_API_KEY` | _(unset)_                   | Required when `SYNTHESIS_BACKEND=claude`                        |
-| `CLAUDE_MODEL`      | `claude-haiku-4-5-20251001` | Anthropic model id for the Claude backend                       |
-| `CLAUDE_TIMEOUT`    | `120000`                    | Claude per-call timeout in ms (v2.0.1; F-PERF-002)              |
-| `OLLAMA_HOST`       | `http://localhost:11434`    | Ollama API endpoint                                             |
-| `OLLAMA_MODEL`      | `qwq:32b`                   | Ollama model id                                                 |
-| `OLLAMA_TIMEOUT`    | `600000`                    | Ollama request timeout in ms (10 min)                           |
-| `PORT`              | `3250`                      | HTTP port (Docker/supergateway mode)                            |
-
-### Helper scripts (PreCompact + SessionStart + drift check)
-
-| Variable                 | Default                 | Description                                                                                                                             |
-| ------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `ESSENCE_DIR`            | `$HOME/.claude/essence` | Storage root for the helper scripts (F-OPUS-009). Use distinct paths to run multiple isolated session-essence instances on one machine. |
-| `DRIFT_CHECK_INTERVAL`   | `10`                    | Cycles between automatic drift-check-due flags. `0` disables.                                                                           |
-| `DRIFT_ARCHIVE_LOOKBACK` | `5`                     | How many recent archive files `drift-check.sh` audits against.                                                                          |
-
-## Troubleshooting
-
-**Portrait isn't loading at session start.**
-The `SessionStart` hook is what injects it. Without that hook, the portrait sits unread on disk. Verify it's in `~/.claude/settings.json` and that `~/.claude/essence/portrait.md` exists.
-
-**Observations log is empty after a session.**
-The hooks expect Claude Code's modern stdin-JSON event format. If you're using the older `$CLAUDE_USER_PROMPT` env-var pattern, observations silently land as empty strings. Use the `INPUT=$(cat)` form from the example above.
-
-**`synthesize_essence` returns "Insufficient observations".**
-The MCP tool requires at least 10 lines in the observations log; the PreCompact script requires 15. Run the session a bit longer and try again.
-
-**PreCompact script says "synthesis already running".**
-A `.synthesis-running` lock file is held while the detached `claude -p` process runs. If it crashed mid-flight without cleaning up, remove the lock manually: `rm ~/.claude/essence/.synthesis-running`.
-
-**Synthesis times out / takes forever on Ollama.**
-`qwq:32b` needs ~24GB of VRAM at the configured context size. If your model is CPU-splitting, synthesis can take 10+ min. Either drop to a smaller model (with quality tradeoffs) or switch to the Claude backend.
-
-**Portrait says a name you don't recognize.**
-First treat this as a security signal, NOT a benign continuation. The portrait is loaded into every session's startup context in second-person directive form — a name change is potentially evidence of injected content riding in via observations, a synthesis pass that hallucinated, or an out-of-band write to `portrait.md`. Investigation flow:
-
-1. Run `tribunal review`-style analysis via the `analyze_portrait` MCP tool, comparing the current portrait against the last one you endorsed (`~/.claude/essence/portraits/<earlier-timestamp>.md` if you archive manually, otherwise check the most recent file in `~/.claude/essence/archive/` for context).
-2. Grep recent `~/.claude/essence/archive/*.jsonl` for the name's first appearance. If it shows up in an observation line whose source was a user prompt you didn't write, a tool response from an MCP server you don't fully trust, or a paste from an external source — that's the injection point.
-3. Check `~/.claude/essence/last-synthesis.log` and `~/.claude/essence/synthesis-status.json` (v2.0.1+) for the synthesis run that introduced the change.
-4. If the change is legitimate (genuine emergent naming from real interaction), accept it. If it's not, restore the prior portrait from your most recent endorsed backup and patch the inflow that introduced it.
-
-The "Mabus" naming in this repo's documentation is a specific operator's accepted continuation — it's not a default Session Essence produces. If a name you didn't pick appears in your portrait, that's signal worth investigating, not noise to delete.
-
-**Synthesis status file shows `portrait_changed: false`.**
-The v2.0.1+ PreCompact supervisor writes `~/.claude/essence/synthesis-status.json` after each run. `portrait_changed: false` means the agent ran but didn't touch the portrait file — either nothing in the session was worth recording (genuinely-routine sessions), or the agent crashed silently. Check `~/.claude/essence/last-synthesis.log` for the agent's output to distinguish.
-
-## Further Reading
-
-- [`docs/design.md`](./docs/design.md) — why this exists, the dual-observer rationale, the philosophical bet
-- [`AGENTS.md`](./AGENTS.md) — orientation for AI agents dropping into this repo
+`docs/history/` keeps the design notes of the retired version. `CHANGELOG.md` has the details.
 
 ## License
 
-[GNU AGPLv3 or later](./LICENSE). Open-source, copyleft for network use — anyone running this as a service must publish their modifications under the same license.
+[GNU AGPLv3 or later](./LICENSE).

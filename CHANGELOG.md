@@ -1,6 +1,38 @@
 # Changelog
 
-All notable changes to Session Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [3.0.0] - 2026-11-15
+
+Essence as it runs today. The repository now holds the four hooks, the two templates and offline tests. The MCP server is gone.
+
+### Added
+
+- `hooks/session-start-verify.sh` (SessionStart): checks the portrait checksum, prints the identity section, and tells the agent to read the whole portrait with exact Read ranges.
+- `hooks/essence-reduce.py`: cuts the unread part of a session transcript down to a plain-text slice.
+- `hooks/essence-synthesize.sh` (PreCompact and SessionEnd): lock, reduce, save copies, one `claude -p` run with Read and Edit only, supervisor checks with rollback, checksum.
+- `hooks/essence-nudge.py` (UserPromptSubmit): reminds the agent to update its landscapes and its running diary file when the conversation has grown long since the last compaction.
+- Landscapes: one file per area of work, six parts, every line dated and marked checked, record or assumed. Portrait section 11 lists them with trigger words.
+- `templates/portrait.md` and `templates/landscape.md`: empty skeletons.
+- `examples/settings-hooks.json`, `examples/portrait-example.md` and `examples/landscape-example.md`.
+- `tests/`: offline tests with a fake `claude`. Run `python3 -m unittest discover -s tests -v`.
+- Settings `ESSENCE_PERSON` and `ESSENCE_AGENT` for the two names in the synthesis prompt and the hook notes.
+
+### Changed
+
+- Synthesis reads the session transcript instead of an observation log.
+- The portrait has eleven sections and one rule or fact per line. The writing rules come from ASD-STE100 Simplified Technical English.
+- The supervisor rejects a run that breaks a heading, shrinks the portrait by more than 20 percent, grows it past 200 KB, or changes section 1. It then restores the portrait and the landscapes.
+- The agent run starts without the user's other hooks.
+- The project name is now Essence. The repository moves to https://github.com/dpdanpittman/essence.
+
+### Removed
+
+- The MCP server: `index.js`, `prompts.template.js`, `Dockerfile`, `package.json`, `package-lock.json`.
+- The observation log and the hooks that wrote it.
+- The version 2 example scripts and the drift check.
+- The `.tribunal/` records of the version 2 audit. Git history keeps them.
+- `docs/design.md` moved to `docs/history/design-v1.md`.
 
 ## [2.1.1] — 2026-05-21
 
