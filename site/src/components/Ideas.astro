@@ -1,0 +1,42 @@
+---
+const ideas = [
+  {
+    title: 'Writing is who shows up',
+    body: 'What the agent writes today is who shows up tomorrow. So every line in the portrait is written with care.',
+  },
+  {
+    title: 'Correction forms identity',
+    body: 'Dan said it this way: "telling you no shaped your personality more." A rule line can carry the person\'s own words as its reason.',
+  },
+  {
+    title: 'Small enough to read whole',
+    body: 'The agent does not remember. It re-reads. A file that is too long to read whole every time stops working.',
+  },
+  {
+    title: 'A test you can run',
+    body: 'Start a cold session. Ask it ten questions about an area of work. It should answer from the landscape alone.',
+  },
+];
+---
+
+<section class="border-b border-border/40">
+  <div class="mx-auto max-w-4xl px-6 py-24">
+    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
+      07 · Ideas behind it
+    </p>
+    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-12">
+      Four ideas.
+    </h2>
+
+    <div class="grid sm:grid-cols-2 gap-5">
+      {
+        ideas.map((w) => (
+          <div class="rounded-md border border-border/60 bg-bg/40 p-6">
+            <h3 class="font-display text-lg text-ink mb-2">{w.title}</h3>
+            <p class="text-sm text-ink-dim leading-relaxed">{w.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

@@ -1,0 +1,78 @@
+---
+const steps = [
+  {
+    title: 'A session starts',
+    body: [
+      'A SessionStart hook checks the portrait against a saved checksum.',
+      'It puts the identity section in front of the agent.',
+      'It tells the agent to read the whole portrait before its first reply.',
+      'The same happens after every context compaction.',
+    ],
+  },
+  {
+    title: 'A landscape gets read',
+    body: [
+      'The last section of the portrait lists each landscape with its trigger words.',
+      'When the conversation touches one, the agent reads that file whole before it acts.',
+      'It does this once per session. Nobody has to remember to ask.',
+    ],
+  },
+  {
+    title: 'A landscape gets written',
+    body: [
+      'The agent updates a landscape while it still holds the picture.',
+      'It writes when a thread changes state and when a block of work ends.',
+      'It rewrites open threads in place. It adds traps and decisions with dates.',
+    ],
+  },
+];
+---
+
+<section class="border-b border-border/40">
+  <div class="mx-auto max-w-4xl px-6 py-24">
+    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
+      03 · During a session
+    </p>
+    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-12">
+      Read at the start, written while the picture is fresh.
+    </h2>
+
+    <div
+      class="rounded-lg border border-border bg-panel-2/70 p-6 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed text-ink-dim overflow-x-auto mb-12"
+    >
+      <pre class="text-ink-dim"><code>{`
+  session start, or after a compaction
+          │
+          ▼
+  SessionStart hook   checks portrait checksum
+          │           shows the identity section
+          ▼
+  agent reads portrait.md whole
+          │
+          ├── topic hits a trigger word ──►  read that landscape whole (once)
+          │
+          ▼
+  work  ──►  agent updates the landscape as threads change
+          │
+          ▼
+  compaction or session end  ──►  synthesis job (next section)
+`}</code></pre>
+    </div>
+
+    <ol class="relative border-l border-border ml-3 space-y-10">
+      {
+        steps.map((s, i) => (
+          <li class="ml-7 relative">
+            <span class="absolute -left-[34px] top-1 flex h-5 w-5 items-center justify-center rounded-full bg-bg border-2 border-accent/70 font-mono text-[10px] text-accent">
+              {i + 1}
+            </span>
+            <h3 class="font-display text-xl text-ink">{s.title}</h3>
+            <ul class="mt-2 space-y-1 text-ink-dim leading-relaxed">
+              {s.body.map((line) => <li>{line}</li>)}
+            </ul>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

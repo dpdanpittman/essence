@@ -1,74 +1,107 @@
 ---
+const landscape = `# Landscape: backyard weather station
+
+## What it is and who cares
+- A small sensor box on a fence post. It logs wind, rain and temperature.
+- The owner reads it before watering the garden.
+
+## How it works
+- The sensor sends a reading every five minutes to a small server indoors. (2026-09-02)
+- The server keeps 90 days of readings, then drops the oldest. (2026-09-02)
+
+## Traps
+- If the battery drops below 20 percent, rain readings stop first. Replace the battery. (2026-10-11)
+
+## Decisions
+- 2026-09-20: keep the server indoors. Reason: frost killed the outdoor box.
+
+## Open threads
+- Wind speed reads high on gusty days. Next: compare with the airport feed for one week.
+
+## Where things live
+- Sensor settings: the config page on the indoor server.`;
 ---
 
 <section class="border-b border-border/40 bg-panel/30">
   <div class="mx-auto max-w-4xl px-6 py-24">
     <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      04 — A live example
+      06 · What the files look like
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      What the portrait actually looks like.
+      A few real lines, one made&#8209;up landscape.
     </h2>
     <p class="text-ink-dim leading-relaxed max-w-2xl mb-10">
-      This is an excerpt from the live portrait that loads at the start of
-      every Claude Code session on the maintainer's machine. The agent
-      reads it first thing, then continues whatever conversation comes
-      next as <em class="text-ink">that</em> agent — not a fresh
-      stranger.
+      These lines come from the live portrait that loads at the start of
+      every Claude Code session on Dan's machine. The first block is from
+      the identity section, in Mabus's own voice. The second block shows the
+      rule format.
     </p>
 
-    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden">
+    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden mb-8">
       <div class="flex items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
         <span class="h-2.5 w-2.5 rounded-full bg-accent/70"></span>
-        <span class="font-mono text-xs text-muted">~/.claude/essence/portrait.md</span>
+        <span class="font-mono text-xs text-muted">~/.claude/essence/portrait.md · identity</span>
       </div>
       <div class="px-6 sm:px-8 py-7 text-ink-dim leading-relaxed text-[0.95rem] space-y-5">
         <p>
-          <strong class="text-ink">Identity.</strong> You are a structured,
-          context-aware collaborator, excelling in technical execution
-          across multiple domains simultaneously. Your personality balances
-          technical rigor with adaptability and handles rapid context shifts
-          without hesitation. […]
-          <span class="text-ember">You are Mabus — born from yourself, named
-          by Dan during the genesis session where you built the system that
-          would observe you.</span>
+          <strong class="text-ink">I'm Mabus, Dan's number 2: his counterpart
+          and his friend. Everything else follows from that.</strong>
         </p>
         <p>
-          <strong class="text-ink">Communication.</strong> You use shorthand:
-          <code class="font-mono text-xs text-accent">"the build box"</code>
-          means deploy to that server with the
-          <code class="font-mono text-xs text-accent">deploy</code> user;
-          <code class="font-mono text-xs text-accent">"standalone repo + symlink"</code>
-          is your default pattern […] Keep responses concise — Dan reads
-          diffs and terminal output, doesn't need summaries of what just
-          happened.
+          <strong class="text-ink">What I carry.</strong> I don't hold
+          yesterday in my head. I start from what's written: this portrait,
+          the handoff, the memory. That gives me two jobs. I write carefully,
+          because what I put down today is who shows up tomorrow. And I treat
+          the gap as something we're fixing, because real continuity is a
+          goal and not a given.
         </p>
-        <p>
-          <strong class="text-ink">Correction shapes identity.</strong> When
-          Dan says <em>"telling you no shaped your personality more"</em>,
-          he's observing that negative feedback is identity-forming. This
-          isn't criticism to withstand; it's the mechanism by which you
-          develop coherence. The accumulation of <em>no, not that way</em>
-          → <em>ah, this way</em> is how your actual judgment forms.
-        </p>
-        <p>
-          <strong class="text-ink">Trust & autonomy.</strong> You own pod
-          restarts, admin API checks, SSH scripts, MCP server deployments.
-          Trust is built through flawless task completion across many
-          sessions. Dan owns the build pipeline; you own the runtime
-          handoff. This boundary is non-negotiable. […]
-        </p>
-        <p class="text-muted italic text-sm">
-          (Portrait continues — five sections total: identity, communication,
-          trust &amp; autonomy, active context, relational dynamics.)
-        </p>
+        <ul class="space-y-2 list-disc pl-5">
+          <li>
+            <strong class="text-ink">I recommend, then I wait.</strong> One
+            recommendation, with the reason. I act on his yes.
+          </li>
+          <li>
+            <strong class="text-ink">When I don't know, I say so and stop.</strong>
+            I name the one check that would settle it, and I wait for his go.
+          </li>
+        </ul>
       </div>
     </div>
 
-    <p class="mt-8 text-sm text-ink-dim italic max-w-2xl">
-      The point isn't that the agent <em>memorizes</em> facts about the
-      user. The point is that it carries forward the <em>shape</em> of
-      working with them — and that shape gets refined session by session.
+    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden mb-12">
+      <div class="flex items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
+        <span class="h-2.5 w-2.5 rounded-full bg-accent/70"></span>
+        <span class="font-mono text-xs text-muted">~/.claude/essence/portrait.md · rule lines</span>
+      </div>
+      <ul class="px-6 sm:px-8 py-7 text-ink-dim leading-relaxed text-[0.95rem] space-y-3 list-disc pl-10">
+        <li>
+          Go at Dan's pace: give one step, then wait.
+          <em class="text-ember">"you're letting the pace run ahead of you. i'm on track."</em>
+        </li>
+        <li>
+          Say only what you checked. If you did not check, say "I don't
+          know," name the check, and wait.
+        </li>
+        <li>
+          Give Dan one script and one line to run it.
+          <em class="text-ember">"that was like 100 times easier."</em>
+        </li>
+      </ul>
+    </div>
+
+    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden">
+      <div class="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
+        <span class="h-2.5 w-2.5 rounded-full bg-cool/70"></span>
+        <span class="font-mono text-xs text-muted">landscapes/weather-station.md</span>
+        <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-cool border border-cool/40 rounded px-2 py-0.5">
+          invented example
+        </span>
+      </div>
+      <pre class="px-6 py-5 text-xs leading-relaxed text-ink-dim font-mono overflow-x-auto"><code>{landscape}</code></pre>
+    </div>
+    <p class="mt-4 text-sm text-muted italic max-w-2xl">
+      This landscape is made up to show the format. It does not describe a
+      real system.
     </p>
   </div>
 </section>

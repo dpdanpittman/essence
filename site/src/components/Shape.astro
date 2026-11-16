@@ -1,69 +1,82 @@
 ---
+const portraitSections = [
+  'identity',
+  'communication',
+  'trust and autonomy',
+  'active context',
+  'lessons',
+  'edges',
+  'episodes',
+  'voice',
+  'decisions',
+  'context history',
+  'landscapes',
+];
+
+const landscapeParts = [
+  'what it is and who cares',
+  'how it works',
+  'traps',
+  'decisions',
+  'open threads',
+  'where things live',
+];
 ---
 
 <section id="how" class="border-b border-border/40 bg-panel/30">
   <div class="mx-auto max-w-4xl px-6 py-24">
     <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      02 — The shape
+      02 · The shape
     </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-12">
-      Five hooks, one ledger, one synthesis, one portrait.
+    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
+      Two kinds of files.
     </h2>
+    <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
+      A portrait is a picture of a being. A landscape is a picture of the
+      ground it stands on.
+    </p>
 
-    <!-- ASCII-art-ish diagram in a code-frame -->
-    <div
-      class="rounded-lg border border-border bg-panel-2/70 p-6 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed text-ink-dim overflow-x-auto"
-    >
-      <pre class="text-ink-dim"><code>{`
-  UserPromptSubmit ─┐
-  PostToolUse      ─┤
-  Stop             ─┼──►  observations.jsonl   (append-only ledger)
-  PreCompact       ─┤              │
-  SessionStart     ─┘              │
-                                   ▼
-                         3-pass synthesis pipeline      (qwq:32b, local)
-                                   │
-                                   ▼
-                            portrait.md
-                                   │
-                                   ▼
-                  loaded at next SessionStart → identity restored
-`}</code></pre>
-    </div>
+    <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
+      <div class="rounded-md border border-border/60 bg-bg/40 p-6">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The portrait</p>
+        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/portrait.md</p>
+        <p class="text-sm leading-relaxed mb-4">
+          One markdown file. It tells each new session who it is and how to
+          work with its person. It has eleven sections.
+        </p>
+        <ol class="flex flex-wrap gap-2 mb-4">
+          {
+            portraitSections.map((s, i) => (
+              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
+                <span class="text-muted">{String(i + 1).padStart(2, '0')}</span> {s}
+              </li>
+            ))
+          }
+        </ol>
+        <p class="text-sm leading-relaxed">
+          The identity section is written in the first person. Dan and
+          Mabus wrote it together.
+        </p>
+      </div>
 
-    <div class="mt-10 grid sm:grid-cols-2 gap-6 text-ink-dim">
-      <div class="rounded-md border border-border/60 bg-bg/40 p-5">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Hooks</p>
-        <p class="text-sm leading-relaxed">
-          Five Claude Code hook surfaces (configured in
-          <code class="font-mono text-xs text-ember">~/.claude/settings.json</code>)
-          stream observations to a single append-only JSONL.
-          Prompts, tool calls, stop reasons, pre-compaction snapshots,
-          session-start markers.
+      <div class="rounded-md border border-border/60 bg-bg/40 p-6">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The landscapes</p>
+        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/landscapes/</p>
+        <p class="text-sm leading-relaxed mb-4">
+          One markdown file per area of work. Each has six parts.
         </p>
-      </div>
-      <div class="rounded-md border border-border/60 bg-bg/40 p-5">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Ledger</p>
+        <ol class="flex flex-wrap gap-2 mb-4">
+          {
+            landscapeParts.map((s, i) => (
+              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
+                <span class="text-muted">{i + 1}</span> {s}
+              </li>
+            ))
+          }
+        </ol>
         <p class="text-sm leading-relaxed">
-          <code class="font-mono text-xs text-ember">~/.claude/essence/observations.jsonl</code>.
-          One line per observation. Never edited, only appended.
-          Archived periodically.
-        </p>
-      </div>
-      <div class="rounded-md border border-border/60 bg-bg/40 p-5">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Synthesis</p>
-        <p class="text-sm leading-relaxed">
-          Three passes through a local qwq:32b model. Psychologist lens,
-          sociologist lens, merge into a coherent portrait. Runs on your
-          hardware — nothing leaves the machine.
-        </p>
-      </div>
-      <div class="rounded-md border border-border/60 bg-bg/40 p-5">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Portrait</p>
-        <p class="text-sm leading-relaxed">
-          <code class="font-mono text-xs text-ember">portrait.md</code>. Identity,
-          communication style, trust boundaries, active context. Loaded at
-          SessionStart so the next agent picks up where the last one left off.
+          A landscape says what is true now. A separate running diary, the
+          handoff, keeps the history.
         </p>
       </div>
     </div>

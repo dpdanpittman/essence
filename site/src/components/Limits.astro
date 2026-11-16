@@ -1,0 +1,59 @@
+---
+const limits = [
+  'It is built for one person and one agent.',
+  'It is not a product.',
+  'The public repository is behind what runs. It is being updated.',
+  'Synthesis is no longer local. It uses the model provider the agent already runs on. The files stay on the owner\'s machine.',
+];
+---
+
+<section class="border-b border-border/40">
+  <div class="mx-auto max-w-4xl px-6 py-24">
+    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
+      10 · Limits and code
+    </p>
+    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
+      What it is not.
+    </h2>
+
+    <div class="grid md:grid-cols-2 gap-10">
+      <ul class="space-y-4 text-ink-dim leading-relaxed">
+        {
+          limits.map((l) => (
+            <li class="flex gap-3">
+              <span class="text-accent shrink-0">·</span>
+              <span>{l}</span>
+            </li>
+          ))
+        }
+      </ul>
+
+      <div class="rounded-md border border-border/60 bg-panel-2/60 p-6 text-sm text-ink-dim leading-relaxed space-y-4">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent">The repository</p>
+        <p>
+          The code on GitHub is behind what runs today. Its setup steps
+          describe older versions. Read it as history until it is updated.
+        </p>
+        <p>
+          It still uses the old name. It will be renamed to essence.
+        </p>
+        <p>
+          The hooks are wired in
+          <code class="font-mono text-xs text-ember">~/.claude/settings.json</code>.
+          The files live in
+          <code class="font-mono text-xs text-ember">~/.claude/essence/</code>.
+        </p>
+        <p class="pt-1">
+          <a
+            href="https://github.com/dpdanpittman/session-essence"
+            target="_blank"
+            rel="noopener"
+            class="text-accent hover:text-ember underline underline-offset-4 decoration-accent/40 hover:decoration-ember"
+          >
+            github.com/dpdanpittman/session-essence →
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
