@@ -1,35 +1,10 @@
----
-const portraitSections = [
-  'identity',
-  'communication',
-  'trust and autonomy',
-  'active context',
-  'lessons',
-  'edges',
-  'episodes',
-  'voice',
-  'decisions',
-  'context history',
-  'landscapes',
-];
-
-const landscapeParts = [
-  'what it is and who cares',
-  'how it works',
-  'traps',
-  'decisions',
-  'open threads',
-  'where things live',
-];
----
-
 <section id="how" class="border-b border-border/40 bg-panel/30">
   <div class="mx-auto max-w-4xl px-6 py-24">
     <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
       02 · The shape
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Two kinds of files.
+      Two kinds of pictures.
     </h2>
     <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
       A portrait is a picture of a being. A landscape is a picture of the
@@ -38,45 +13,26 @@ const landscapeParts = [
 
     <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
       <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The portrait</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/portrait.md</p>
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-4">The portrait</p>
         <p class="text-sm leading-relaxed mb-4">
-          One markdown file. It tells each new session who it is and how to
-          work with its person. It has eleven sections.
+          It tells each new session who it is and how to work with its
+          person. A new session reads it before its first reply.
         </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            portraitSections.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{String(i + 1).padStart(2, '0')}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
         <p class="text-sm leading-relaxed">
-          The identity section is written in the first person. Dan and
-          Mabus wrote it together.
+          Its first part is written in the first person. Dan and Mabus
+          wrote it together.
         </p>
       </div>
 
       <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The landscapes</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/landscapes/</p>
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-4">The landscapes</p>
         <p class="text-sm leading-relaxed mb-4">
-          One markdown file per area of work. Each has six parts.
+          One for each area of work. A landscape holds how that work fits
+          together, what has gone wrong before, and what is open.
         </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            landscapeParts.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{i + 1}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
         <p class="text-sm leading-relaxed">
-          A landscape says what is true now. A separate running diary, the
-          handoff, keeps the history.
+          A landscape says what is true now. When the work comes up again,
+          the session reads it and picks up where the last one stopped.
         </p>
       </div>
     </div>

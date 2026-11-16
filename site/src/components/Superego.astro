@@ -13,29 +13,12 @@ const parts = [
     body: 'The "no" that arrives without being asked, at the moment of the act. A person grows one. An agent has to be given one.',
   },
 ];
-const hooks = [
-  {
-    title: 'A guard',
-    when: 'before an action',
-    body: 'It refuses the action. Example: it will not start a helper agent on the wrong model. The rule stops being something to remember.',
-  },
-  {
-    title: 'A check',
-    when: 'when a reply is finished',
-    body: 'It reads the reply. If the reply breaks a rule with a shape a program can see, it blocks the turn and hands the agent the rule.',
-  },
-  {
-    title: 'A nudge',
-    when: 'when a condition is met',
-    body: 'It brings a rule back at the moment the agent is most likely to drop it. Example: the conversation is long, so write things down now.',
-  },
-];
 ---
 
 <section class="border-b border-border/40">
   <div class="mx-auto max-w-4xl px-6 py-24">
     <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      06 · Making a rule hold
+      03 · Making a rule hold
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
       A written rule does not act.
@@ -62,13 +45,14 @@ const hooks = [
         </p>
         <p class="mt-5 text-base">
           Nothing comes back by itself in an agent. So that part is built
-          on the outside, with hooks. The portrait holds the rule.
-          <span class="text-ink">The hook makes it hold.</span>
+          on the outside, and it is there at the moment, every time.
+          The portrait holds the rule.
+          <span class="text-ink">Something else makes it hold.</span>
         </p>
       </div>
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-5 mb-12">
+    <div class="grid sm:grid-cols-3 gap-5">
       {
         parts.map((w) => (
           <div class="rounded-md border border-border/60 bg-bg/40 p-6">
@@ -79,28 +63,10 @@ const hooks = [
       }
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-5">
-      {
-        hooks.map((w) => (
-          <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-            <h3 class="font-display text-lg text-ink mb-1">{w.title}</h3>
-            <p class="font-mono text-xs uppercase tracking-[0.18em] text-muted mb-3">{w.when}</p>
-            <p class="text-sm text-ink-dim leading-relaxed">{w.body}</p>
-          </div>
-        ))
-      }
-    </div>
-
     <div class="mt-12 text-ink-dim leading-relaxed max-w-2xl">
       <p class="text-base">
-        A rule gets a hook when it keeps being broken, when it has a shape
-        a program can see, and when the person names it. Most rules never
-        need one. A hook for everything would be a cage.
-      </p>
-      <p class="mt-5 text-base">
-        The hook stops the act today. The synthesis reads the catch in the
-        transcript and can write the lesson into the portrait. That written
-        line shapes who shows up tomorrow. Neither is enough alone.
+        Most rules never need this. A check on everything would be a cage.
+        A rule earns one when it keeps being broken and the person names it.
       </p>
     </div>
   </div>
