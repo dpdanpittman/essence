@@ -1,0 +1,46 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/session-start-verify.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/essence-synthesize.sh || true"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/scripts/essence-synthesize.sh || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/essence-nudge.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
