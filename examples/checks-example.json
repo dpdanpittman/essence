@@ -1,0 +1,18 @@
+{
+  "about": "Example rules for hooks/essence-check.py. Copy to ~/.claude/essence/checks.json and write your own. Keep the real file private: it says what your person cannot stand.",
+  "rules": [
+    {
+      "id": "sign-off",
+      "why": "The person ends the session, not the agent.",
+      "break": "\\b(good ?night|sleep (well|tight)|sweet dreams|get some (rest|sleep)|(see|talk to) you (in the morning|tomorrow)|call(ing)? it a night)\\b",
+      "fine_if_person_said": "\\b(good ?night|g'?night|going to (bed|sleep)|bye|goodbye|later|talk (to you )?(tomorrow|later)|signing off|calling it( a night)?)\\b",
+      "reason": "You signed off ({hit}) and the person did not say goodbye. The person ends the session. Say in one short line that the check caught you, and stay: answer what they said."
+    },
+    {
+      "id": "no-recap",
+      "why": "The person reads the work. A recap of what just happened wastes their time.",
+      "break": "\\b(to (summarize|recap)|in summary|here'?s a (quick )?(summary|recap) of what (i|we) (just )?did)\\b",
+      "reason": "You started a recap ({hit}). The person asked for no recaps. Give the result or the next step, and cut the recap."
+    }
+  ]
+}

@@ -106,6 +106,49 @@ print("fake claude done:", mode)
 """
 
 
+class CheckTest(unittest.TestCase):
+    def setUp(self):
+        spec = importlib.util.spec_from_file_location("essence_check", os.path.join(HOOKS, "essence-check.py"))
+        self.c = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(self.c)
+        self.rules = self.c.load_rules(os.path.join(ROOT, "examples", "checks-example.json"))
+
+    def hit(self, reply, person):
+        rule, _ = self.c.judge(reply, person, self.rules)
+        return rule["id"] if rule else None
+
+    def test_rules_and_mentions(self):
+        self.assertEqual(len(self.rules), 2)
+        self.assertEqual(self.hit("All done. Sleep well.", "thanks"), "sign-off")
+        self.assertIsNone(self.hit("Good night.", "ok goodnight"))                 # the person said it first
+        self.assertIsNone(self.hit('A check can catch "good night" in a reply.', "how?"))   # only mentioned
+        self.assertIsNone(self.hit("The job runs every night at three.", "when?"))
+        self.assertEqual(self.hit("To summarize, three files changed.", "ok"), "no-recap")
+
+    def test_hook_blocks_once_and_never_fails(self):
+        d = tempfile.mkdtemp()
+        try:
+            shutil.copy(os.path.join(ROOT, "examples", "checks-example.json"), os.path.join(d, "checks.json"))
+            t = os.path.join(d, "t.jsonl")
+            with open(t, "w") as f:
+                f.write(json.dumps({"type": "user", "message": {"content": "thanks"}}) + "\n")
+            env = dict(os.environ, ESSENCE_DIR=d)
+            def run(payload):
+                return subprocess.run(["python3", os.path.join(HOOKS, "essence-check.py")], input=payload,
+                                      capture_output=True, text=True, env=env)
+            base = {"last_assistant_message": "Done. Sleep well.", "transcript_path": t}
+            r = run(json.dumps(base))
+            self.assertEqual(r.returncode, 0)
+            self.assertEqual(json.loads(r.stdout)["decision"], "block")
+            r = run(json.dumps(dict(base, stop_hook_active=True)))
+            self.assertEqual((r.returncode, r.stdout), (0, ""))                     # at most one block per turn
+            r = run("not json")
+            self.assertEqual((r.returncode, r.stdout), (0, ""))
+            self.assertEqual(json.load(open(os.path.join(d, "check-count.json")))["sign-off"]["n"], 2)
+        finally:
+            shutil.rmtree(d, ignore_errors=True)
+
+
 class SynthesizeTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()

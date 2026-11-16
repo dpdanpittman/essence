@@ -12,8 +12,11 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-reduce.py`: cuts the unread part of a transcript down to a plain-text slice. Lines are marked PERSON and AGENT.
 - `hooks/essence-synthesize.sh`: PreCompact and SessionEnd hook. Lock, reduce, save copies, one `claude -p` run with Read and Edit only, supervisor checks and rollback, checksum. The synthesis prompt is inside this file.
 - `hooks/essence-nudge.py`: UserPromptSubmit hook. Reminds the agent to update landscapes when the transcript has grown long since the last compaction.
+- `hooks/essence-check.py`: Stop hook. Reads the finished reply and blocks the turn when it breaks a rule from the private file `~/.claude/essence/checks.json`. The script holds no rules.
 - `templates/portrait.md`, `templates/landscape.md`: empty skeletons.
 - `examples/settings-hooks.json`: the hooks block for `~/.claude/settings.json`.
+- `examples/checks-example.json`: example rules for the check. A real rules file is private and must never be committed.
+- `docs/superego.md`: why a written rule is not enough and how hooks make it hold.
 - `examples/portrait-example.md`, `examples/landscape-example.md`: invented, filled-in files (Sara, Max, a home economics class).
 - `tests/test_essence.py`: offline tests with a fake `claude` on PATH.
 - `docs/history/`: design notes of the retired version 1 and 2. Do not update them.
@@ -27,7 +30,7 @@ python3 -m unittest discover -s tests -v
 
 # Syntax and lint checks for the hooks
 bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh
-python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py
+python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py
 shellcheck -S warning hooks/*.sh
 
 # Site

@@ -41,6 +41,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/essence-check.py",
+            "timeout": 15
+          }
+        ]
+      }
     ]
   }
 }

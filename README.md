@@ -79,6 +79,16 @@ The PreCompact and SessionEnd hooks run `hooks/essence-synthesize.sh`. The hook 
 
 The agent run starts without the user's other hooks (`--setting-sources project,local`). A formatter hook once rewrote the portrait's quotes during a dry run.
 
+## Making a rule hold: the superego
+
+A rule written in the portrait does not act. The agent read it hours ago, and a fresh cue plus a trained habit can beat it. Essence treats that as a missing part and builds it on the outside, with hooks.
+
+- A **guard** refuses an action before it happens.
+- A **check** (`hooks/essence-check.py`, a Stop hook) reads the finished reply. If it breaks a rule with a shape a program can see, the check blocks the turn and hands the agent the rule.
+- A **nudge** (`hooks/essence-nudge.py`) brings a rule back at the moment the agent is most likely to drop it.
+
+The rules for the check live in a private file, `~/.claude/essence/checks.json`. Start from `examples/checks-example.json`. The full idea, and which rules deserve a hook, is in [docs/superego.md](docs/superego.md).
+
 ## The writing rules
 
 The rules come from ASD-STE100 Simplified Technical English, the controlled language of aircraft maintenance manuals.
@@ -100,7 +110,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    ```bash
    mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes
-   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py ~/.claude/scripts/
+   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py ~/.claude/scripts/
    chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py
    ```
 

@@ -2,6 +2,15 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.0] - 2026-11-15
+
+### Added
+
+- `hooks/essence-check.py` (Stop): reads the agent's finished reply and blocks the turn when it breaks a rule with a visible shape. The rules live in a private file, `~/.claude/essence/checks.json`.
+- `examples/checks-example.json`: two example rules.
+- `docs/superego.md`: why a written rule is not enough, the three kinds of hook, and which rules deserve one.
+- `examples/settings-hooks.json` now wires the Stop hook.
+
 ## [3.0.0] - 2026-11-15
 
 Essence as it runs today. The repository now holds the four hooks, the two templates and offline tests. The MCP server is gone.
