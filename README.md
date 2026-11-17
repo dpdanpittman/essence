@@ -86,6 +86,7 @@ A rule written in the portrait does not act. The agent read it hours ago, and a 
 - A **guard** refuses an action before it happens.
 - A **check** (`hooks/essence-check.py`, a Stop hook) reads the finished reply. If it breaks a rule with a shape a program can see, the check blocks the turn and hands the agent the rule.
 - A **nudge** (`hooks/essence-nudge.py`) brings a rule back at the moment the agent is most likely to drop it.
+- A **fact** (`hooks/essence-now.sh`, a UserPromptSubmit hook) puts something true in front of the agent every turn, so it reads instead of guessing. Today: the current time, because an agent has no clock and its guesses drift.
 
 The rules for the check live in a private file, `~/.claude/essence/checks.json`. Start from `examples/checks-example.json`. The full idea, and which rules deserve a hook, is in [docs/superego.md](docs/superego.md).
 
@@ -118,8 +119,8 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    ```bash
    mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes
-   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py ~/.claude/scripts/
-   chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py
+   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-now.sh ~/.claude/scripts/
+   chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh
    ```
 
    `essence-synthesize.sh` finds `essence-reduce.py` in its own folder. Keep them together.
@@ -180,6 +181,7 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_MIN_MESSAGES` | `3` | synthesis (fewer new messages from the person: skip) |
 | `ESSENCE_NUDGE_MB` | `6` | nudge (first reminder) |
 | `ESSENCE_NUDGE_AGAIN_MB` | `3` | nudge (each reminder after that) |
+| `ESSENCE_TZ` | the machine's time zone | now (the person's time zone, an IANA name such as `America/Denver`) |
 
 ## Tests
 

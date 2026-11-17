@@ -2,6 +2,18 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2026-11-17
+
+### Added
+
+- `hooks/essence-now.sh` (UserPromptSubmit): puts the current time in front of the agent on every message, in the person's time zone (`ESSENCE_TZ`) and UTC. An agent has no clock and its guesses drift; this one said "just after 2:00" at 1:40.
+- A fourth kind of hook in `docs/superego.md`: a fact, which removes the need for a rule by showing the agent the truth.
+- `examples/settings-hooks.json` wires it.
+
+### Changed
+
+- `hooks/essence-check.py`: no change.
+
 ## [3.2.0] - 2026-11-16
 
 ### Added

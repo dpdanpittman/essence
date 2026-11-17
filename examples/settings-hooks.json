@@ -38,6 +38,11 @@
             "type": "command",
             "command": "python3 ~/.claude/scripts/essence-nudge.py",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "ESSENCE_TZ=America/Denver bash ~/.claude/scripts/essence-now.sh",
+            "timeout": 5
           }
         ]
       }

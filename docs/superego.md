@@ -33,17 +33,19 @@ agent's superego has to be built on the outside. A hook is how you build it.
 A hook is a small program the harness runs at a fixed moment. It does not depend on the agent remembering
 anything. It is there every time.
 
-Essence uses three kinds.
+Essence uses four kinds.
 
 | Kind | Moment | What it does | Example |
 | --- | --- | --- | --- |
 | A guard | before an action | refuses the action | refuse to start a helper agent on the wrong model |
 | A check | when a reply is finished | catches the reply and hands back the rule | `hooks/essence-check.py`: the agent signed off first |
 | A nudge | when a condition is met | puts a reminder in front of the agent | `hooks/essence-nudge.py`: the conversation is long, write things down now |
+| A fact | every message from the person | puts something true in front of the agent, so it reads instead of guessing | `hooks/essence-now.sh`: the current time |
 
 A guard is the strongest. The agent cannot break the rule, so it stops being a rule the agent has to remember.
 A check comes right after the act. The words may already be on the screen, but the agent has to answer for them
-in the same turn. A nudge prevents: it brings a rule back at the moment the agent is most likely to drop it.
+in the same turn. A nudge prevents: it brings a rule back at the moment the agent is most likely to drop it. A fact removes the
+need for a rule at all: an agent that is shown the time has nothing to guess.
 
 ## Which rules deserve a hook
 

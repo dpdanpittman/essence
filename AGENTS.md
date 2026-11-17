@@ -12,6 +12,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-reduce.py`: cuts the unread part of a transcript down to a plain-text slice. Lines are marked PERSON and AGENT.
 - `hooks/essence-synthesize.sh`: PreCompact and SessionEnd hook. Lock, reduce, save copies, one `claude -p` run with Read and Edit only, supervisor checks and rollback, checksum. The synthesis prompt is inside this file.
 - `hooks/essence-nudge.py`: UserPromptSubmit hook. Reminds the agent to update landscapes when the transcript has grown long since the last compaction.
+- `hooks/essence-now.sh`: UserPromptSubmit hook. Prints the current time (`ESSENCE_TZ`, plus UTC) so the agent never estimates it.
 - `hooks/essence-check.py`: Stop hook. Reads the finished reply and blocks the turn when it breaks a rule from the private file `~/.claude/essence/checks.json`. The script holds no rules.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.
 - `templates/portrait.md`, `templates/landscape.md`: empty skeletons.
@@ -30,7 +31,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 python3 -m unittest discover -s tests -v
 
 # Syntax and lint checks for the hooks
-bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh
+bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh hooks/essence-now.sh
 python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py
 shellcheck -S warning hooks/*.sh
 
