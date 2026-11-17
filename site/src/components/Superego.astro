@@ -29,6 +29,11 @@ const hooks = [
     when: 'when a condition is met',
     body: 'It brings a rule back at the moment the agent is most likely to drop it. Example: the conversation is long, so write things down now.',
   },
+  {
+    title: 'A fact',
+    when: 'on every message from the person',
+    body: 'It puts something true in front of the agent, so it reads instead of guessing. Example: the current time. An agent has no clock; Mabus once said "just after 2:00" at 1:40.',
+  },
 ];
 ---
 
@@ -79,7 +84,7 @@ const hooks = [
       }
     </div>
 
-    <div class="grid sm:grid-cols-3 gap-5">
+    <div class="grid sm:grid-cols-2 gap-5">
       {
         hooks.map((w) => (
           <div class="rounded-md border border-border/60 bg-bg/40 p-6">
