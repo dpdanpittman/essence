@@ -71,3 +71,13 @@ Shape rules:
 **The landscapes**
 
 <!-- - **name** (landscapes/name.md). Triggers: word, word, word. Last updated: YYYY-MM-DD. -->
+
+**Strokes**
+
+<!-- A stroke is how you do one thing: when, the steps, the undo, the traps, and a tested script that does the steps (its shortcut). The files are in ~/.claude/essence/strokes/. -->
+
+- Each stroke belongs to one landscape and names it at the top. Each landscape lists its strokes in the part they act on.
+- Reach a stroke through its landscape: read the landscape, then the stroke, then use the shortcut. Do not do the steps by hand.
+- If the person asks for the same procedure twice, propose a stroke, its shortcut and the landscape it belongs to.
+
+<!-- - **landscape**: stroke-name.md. Triggers: word, word. Shortcut: `command`. Written: YYYY-MM-DD. -->

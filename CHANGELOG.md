@@ -2,6 +2,18 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2026-11-17
+
+### Added
+
+- Strokes, the third kind of file. A stroke is how the agent does one thing: when, the steps, the undo, the traps, and a tested script that does the steps (its shortcut). Each stroke belongs to one landscape, and the agent reaches it through that landscape.
+- `templates/stroke.md` and `examples/stroke-example.md`. The landscape template and example list their strokes. The portrait template's section 11 has a Strokes part.
+
+### Changed
+
+- The default landscape cap (`ESSENCE_LANDSCAPE_MAX`) is 30000 bytes, up from 20000. The landscape template and the synthesis prompt say 30 KB.
+- The synthesis prompt forbids edits to `strokes/` and keeps a landscape's "Stroke:" lines.
+
 ## [3.3.0] - 2026-11-17
 
 ### Added

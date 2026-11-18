@@ -13,6 +13,8 @@ const portraitSections = [
   'landscapes',
 ];
 
+const strokeParts = ['when', 'shortcut', 'steps', 'undo', 'traps'];
+
 const landscapeParts = [
   'what it is and who cares',
   'how it works',
@@ -29,11 +31,11 @@ const landscapeParts = [
       02 · The shape
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Two kinds of files.
+      Three kinds of files.
     </h2>
     <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
       A portrait is a picture of a being. A landscape is a picture of the
-      ground it stands on.
+      ground it stands on. A stroke is how it does one thing there.
     </p>
 
     <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
@@ -77,6 +79,33 @@ const landscapeParts = [
         <p class="text-sm leading-relaxed">
           A landscape says what is true now, in under 30 KB. It holds no
           history: a separate running diary, the handoff, keeps that.
+        </p>
+      </div>
+
+      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The strokes</p>
+        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/strokes/</p>
+        <p class="text-sm leading-relaxed mb-4">
+          One markdown file per procedure. Each has five parts, and a tested
+          script that does the steps: its shortcut.
+        </p>
+        <ol class="flex flex-wrap gap-2 mb-4">
+          {
+            strokeParts.map((s, i) => (
+              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
+                <span class="text-muted">{i + 1}</span> {s}
+              </li>
+            ))
+          }
+        </ol>
+        <p class="text-sm leading-relaxed">
+          The script does the steps the same way every time and refuses to
+          guess. The stroke holds what a script cannot: when to use it, where
+          to stop and ask, what went wrong before. Each stroke belongs to a
+          landscape, and the agent reaches it through that landscape. Dan
+          named them in November 2026, after the first one came out of a
+          router fix: <span class="text-ink">"So essence is made up of The
+          Portrait, The Landscape, and The Stroke."</span>
         </p>
       </div>
     </div>

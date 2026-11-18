@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## What this project is
 
-Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is four Claude Code hooks and two kinds of markdown files: one portrait (eleven sections) and one landscape per area of work (six parts). The files live on the owner's machine in `~/.claude/essence/`. This repository holds the hooks, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later.
+Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is Claude Code hooks and three kinds of markdown files: one portrait (eleven sections), one landscape per area of work (six parts), and one stroke per procedure (five parts, plus a tested script, its shortcut). The files live on the owner's machine in `~/.claude/essence/`. This repository holds the hooks, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later.
 
 ## Layout
 
@@ -15,11 +15,11 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-now.sh`: UserPromptSubmit hook. Prints the current time (`ESSENCE_TZ`, plus UTC) so the agent never estimates it.
 - `hooks/essence-check.py`: Stop hook. Reads the finished reply and blocks the turn when it breaks a rule from the private file `~/.claude/essence/checks.json`. The script holds no rules.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.
-- `templates/portrait.md`, `templates/landscape.md`: empty skeletons.
+- `templates/portrait.md`, `templates/landscape.md`, `templates/stroke.md`: empty skeletons.
 - `examples/settings-hooks.json`: the hooks block for `~/.claude/settings.json`.
 - `examples/checks-example.json`: example rules for the check. A real rules file is private and must never be committed.
 - `docs/superego.md`: why a written rule is not enough and how hooks make it hold.
-- `examples/portrait-example.md`, `examples/landscape-example.md`: invented, filled-in files (Sara, Max, a home economics class).
+- `examples/portrait-example.md`, `examples/landscape-example.md`, `examples/stroke-example.md`: invented, filled-in files (Sara, Max, a home economics class).
 - `tests/test_essence.py`: offline tests with a fake `claude` on PATH.
 - `docs/history/`: design notes of the retired version 1 and 2. Do not update them.
 - `site/`: the Astro + Tailwind website, with its own `package.json`, Dockerfile, nginx config and deploy files.

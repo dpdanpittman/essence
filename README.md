@@ -1,20 +1,23 @@
 # Essence
 
-Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of four Claude Code hooks and two kinds of markdown files. The project was called `session-essence` before.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and three kinds of markdown files: a portrait, landscapes and strokes. The project was called `session-essence` before.
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
 
 ## What it is
 
-Each new session of a coding agent starts as a stranger. Essence closes that gap with two kinds of files that live on the owner's machine, in `~/.claude/essence/`:
+Each new session of a coding agent starts as a stranger. Essence closes that gap with three kinds of files that live on the owner's machine, in `~/.claude/essence/`:
 
 - **The portrait.** One markdown file with eleven sections. It tells each new session who the agent is and how to work with its person.
 - **The landscapes.** One markdown file per area of work. A landscape says what is true now in that area. A separate running diary file keeps the history.
+- **The strokes.** One markdown file per procedure: how the agent does one thing on the ground a landscape describes. A stroke holds the judgment and calls a tested script, its shortcut, for the steps.
+
+The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there.
 
 Four hooks keep the files loaded and current. Nothing else runs: no server, no database, no background service.
 
-## The two kinds of files
+## The three kinds of files
 
 ### The portrait
 
@@ -44,6 +47,22 @@ A landscape has six parts:
 6. Where things live
 
 Every line has the form `- fact (date, checked|record|assumed)`. "Checked" means seen first hand. "Record" means taken from a document or a message. "Assumed" means not yet confirmed. When a fact stops being true, the line goes. History belongs in the running diary file.
+
+### The strokes
+
+A stroke has five parts:
+
+1. When
+2. Shortcut
+3. Steps
+4. Undo
+5. Traps
+
+The shortcut is a script with its own tests. It does the steps the same way every time, refuses an ambiguous input instead of guessing, and has a dry-run flag. The stroke keeps what a script cannot hold: when to use it, where to stop and ask the person, and what has gone wrong before. Without a stroke, an agent rebuilds the steps from memory each time, and that is where the mistakes come from.
+
+Each stroke belongs to one landscape. The stroke names its landscape at the top, and the landscape lists the stroke in the part it acts on. The agent reaches a stroke through its landscape: it reads the landscape, then the stroke, then runs the shortcut. Section 11 of the portrait lists the strokes too.
+
+A stroke is written when the person asks for the same procedure a second time. The synthesis never edits a stroke. `templates/stroke.md` is the skeleton, and `examples/stroke-example.md` shows one filled in.
 
 ## How a session starts
 
@@ -95,7 +114,7 @@ The rules for the check live in a private file, `~/.claude/essence/checks.json`.
 The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
 
 - **A scan of what was added** (`hooks/essence-scan.py`). After a run, every added line is checked for text that reads like a planted instruction, a way to send data out, a secret, an unknown web address or hidden characters. A hit rejects the run and restores the files.
-- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 20000) is undone for that file.
+- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 30000) is undone for that file.
 - **A local history.** Run `git init` in `~/.claude/essence` and keep it local. Each run then makes two commits: what changed by hand before the run, and what the run changed. A real portrait holds private things, so do not push this history anywhere public.
 
 ## The writing rules
@@ -118,7 +137,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 1. Copy the hooks:
 
    ```bash
-   mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes
+   mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes ~/.claude/essence/strokes
    cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-now.sh ~/.claude/scripts/
    chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh
    ```
@@ -140,6 +159,14 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
    ```
 
    `examples/portrait-example.md` and `examples/landscape-example.md` show both files filled in for an invented agent and an invented class.
+
+   When a procedure repeats, write a stroke and its shortcut, and list it in its landscape and in section 11:
+
+   ```bash
+   cp templates/stroke.md ~/.claude/essence/strokes/my-procedure.md
+   ```
+
+   `examples/stroke-example.md` shows one for the same invented class.
 
 4. Wire the hooks. `examples/settings-hooks.json` holds the hooks block. This command adds its entries to your existing settings and keeps your other hooks:
 

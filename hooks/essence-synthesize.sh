@@ -34,7 +34,7 @@ SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL="${ESSENCE_MODEL:-opus}"
 MIN_PERSON="${ESSENCE_MIN_MESSAGES:-3}"    # fewer new messages from the person than this: nothing to learn, skip
 PORTRAIT_MAX="${ESSENCE_PORTRAIT_MAX:-160000}"    # hard cap in bytes: a run that grows the portrait past it is refused
-LANDSCAPE_MAX="${ESSENCE_LANDSCAPE_MAX:-20000}"  # hard cap in bytes for one landscape: an edit past it is undone
+LANDSCAPE_MAX="${ESSENCE_LANDSCAPE_MAX:-30000}"  # hard cap in bytes for one landscape: an edit past it is undone
 PERSON="${ESSENCE_PERSON:-the person}"
 AGENT="${ESSENCE_AGENT:-the agent}"
 TRANSCRIPT=""; DRY=0; WAIT=0
@@ -61,6 +61,7 @@ if [ "$DRY" = 1 ]; then
   cp -p "$REAL_DIR/portrait.md" "$ESSENCE_DIR/"
   mkdir -p "$ESSENCE_DIR/landscapes"
   cp -p "$REAL_DIR"/landscapes/*.md "$ESSENCE_DIR/landscapes/" 2>/dev/null || true
+  mkdir -p "$ESSENCE_DIR/strokes"; cp -p "$REAL_DIR"/strokes/*.md "$ESSENCE_DIR/strokes/" 2>/dev/null || true
   [ -f "$REAL_DIR/synth-state.json" ] && cp -p "$REAL_DIR/synth-state.json" "$ESSENCE_DIR/"
   echo "Essence: DRY RUN on a copy in $ESSENCE_DIR (the real portrait is not touched)" >&2
 fi
@@ -112,6 +113,8 @@ cp -p "$PORTRAIT" "$BEFORE"
 BEFORE_BYTES=$(stat -c %s "$PORTRAIT")
 LAND_BEFORE="$RUN_DIR/landscapes-$TS"
 mkdir -p "$LAND_BEFORE"; cp -p "$LAND_DIR"/*.md "$LAND_BEFORE/" 2>/dev/null || true
+STROKE_DIR="$ESSENCE_DIR/strokes"; STROKES_BEFORE="$RUN_DIR/strokes-$TS"   # strokes are never the synthesis's to edit
+mkdir -p "$STROKES_BEFORE"; cp -p "$STROKE_DIR"/*.md "$STROKES_BEFORE/" 2>/dev/null || true
 
 # --- history: if the essence folder is a git repository (git init there; keep it local), what changed since the last
 # commit was changed by hand or by the session itself: commit it first, so the synthesis run is a commit of its own. ---
@@ -205,7 +208,8 @@ The portrait is OPERATIVE memory: what shapes how the next session behaves. For 
 - A landscape says what is true NOW. Remove a line that the slice shows is no longer true. Do not keep history in it.
 - Keep its headings and its shape: one fact per line, each with its date and marked as checked, from the record, or assumed. Mark what the slice does not settle as "unconfirmed".
 - Add nothing that the slice does not show. If the slice does not touch a landscape, do not open it.
-- Keep each landscape under 20 KB.
+- Keep each landscape under 30 KB.
+- Never edit a file in @DIR@/strokes/. A stroke is a procedure the person and @AGENT@ wrote with a tested script. Keep a landscape's "Stroke:" lines as they are.
 
 5. Use the Edit tool for every change.
 
@@ -289,6 +293,11 @@ supervise() {
         echo "Essence: landscape changed: $(basename "$f")" >> "$LOG"
       fi
     done
+    if [ -d "$STROKE_DIR" ] && ! diff -rq "$STROKES_BEFORE" "$STROKE_DIR" >/dev/null 2>&1; then   # put every stroke back as it was
+      for f in "$STROKE_DIR"/*.md; do [ -e "$f" ] && [ ! -e "$STROKES_BEFORE/$(basename "$f")" ] && rm -f -- "$f"; done
+      cp -p "$STROKES_BEFORE"/*.md "$STROKE_DIR/" 2>/dev/null || true
+      echo "Essence: the run changed a stroke; strokes are never edited by synthesis: that change was undone" >> "$LOG"
+    fi
     gitc "Synthesis $TS: edits from the session transcript"
     if [ "$rc" = 0 ] && [ "$DRY" = 0 ]; then      # remember how far this transcript was read
       python3 - "$STATE" "$TRANSCRIPT" "$END" <<'PY'
@@ -302,7 +311,7 @@ fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p)); os.write(fd, json.dumps(d, i
 PY
     fi
   fi
-  rm -f "$SLICE"; rm -rf "$LAND_BEFORE"
+  rm -f "$SLICE"; rm -rf "$LAND_BEFORE" "$STROKES_BEFORE"
   printf '{"finished":"%s","run":"%s","agent_exit":%s,"verdict":"%s","portrait_changed":%s,"dry":%s}\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$TS" "$rc" "$verdict" "$changed" "$([ "$DRY" = 1 ] && echo true || echo false)" > "$STATUS"
   echo "Essence: finished $(date -u +%Y-%m-%dT%H:%M:%SZ) (agent exit $rc, verdict: $verdict)" >> "$LOG"
