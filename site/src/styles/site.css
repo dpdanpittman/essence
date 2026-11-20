@@ -1085,39 +1085,6 @@ h3 {
   font-size: var(--t-small);
 }
 
-/* ---------- writing rules ---------- */
-
-.rules {
-  list-style: none;
-  padding: 0 var(--s3);
-  background: var(--sheet);
-}
-
-.rules li {
-  display: grid;
-  grid-template-columns: 1.6em minmax(0, 1fr);
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--hairline);
-  line-height: 1.4;
-}
-
-.rules li:last-child {
-  border-bottom: 0;
-}
-
-.rule-num {
-  font-family: var(--sans);
-  font-weight: 700;
-  color: var(--graphite);
-  font-variant-numeric: lining-nums;
-}
-
-.rule-coda {
-  font-style: italic;
-  margin-top: var(--s3);
-  max-width: 30em;
-}
-
 /* ---------- making a rule hold ---------- */
 
 .psyche {

@@ -10,6 +10,10 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 - Site: Tailwind is gone. The site is Astro with one plain stylesheet, `site/src/styles/site.css`, and no client JavaScript. The dark theme, Inter, Newsreader, JetBrains Mono and the breathing animation are removed.
 - Site: a skip link, visible focus outlines, the hooks as a table, and the footer outside `main`.
 
+### Removed
+
+- Site: the section "How the files are written" is removed. The writing rules stay in the README.
+
 ## [3.6.1] - 2026-11-20
 
 ### Changed
