@@ -8,6 +8,7 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 - Brushes, the fourth kind of file. A brush is one ability: a login, a role, a token or a tool. It says what the ability can reach, what it cannot, where its key lives, who granted it, how to check it and how to take it away. Permissions belong on brushes, not on strokes, because only a brush touches the world.
 - `templates/brush.md` and `examples/brush-example.md`. A brush file never holds a secret value, only where the key lives.
+- Pigments and cabinets, the security part. A pigment is the secret that loads a brush. A cabinet is the password-manager vault that keeps it. Each brush has `Pigment:` and `Cabinet:` lines. `templates/cabinet.md` and `examples/cabinet-example.md` list the cabinets and the four rules: cabinet first, load at run time and never to disk, no pigment in any Essence file, never through the conversation.
 - The landscape template and example list their brushes. The stroke template and example name the brush they need. The portrait template's section 11 has a Brushes part.
 
 ### Changed

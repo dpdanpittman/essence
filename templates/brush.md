@@ -3,8 +3,9 @@ Essence brush template. Copy to ~/.claude/essence/brushes/<name>.md, add a line 
 and list it in the landscapes whose work uses it.
 A brush is one ability: the login, role, token or tool that lets the agent make a mark on the world.
 A stroke says how to do a thing. A brush is what can. Permissions belong here, because only a brush touches the world.
-NEVER write a secret value in this file. Write only where the key lives: the password manager, the vault and the item
-name, or the path of a config file.
+A brush makes no mark until it is loaded with its pigment: the secret (a token, a password, a key). The pigment lives in
+a cabinet: a password-manager vault. NEVER write a pigment in this file. Write only the drawer (the item name) and the
+cabinet (the vault, and the helper that reads it). Write "none" for a brush that needs no pigment, like a local tool.
 Mark each fact: checked YYYY-MM-DD (seen with a read-only command) or record (a named record says so).
 The synthesis never edits a brush.
 -->
@@ -21,8 +22,10 @@ Written YYYY-MM-DD.
 ## Cannot
 <!-- The limits that matter, including the ones people wrongly assume it has. -->
 
-## Where its key lives
-<!-- Password manager, vault and item name, or a file path. Never the value. -->
+## Pigment and cabinet
+<!-- Two lines. Never the value. -->
+- Pigment: ITEM NAME, or none
+- Cabinet: VAULT, read with HELPER, or none
 
 ## Granted by and when
 <!-- Who gave it, the date, and when it expires. -->

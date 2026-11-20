@@ -1,6 +1,6 @@
 # Essence
 
-Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes. The project was called `session-essence` before.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. The project was called `session-essence` before.
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
@@ -20,8 +20,9 @@ Each new session of a coding agent starts as a stranger. Essence closes that gap
 | The landscape | the ground of one area of work | What is true here now?          |
 | The stroke    | the motion on that ground      | How do I do this one thing?     |
 | The brush     | the ability that makes a mark  | What can I actually touch?      |
+| The pigment and the cabinet | the secret that loads a brush, and the locked vault it is kept in | Where is the key, and who holds it? |
 
-The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there. A brush is what lets it do it. You can know a stroke perfectly, and without the brush nothing happens.
+The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there. A brush is what lets it do it. You can know a stroke perfectly, and without the brush nothing happens. And a brush makes no mark until it is loaded: its pigment is the secret, kept in a cabinet.
 
 Four hooks keep the files loaded and current. Nothing else runs: no server, no database, no background service.
 
@@ -79,7 +80,7 @@ A brush has eight parts:
 1. What it is
 2. Can reach
 3. Cannot
-4. Where its key lives
+4. Pigment and cabinet
 5. Granted by and when
 6. How to check it
 7. How to take it away
@@ -91,9 +92,22 @@ Without brush files, an agent guesses what it can do. It says it cannot change a
 
 The "Cannot" part matters most. Write down the limits a person would wrongly assume, not only the obvious ones.
 
-A brush file never holds a secret value. It says where the key lives: the password manager, the vault and the item name, or the path of a config file. Its check is one read-only command that proves the brush works, shows its scope and prints no secret. Mark each fact as checked, with the date, or as from a named record.
+A brush file never holds a secret value, its pigment. It names the pigment's drawer (the item's name) and its cabinet (the vault). Its check is one read-only command that proves the brush works, shows its scope and prints no secret. Mark each fact as checked, with the date, or as from a named record.
 
 The brushes live in `~/.claude/essence/brushes/`, with one line each in `brushes/INDEX.md`. Each landscape lists the brushes its work uses in a short Brushes part. Section 11 of the portrait says how to use them: read the landscape, it names the brushes, and check a brush before you promise something that depends on it. The synthesis never edits a brush. `templates/brush.md` is the skeleton, and `examples/brush-example.md` shows one filled in.
+
+### Pigments and cabinets: the security part
+
+A brush makes no mark until it is loaded. The **pigment** is the secret that loads a brush: a token, a password, a key. The **cabinet** is the locked place pigments are kept: a password-manager vault. Painters kept costly pigments, such as ultramarine ground from lapis, locked away and measured out for one job at a time.
+
+Four rules:
+
+1. A pigment goes into a cabinet before it goes anywhere else.
+2. A brush is loaded only for the job at hand, at run time. The pigment is never written to disk beside the work.
+3. No Essence file (portrait, landscape, stroke or brush) ever holds a pigment. It says only which cabinet and which drawer: the item's name.
+4. A pigment never passes through the conversation.
+
+Each brush file carries two lines: `Pigment:` (the item's name, or "none" for a brush that needs no secret, like a local tool) and `Cabinet:` (the vault, and the helper that reads it). One file, `~/.claude/essence/cabinets.md`, lists every cabinet the agent can open: what it is, the helper that reads it, which vaults it may open, what it must never hold, who owns it, and how access is taken away. The only secret files the agent's machine may hold are the cabinets' own access tokens, each readable only by the agent's user. `templates/cabinet.md` is the skeleton, and `examples/cabinet-example.md` shows one filled in.
 
 ## How a session starts
 
@@ -205,7 +219,11 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
    cp templates/brush.md ~/.claude/essence/brushes/my-ability.md
    ```
 
-   `examples/brush-example.md` shows one for the same invented class.
+   `examples/brush-example.md` shows one for the same invented class. List the cabinets its pigments come from:
+
+   ```bash
+   cp templates/cabinet.md ~/.claude/essence/cabinets.md
+   ```
 
 4. Wire the hooks. `examples/settings-hooks.json` holds the hooks block. This command adds its entries to your existing settings and keeps your other hooks:
 

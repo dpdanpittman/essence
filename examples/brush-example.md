@@ -19,9 +19,10 @@ Written 2027-01-20.
 - Order more than 80 in one week. The store refuses a larger order from a school account (2027-01-21, checked).
 - Order for any address but the school kitchen (2027-01-20, record).
 
-## Where its key lives
+## Pigment and cabinet
 
-- Max's password manager, vault "Class", item "Store account". Never the password itself.
+- Pigment: "Store account", field password.
+- Cabinet: Max's password manager, vault "Class", read at run time with `class-secret`.
 
 ## Granted by and when
 

@@ -300,13 +300,18 @@ class SynthesizeTest(unittest.TestCase):
         self.assertIn("Never edit a file in @DIR@/brushes/", synth)
         root = os.path.dirname(HOOKS)
         brush = read(os.path.join(root, "templates", "brush.md"))
-        for h in ("## What it is", "## Can reach", "## Cannot", "## Where its key lives", "## Granted by and when",
-                  "## How to check it", "## How to take it away", "## Used by", "NEVER write a secret value"):
+        for h in ("## What it is", "## Can reach", "## Cannot", "## Pigment and cabinet", "## Granted by and when",
+                  "## How to check it", "## How to take it away", "## Used by", "NEVER write a pigment",
+                  "- Pigment:", "- Cabinet:"):
             self.assertIn(h, brush)
         self.assertIn("**Brushes**", read(os.path.join(root, "templates", "portrait.md")))
         self.assertIn("Brush:", read(os.path.join(root, "templates", "stroke.md")))
         self.assertIn("Brushes part", read(os.path.join(root, "templates", "landscape.md")))
-        self.assertIn("## Where its key lives", read(os.path.join(root, "examples", "brush-example.md")))
+        self.assertIn("- Pigment:", read(os.path.join(root, "examples", "brush-example.md")))
+        cab = read(os.path.join(root, "templates", "cabinet.md"))
+        for h in ("## The rules", "## Cabinet:", "Helper:", "May open:", "Never holds", "Taken away:", "NEVER write a pigment"):
+            self.assertIn(h, cab)
+        self.assertIn("## Cabinet:", read(os.path.join(root, "examples", "cabinet-example.md")))
 
     def test_local_git_history(self):
         git = lambda *a: subprocess.run(["git", "-C", self.dir, *a], capture_output=True, text=True)

@@ -19,7 +19,7 @@ const brushParts = [
   'what it is',
   'can reach',
   'cannot',
-  'where its key lives',
+  'pigment and cabinet',
   'granted by and when',
   'how to check it',
   'how to take it away',
@@ -47,7 +47,8 @@ const landscapeParts = [
     <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
       A portrait is a picture of a being. A landscape is a picture of the
       ground it stands on. A stroke is how it does one thing there. A
-      brush is what lets it make the mark.
+      brush is what lets it make the mark. A pigment loads the brush, and
+      a cabinet keeps the pigment locked.
     </p>
 
     <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
@@ -148,9 +149,32 @@ const landscapeParts = [
         <p class="text-sm leading-relaxed">
           Without them, an agent guesses what it can do. It says it cannot
           change a setting its login can change, and it promises a change no
-          credential it holds can make. A brush file never holds a secret
-          value. It says where the key lives, and gives one read-only command
-          that proves the brush works.
+          credential it holds can make. Each brush gives one read-only command
+          that proves it works.
+        </p>
+      </div>
+
+      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Pigments and cabinets</p>
+        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/cabinets.md</p>
+        <p class="text-sm leading-relaxed mb-4">
+          The security part. A brush makes no mark until it is loaded. The
+          pigment is the secret that loads it: a token, a password, a key.
+          The cabinet is the locked place pigments are kept: a
+          password-manager vault. Painters kept costly pigments, such as
+          ultramarine ground from lapis, locked away and measured out for one
+          job at a time.
+        </p>
+        <ol class="text-sm leading-relaxed list-decimal pl-5 space-y-1 mb-4">
+          <li>A pigment goes into a cabinet before it goes anywhere else.</li>
+          <li>A brush is loaded only for the job at hand, at run time. The pigment is never written to disk beside the work.</li>
+          <li>No Essence file ever holds a pigment. It names only the cabinet and the drawer: the item's name.</li>
+          <li>A pigment never passes through the conversation.</li>
+        </ol>
+        <p class="text-sm leading-relaxed">
+          Each brush carries two lines, Pigment and Cabinet. One file lists
+          every cabinet the agent can open, what it may never hold, and how
+          access is taken away.
         </p>
       </div>
     </div>

@@ -90,3 +90,12 @@ Shape rules:
 - Each landscape lists the brushes its work uses. Read the landscape, and it names the brushes.
 - Check a brush with its read-only check before you promise anything that depends on it.
 - A brush file never holds a secret value. It says where the key lives.
+
+**Pigments and cabinets**
+
+<!-- A pigment is the secret that loads a brush. A cabinet is the password-manager vault that keeps it. ~/.claude/essence/cabinets.md lists the cabinets. -->
+
+- A pigment goes into a cabinet before it goes anywhere else.
+- Load a brush only for the job at hand, at run time. Never write the pigment to disk beside the work.
+- No Essence file holds a pigment: only the cabinet and the drawer (the item's name).
+- A pigment never passes through the conversation.
