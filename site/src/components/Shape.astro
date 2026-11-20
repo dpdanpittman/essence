@@ -15,6 +15,17 @@ const portraitSections = [
 
 const strokeParts = ['when', 'shortcut', 'steps', 'undo', 'traps'];
 
+const brushParts = [
+  'what it is',
+  'can reach',
+  'cannot',
+  'where its key lives',
+  'granted by and when',
+  'how to check it',
+  'how to take it away',
+  'used by',
+];
+
 const landscapeParts = [
   'what it is and who cares',
   'how it works',
@@ -31,11 +42,12 @@ const landscapeParts = [
       02 · The shape
     </p>
     <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Three kinds of files.
+      Four kinds of files.
     </h2>
     <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
       A portrait is a picture of a being. A landscape is a picture of the
-      ground it stands on. A stroke is how it does one thing there.
+      ground it stands on. A stroke is how it does one thing there. A
+      brush is what lets it make the mark.
     </p>
 
     <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
@@ -106,6 +118,39 @@ const landscapeParts = [
           named them in November 2026, after the first one came out of a
           router fix: <span class="text-ink">"So essence is made up of The
           Portrait, The Landscape, and The Stroke."</span>
+        </p>
+      </div>
+
+      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
+        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The brushes</p>
+        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/brushes/</p>
+        <p class="text-sm leading-relaxed mb-4">
+          One markdown file per ability: a login, a role, a token or a tool.
+          Each has eight parts.
+        </p>
+        <ol class="flex flex-wrap gap-2 mb-4">
+          {
+            brushParts.map((s, i) => (
+              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
+                <span class="text-muted">{i + 1}</span> {s}
+              </li>
+            ))
+          }
+        </ol>
+        <p class="text-sm leading-relaxed mb-4">
+          A stroke is a set of instructions, not a capability. You can know a
+          stroke perfectly, and without the brush nothing happens. So the
+          permissions live on the brush, the only part that touches the world.
+          A stroke names the brush it needs. Each landscape lists the brushes
+          its work uses, and the agent checks a brush before it promises
+          anything that depends on it.
+        </p>
+        <p class="text-sm leading-relaxed">
+          Without them, an agent guesses what it can do. It says it cannot
+          change a setting its login can change, and it promises a change no
+          credential it holds can make. A brush file never holds a secret
+          value. It says where the key lives, and gives one read-only command
+          that proves the brush works.
         </p>
       </div>
     </div>

@@ -81,3 +81,12 @@ Shape rules:
 - If the person asks for the same procedure twice, propose a stroke, its shortcut and the landscape it belongs to.
 
 <!-- - **landscape**: stroke-name.md. Triggers: word, word. Shortcut: `command`. Written: YYYY-MM-DD. -->
+
+**Brushes**
+
+<!-- A brush is an ability: the login, role, token or tool that lets you make a mark on the world. The files are in ~/.claude/essence/brushes/, with one line each in brushes/INDEX.md. -->
+
+- A stroke without its brush does nothing. Permissions live on the brush, never on the stroke.
+- Each landscape lists the brushes its work uses. Read the landscape, and it names the brushes.
+- Check a brush with its read-only check before you promise anything that depends on it.
+- A brush file never holds a secret value. It says where the key lives.

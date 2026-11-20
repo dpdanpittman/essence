@@ -1,23 +1,31 @@
 # Essence
 
-Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and three kinds of markdown files: a portrait, landscapes and strokes. The project was called `session-essence` before.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes. The project was called `session-essence` before.
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
 
 ## What it is
 
-Each new session of a coding agent starts as a stranger. Essence closes that gap with three kinds of files that live on the owner's machine, in `~/.claude/essence/`:
+Each new session of a coding agent starts as a stranger. Essence closes that gap with four kinds of files that live on the owner's machine, in `~/.claude/essence/`:
 
 - **The portrait.** One markdown file with eleven sections. It tells each new session who the agent is and how to work with its person.
 - **The landscapes.** One markdown file per area of work. A landscape says what is true now in that area. A separate running diary file keeps the history.
 - **The strokes.** One markdown file per procedure: how the agent does one thing on the ground a landscape describes. A stroke holds the judgment and calls a tested script, its shortcut, for the steps.
+- **The brushes.** One markdown file per ability: a login, a role, a token or a tool. A brush is what lets the agent make a mark on the world. It says what the ability can reach, what it cannot, where its key lives and how to check it.
 
-The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there.
+| File          | What it is                     | Answers                         |
+| ------------- | ------------------------------ | ------------------------------- |
+| The portrait  | who the agent is               | Who am I, with this person?     |
+| The landscape | the ground of one area of work | What is true here now?          |
+| The stroke    | the motion on that ground      | How do I do this one thing?     |
+| The brush     | the ability that makes a mark  | What can I actually touch?      |
+
+The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there. A brush is what lets it do it. You can know a stroke perfectly, and without the brush nothing happens.
 
 Four hooks keep the files loaded and current. Nothing else runs: no server, no database, no background service.
 
-## The three kinds of files
+## The four kinds of files
 
 ### The portrait
 
@@ -63,6 +71,29 @@ The shortcut is a script with its own tests. It does the steps the same way ever
 Each stroke belongs to one landscape. The stroke names its landscape at the top, and the landscape lists the stroke in the part it acts on. The agent reaches a stroke through its landscape: it reads the landscape, then the stroke, then runs the shortcut. Section 11 of the portrait lists the strokes too.
 
 A stroke is written when the person asks for the same procedure a second time. The synthesis never edits a stroke. `templates/stroke.md` is the skeleton, and `examples/stroke-example.md` shows one filled in.
+
+### The brushes
+
+A brush has eight parts:
+
+1. What it is
+2. Can reach
+3. Cannot
+4. Where its key lives
+5. Granted by and when
+6. How to check it
+7. How to take it away
+8. Used by
+
+A stroke is a set of instructions. It is not a capability. The brush is the capability: the login, role, token or tool that touches the world. So permissions belong on the brush, never on the stroke. A stroke names the brush it needs, and the brush says exactly how far it reaches.
+
+Without brush files, an agent guesses what it can do. It says it cannot change a setting that its login can change, and it promises a change that no credential it holds can make. Both mistakes come from abilities that are written down nowhere in one place.
+
+The "Cannot" part matters most. Write down the limits a person would wrongly assume, not only the obvious ones.
+
+A brush file never holds a secret value. It says where the key lives: the password manager, the vault and the item name, or the path of a config file. Its check is one read-only command that proves the brush works, shows its scope and prints no secret. Mark each fact as checked, with the date, or as from a named record.
+
+The brushes live in `~/.claude/essence/brushes/`, with one line each in `brushes/INDEX.md`. Each landscape lists the brushes its work uses in a short Brushes part. Section 11 of the portrait says how to use them: read the landscape, it names the brushes, and check a brush before you promise something that depends on it. The synthesis never edits a brush. `templates/brush.md` is the skeleton, and `examples/brush-example.md` shows one filled in.
 
 ## How a session starts
 
@@ -137,7 +168,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 1. Copy the hooks:
 
    ```bash
-   mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes ~/.claude/essence/strokes
+   mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes ~/.claude/essence/strokes ~/.claude/essence/brushes
    cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-now.sh ~/.claude/scripts/
    chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh
    ```
@@ -167,6 +198,14 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
    ```
 
    `examples/stroke-example.md` shows one for the same invented class.
+
+   Write a brush for each ability the agent holds, add a line to `brushes/INDEX.md`, and list it in the landscapes that use it. Never put a secret value in it:
+
+   ```bash
+   cp templates/brush.md ~/.claude/essence/brushes/my-ability.md
+   ```
+
+   `examples/brush-example.md` shows one for the same invented class.
 
 4. Wire the hooks. `examples/settings-hooks.json` holds the hooks block. This command adds its entries to your existing settings and keeps your other hooks:
 

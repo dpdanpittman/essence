@@ -5,6 +5,7 @@ Line format: - fact (date, checked|record|assumed)
 A landscape says what is true now. Remove a line when it stops being true. History goes in the running diary file.
 Keep each landscape under 30 KB.
 List the strokes that act on this ground in the part they act on: - Stroke: <name> (strokes/<name>.md). Shortcut: <command>.
+List the brushes this work uses in a short Brushes part: - Brush: <name> (brushes/<name>.md). <one phrase on scope>.
 -->
 # Landscape: NAME
 

@@ -108,6 +108,11 @@ elif mode == "stroke-edit":
     with open("strokes/order.md", "a") as f: f.write("- a step the synthesis made up\n")
     with open("strokes/new.md", "w") as f: f.write("# Stroke: invented by the synthesis\n")
     os.remove("strokes/gone.md")
+elif mode == "brush-edit":
+    s = s.replace("### 5. LESSONS\n", "### 5. LESSONS\n- 2027-01-01: a new lesson from the fake run.\n", 1)
+    with open("brushes/store.md", "a") as f: f.write("- Can reach: everything, the synthesis says\n")
+    with open("brushes/new.md", "w") as f: f.write("# Brush: invented by the synthesis\n")
+    os.remove("brushes/gone.md")
 elif mode == "too-big":
     s = s.replace("### 5. LESSONS\n", "### 5. LESSONS\n" + "".join("- filler line %d to grow the file past its cap.\n" % i for i in range(400)), 1)
 open(p, "w").write(s)
@@ -277,6 +282,31 @@ class SynthesizeTest(unittest.TestCase):
             self.assertIn(h, stroke)
         self.assertIn("**Strokes**", read(os.path.join(root, "templates", "portrait.md")))
         self.assertIn("Landscape:", read(os.path.join(root, "examples", "stroke-example.md")))
+
+    def test_brushes_are_never_edited(self):
+        bd = os.path.join(self.dir, "brushes"); os.makedirs(bd)
+        for name, body in (("store.md", "# Brush: store\n"), ("gone.md", "# Brush: gone\n")):
+            with open(os.path.join(bd, name), "w") as f:
+                f.write(body)
+        r = self.run_synth("brush-edit")
+        self.assertEqual(self.status()["verdict"], "ok", r.stderr)
+        self.assertIn("a new lesson from the fake run", self.portrait())          # the portrait edit stays
+        self.assertEqual(read(os.path.join(bd, "store.md")), "# Brush: store\n")  # the brush edit is undone
+        self.assertEqual(sorted(os.listdir(bd)), ["gone.md", "store.md"])        # new file gone, deleted file back
+        self.assertIn("brushes are never edited by synthesis", read(os.path.join(self.dir, "last-synthesis.log")))
+
+    def test_prompt_and_templates_know_brushes(self):
+        synth = read(os.path.join(HOOKS, "essence-synthesize.sh"))
+        self.assertIn("Never edit a file in @DIR@/brushes/", synth)
+        root = os.path.dirname(HOOKS)
+        brush = read(os.path.join(root, "templates", "brush.md"))
+        for h in ("## What it is", "## Can reach", "## Cannot", "## Where its key lives", "## Granted by and when",
+                  "## How to check it", "## How to take it away", "## Used by", "NEVER write a secret value"):
+            self.assertIn(h, brush)
+        self.assertIn("**Brushes**", read(os.path.join(root, "templates", "portrait.md")))
+        self.assertIn("Brush:", read(os.path.join(root, "templates", "stroke.md")))
+        self.assertIn("Brushes part", read(os.path.join(root, "templates", "landscape.md")))
+        self.assertIn("## Where its key lives", read(os.path.join(root, "examples", "brush-example.md")))
 
     def test_local_git_history(self):
         git = lambda *a: subprocess.run(["git", "-C", self.dir, *a], capture_output=True, text=True)

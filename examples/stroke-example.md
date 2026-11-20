@@ -4,6 +4,7 @@ Invented example. Sara, Max and the class do not exist.
 
 Written 2027-01-20.
 Landscape: home-economics-class (~/.claude/essence/landscapes/home-economics-class.md, How it works). Read it first.
+Brush: the store account (~/.claude/essence/brushes/store-account.md). Check it before you start.
 
 ## When
 

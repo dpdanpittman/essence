@@ -12,6 +12,7 @@ Invented example. Sara, Max and the class do not exist.
 - Students cook in pairs at six stations in the shared kitchen (2027-01-11, checked).
 - The ingredient budget is 300 per term, spent in one weekly shop (2027-01-10, record).
 - Stroke: order the weekly ingredients (strokes/order-weekly-ingredients.md). Shortcut: `shop-order` (2027-01-20, record).
+- Brush: the store account (brushes/store-account.md). Orders to the school kitchen, up to 80 a week, no payment (2027-01-20, record).
 - The sewing unit runs for four weeks after the cooking lessons (2027-01-10, record).
 - Each pair shares one sewing machine (2027-01-10, checked).
 

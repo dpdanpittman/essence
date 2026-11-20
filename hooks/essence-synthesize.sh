@@ -62,6 +62,7 @@ if [ "$DRY" = 1 ]; then
   mkdir -p "$ESSENCE_DIR/landscapes"
   cp -p "$REAL_DIR"/landscapes/*.md "$ESSENCE_DIR/landscapes/" 2>/dev/null || true
   mkdir -p "$ESSENCE_DIR/strokes"; cp -p "$REAL_DIR"/strokes/*.md "$ESSENCE_DIR/strokes/" 2>/dev/null || true
+  mkdir -p "$ESSENCE_DIR/brushes"; cp -p "$REAL_DIR"/brushes/*.md "$ESSENCE_DIR/brushes/" 2>/dev/null || true
   [ -f "$REAL_DIR/synth-state.json" ] && cp -p "$REAL_DIR/synth-state.json" "$ESSENCE_DIR/"
   echo "Essence: DRY RUN on a copy in $ESSENCE_DIR (the real portrait is not touched)" >&2
 fi
@@ -115,6 +116,8 @@ LAND_BEFORE="$RUN_DIR/landscapes-$TS"
 mkdir -p "$LAND_BEFORE"; cp -p "$LAND_DIR"/*.md "$LAND_BEFORE/" 2>/dev/null || true
 STROKE_DIR="$ESSENCE_DIR/strokes"; STROKES_BEFORE="$RUN_DIR/strokes-$TS"   # strokes are never the synthesis's to edit
 mkdir -p "$STROKES_BEFORE"; cp -p "$STROKE_DIR"/*.md "$STROKES_BEFORE/" 2>/dev/null || true
+BRUSH_DIR="$ESSENCE_DIR/brushes"; BRUSHES_BEFORE="$RUN_DIR/brushes-$TS"   # brushes are never the synthesis's to edit
+mkdir -p "$BRUSHES_BEFORE"; cp -p "$BRUSH_DIR"/*.md "$BRUSHES_BEFORE/" 2>/dev/null || true
 
 # --- history: if the essence folder is a git repository (git init there; keep it local), what changed since the last
 # commit was changed by hand or by the session itself: commit it first, so the synthesis run is a commit of its own. ---
@@ -210,6 +213,7 @@ The portrait is OPERATIVE memory: what shapes how the next session behaves. For 
 - Add nothing that the slice does not show. If the slice does not touch a landscape, do not open it.
 - Keep each landscape under 30 KB.
 - Never edit a file in @DIR@/strokes/. A stroke is a procedure the person and @AGENT@ wrote with a tested script. Keep a landscape's "Stroke:" lines as they are.
+- Never edit a file in @DIR@/brushes/. A brush is an ability (a login, role, token or tool) with its permissions. Keep a landscape's "Brush:" lines as they are.
 
 5. Use the Edit tool for every change.
 
@@ -298,6 +302,11 @@ supervise() {
       cp -p "$STROKES_BEFORE"/*.md "$STROKE_DIR/" 2>/dev/null || true
       echo "Essence: the run changed a stroke; strokes are never edited by synthesis: that change was undone" >> "$LOG"
     fi
+    if [ -d "$BRUSH_DIR" ] && ! diff -rq "$BRUSHES_BEFORE" "$BRUSH_DIR" >/dev/null 2>&1; then   # put every brush back as it was
+      for f in "$BRUSH_DIR"/*.md; do [ -e "$f" ] && [ ! -e "$BRUSHES_BEFORE/$(basename "$f")" ] && rm -f -- "$f"; done
+      cp -p "$BRUSHES_BEFORE"/*.md "$BRUSH_DIR/" 2>/dev/null || true
+      echo "Essence: the run changed a brush; brushes are never edited by synthesis: that change was undone" >> "$LOG"
+    fi
     gitc "Synthesis $TS: edits from the session transcript"
     if [ "$rc" = 0 ] && [ "$DRY" = 0 ]; then      # remember how far this transcript was read
       python3 - "$STATE" "$TRANSCRIPT" "$END" <<'PY'
@@ -311,7 +320,7 @@ fd, tmp = tempfile.mkstemp(dir=os.path.dirname(p)); os.write(fd, json.dumps(d, i
 PY
     fi
   fi
-  rm -f "$SLICE"; rm -rf "$LAND_BEFORE" "$STROKES_BEFORE"
+  rm -f "$SLICE"; rm -rf "$LAND_BEFORE" "$STROKES_BEFORE" "$BRUSHES_BEFORE"
   printf '{"finished":"%s","run":"%s","agent_exit":%s,"verdict":"%s","portrait_changed":%s,"dry":%s}\n' \
     "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$TS" "$rc" "$verdict" "$changed" "$([ "$DRY" = 1 ] && echo true || echo false)" > "$STATUS"
   echo "Essence: finished $(date -u +%Y-%m-%dT%H:%M:%SZ) (agent exit $rc, verdict: $verdict)" >> "$LOG"
