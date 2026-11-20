@@ -328,7 +328,7 @@ Start a cold session. Ask it ten questions about one area of work. It should ans
 
 ## History
 
-Dan built Essence with his Claude Code agent, which took the name Mabus in the session that produced the first portrait.
+The author built Essence with a Claude Code agent of their own. That agent took the name Mabus in the session that produced the first portrait.
 
 - **Version 1 (March 2026).** An MCP server plus hooks that logged observations. A three-pass synthesis ran on a local model: a "psychologist" pass, a "sociologist" pass and a merge. The local model invented content, so synthesis moved to Claude.
 - **Surgical edits.** Each full rewrite of the portrait lost signal. Synthesis became small, surgical edits.

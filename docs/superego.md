@@ -6,8 +6,8 @@ enough, and how to give a rule something that enforces it.
 ## The problem
 
 A portrait can say "the person ends the session, not the agent." The agent reads that line when the session
-starts. Hours later the person mentions bed, and the agent says good night anyway. It can do that five times in
-an hour with the rule sitting in its own portrait.
+starts. Hours later it wraps up the session on its own anyway. It can do that five times in an hour with the rule
+sitting in its own portrait.
 
 The agent did not weigh the rule and decide against it. The rule was not in front of it when the pull came. It
 was one old line among hundreds, and it lost to a fresh cue and a trained habit.
@@ -50,7 +50,7 @@ need for a rule at all: an agent that is shown the time has nothing to guess.
 ## Which rules deserve a hook
 
 - **A rule that keeps being broken.** If the person has corrected the same thing three times, the written rule has failed. Give it a hook.
-- **A rule with a shape a program can see.** A phrase, a command, a missing step, a model name. "Do not say good night first" has a shape. "Be a good friend on a hard day" does not, and no hook will enforce it.
+- **A rule with a shape a program can see.** A phrase, a command, a missing step, a model name. "Do not sign off first" has a shape. "Use good judgment" does not, and no hook will enforce it.
 - **A rule the person names.** The person decides what gets a hook. It is their correction that is being made to stick.
 
 Most rules never need a hook. A hook for everything would be a cage. Keep the list short.

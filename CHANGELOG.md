@@ -2,6 +2,12 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Site, README and `docs/superego.md`: the text no longer describes the author's private sessions or a personal relationship. It says "the author", "the person" and "the agent". The author's name stays only where the author is credited. The agent's name, Mabus, is told once, in the origin story. The hero quote and the example identity lines are new. The rule examples keep their reasons without names.
+
 ## [3.6.1] - 2026-11-20
 
 ### Changed
