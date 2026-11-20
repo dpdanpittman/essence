@@ -1,4 +1,7 @@
 ---
+import Entry from './Entry.astro';
+import Dot from './Dot.astro';
+
 const steps = [
   {
     title: 'A session starts',
@@ -28,51 +31,59 @@ const steps = [
 ];
 ---
 
-<section class="border-b border-border/40">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      03 · During a session
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-12">
-      Read at the start, written while the picture is fresh.
-    </h2>
-
-    <div
-      class="rounded-lg border border-border bg-panel-2/70 p-6 sm:p-8 font-mono text-xs sm:text-sm leading-relaxed text-ink-dim overflow-x-auto mb-12"
-    >
-      <pre class="text-ink-dim"><code>{`
-  session start, or after a compaction
-          │
-          ▼
-  SessionStart hook   checks portrait checksum
-          │           shows the identity section
-          ▼
-  agent reads portrait.md whole
-          │
-          ├── topic hits a trigger word ──►  read that landscape whole (once)
-          │
-          ▼
-  work  ──►  agent updates the landscape as threads change
-          │
-          ▼
-  compaction or session end  ──►  synthesis job (next section)
-`}</code></pre>
-    </div>
-
-    <ol class="relative border-l border-border ml-3 space-y-10">
+<Entry id="during" label="03 · During a session" title="Read at the start, written while the picture is fresh.">
+  <div class="spread">
+    <ol class="steps">
       {
         steps.map((s, i) => (
-          <li class="ml-7 relative">
-            <span class="absolute -left-[34px] top-1 flex h-5 w-5 items-center justify-center rounded-full bg-bg border-2 border-accent/70 font-mono text-[10px] text-accent">
-              {i + 1}
-            </span>
-            <h3 class="font-display text-xl text-ink">{s.title}</h3>
-            <ul class="mt-2 space-y-1 text-ink-dim leading-relaxed">
+          <li>
+            <h3><span class="step-num">{i + 1}</span> {s.title}</h3>
+            <ul>
               {s.body.map((line) => <li>{line}</li>)}
             </ul>
           </li>
         ))
       }
     </ol>
+
+    <!-- The order of events. The dots say which file each step reads or writes.
+         The dashed line on the right returns to the top: after a compaction it starts again. -->
+    <figure class="diagram route-figure">
+      <ul class="legend" aria-hidden="true">
+        <li><Dot kind="portrait" />portrait</li>
+        <li><Dot kind="landscape" />landscape</li>
+        <li><Dot kind="none" />no file</li>
+      </ul>
+      <ol class="route" aria-label="The order of events in a session">
+        <li>
+          <span class="route-dots"><Dot kind="none" /></span>
+          <b>session start, or after a compaction</b>
+        </li>
+        <li>
+          <span class="route-dots"><Dot kind="portrait" /></span>
+          <b>SessionStart hook</b>
+          <span>checks portrait checksum</span>
+          <span>shows the identity section</span>
+        </li>
+        <li>
+          <span class="route-dots"><Dot kind="portrait" /></span>
+          <b>agent reads portrait.md whole</b>
+          <div class="route-fork">
+            <Dot kind="landscape" />
+            <span>topic hits a trigger word <span class="arrow" aria-hidden="true">→</span> read that landscape whole (once)</span>
+          </div>
+        </li>
+        <li>
+          <span class="route-dots"><Dot kind="landscape" /></span>
+          <b>work</b>
+          <span><span class="arrow" aria-hidden="true">→</span> agent updates the landscape as threads change</span>
+        </li>
+        <li>
+          <span class="route-dots"><Dot kind="portrait" /><Dot kind="landscape" /></span>
+          <b>compaction or session end</b>
+          <span><span class="arrow" aria-hidden="true">→</span> synthesis job (next section)</span>
+        </li>
+      </ol>
+    </figure>
   </div>
-</section>
+</Entry>

@@ -2,6 +2,14 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Site: new design, "the studio notebook". Toned drawing paper, Alegreya and Alegreya Sans, and one pigment per kind of file that marks that kind in every diagram: ultramarine for the portrait, yellow ochre for the landscapes, vermilion for the strokes, lamp black for the brushes. The cabinet is drawn as a chest of four drawers, one pigment rule on each. The pull quote is a slip taped into the margin. Every painted edge is its own, drawn from a seed at build time. The text is unchanged.
+- Site: Tailwind is gone. The site is Astro with one plain stylesheet, `site/src/styles/site.css`, and no client JavaScript. The dark theme, Inter, Newsreader, JetBrains Mono and the breathing animation are removed.
+- Site: a skip link, visible focus outlines, the hooks as a table, and the footer outside `main`.
+
 ## [3.6.1] - 2026-11-20
 
 ### Changed

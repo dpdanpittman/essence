@@ -1,0 +1,17 @@
+---
+// The key: one swatch per kind of file. The same pigment marks that kind in every diagram below.
+import Swatch from './Swatch.astro';
+import { kinds, pigments } from '../lib/pigments';
+---
+
+<ul class="key" aria-label="Pigment key for the kinds of files">
+  {
+    kinds.map((k) => (
+      <li>
+        <Swatch kind={k} seed={`key-${k}`} w={240} h={84} />
+        <b>{pigments[k].name}</b>
+        <span>{pigments[k].plural}</span>
+      </li>
+    ))
+  }
+</ul>

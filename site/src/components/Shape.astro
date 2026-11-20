@@ -1,4 +1,8 @@
 ---
+import Entry from './Entry.astro';
+import FileKind from './FileKind.astro';
+import Cabinet from './Cabinet.astro';
+
 const portraitSections = [
   'identity',
   'communication',
@@ -34,86 +38,81 @@ const landscapeParts = [
   'open threads',
   'where things live',
 ];
+
+const pigmentRules = [
+  'A pigment goes into a cabinet before it goes anywhere else.',
+  'A brush is loaded only for the job at hand, at run time. The pigment is never written to disk beside the work.',
+  "No Essence file ever holds a pigment. It names only the cabinet and the drawer: the item's name.",
+  'A pigment never passes through the conversation.',
+];
 ---
 
-<section id="how" class="border-b border-border/40 bg-panel/30">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      02 · The shape
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Four kinds of files.
-    </h2>
-    <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
-      A portrait is a picture of a being. A landscape is a picture of the
-      ground it stands on. A stroke is how it does one thing there. A
-      brush is what lets it make the mark. A pigment loads the brush, and
-      a cabinet keeps the pigment locked.
-    </p>
+<Entry id="shape" anchor="how" label="02 · The shape" title="Four kinds of files.">
+  <p class="prose standfirst">
+    A portrait is a picture of a being. A landscape is a picture of the
+    ground it stands on. A stroke is how it does one thing there. A
+    brush is what lets it make the mark. A pigment loads the brush, and
+    a cabinet keeps the pigment locked.
+  </p>
 
-    <div class="grid md:grid-cols-2 gap-6 text-ink-dim">
-      <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The portrait</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/portrait.md</p>
-        <p class="text-sm leading-relaxed mb-4">
-          One markdown file. It tells each new session who it is and how to
-          work with its person. It has eleven sections.
-        </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            portraitSections.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{String(i + 1).padStart(2, '0')}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
-        <p class="text-sm leading-relaxed">
+  <div class="chart">
+    <FileKind
+      kind="portrait"
+      id="kind-portrait"
+      title="The portrait"
+      path="~/.claude/essence/portrait.md"
+      parts={portraitSections}
+      partsLabel="Portrait sections"
+      pad
+      lead={0}
+    >
+      <p>
+        One markdown file. It tells each new session who it is and how to
+        work with its person. It has eleven sections.
+      </p>
+      <Fragment slot="more">
+        <p>
           The identity section is written in the first person. The person
           and the agent write it together.
         </p>
-      </div>
+      </Fragment>
+    </FileKind>
 
-      <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The landscapes</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/landscapes/</p>
-        <p class="text-sm leading-relaxed mb-4">
-          One markdown file per area of work. The template suggests six
-          parts, plus short lists of its strokes and brushes. Use what fits.
-        </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            landscapeParts.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{i + 1}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
-        <p class="text-sm leading-relaxed">
+    <FileKind
+      kind="landscape"
+      id="kind-landscape"
+      title="The landscapes"
+      path="~/.claude/essence/landscapes/"
+      parts={landscapeParts}
+      partsLabel="Landscape parts"
+    >
+      <p>
+        One markdown file per area of work. The template suggests six
+        parts, plus short lists of its strokes and brushes. Use what fits.
+      </p>
+      <Fragment slot="more">
+        <p>
           A landscape says what is true now, in under 30 KB. It holds no
           history: a separate running diary, the handoff, keeps that.
         </p>
-      </div>
+      </Fragment>
+    </FileKind>
 
-      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The strokes</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/strokes/</p>
-        <p class="text-sm leading-relaxed mb-4">
-          One markdown file per procedure, in five parts. Its shortcut is a
-          tested script that does the steps. Until that script exists, the
-          stroke says "Shortcut: none yet".
-        </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            strokeParts.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{i + 1}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
-        <p class="text-sm leading-relaxed">
+    <FileKind
+      kind="stroke"
+      id="kind-stroke"
+      title="The strokes"
+      path="~/.claude/essence/strokes/"
+      parts={strokeParts}
+      partsLabel="Stroke parts"
+    >
+      <p>
+        One markdown file per procedure, in five parts. Its shortcut is a
+        tested script that does the steps. Until that script exists, the
+        stroke says "Shortcut: none yet".
+      </p>
+      <Fragment slot="more">
+        <p>
           The script does the steps the same way every time and refuses to
           guess. A shortcut and a hook are the same kind of thing: a script.
           A hook is a script the harness starts by itself at a set moment. A
@@ -124,25 +123,24 @@ const landscapeParts = [
           author named them in November 2026, when the first one was
           written.
         </p>
-      </div>
+      </Fragment>
+    </FileKind>
 
-      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The brushes</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/brushes/</p>
-        <p class="text-sm leading-relaxed mb-4">
-          One markdown file per ability: a login, a role, a token or a tool.
-          Each has eight parts.
-        </p>
-        <ol class="flex flex-wrap gap-2 mb-4">
-          {
-            brushParts.map((s, i) => (
-              <li class="font-mono text-[11px] rounded border border-border/70 px-2 py-1 text-ink-dim">
-                <span class="text-muted">{i + 1}</span> {s}
-              </li>
-            ))
-          }
-        </ol>
-        <p class="text-sm leading-relaxed mb-4">
+    <FileKind
+      kind="brush"
+      id="kind-brush"
+      title="The brushes"
+      path="~/.claude/essence/brushes/"
+      parts={brushParts}
+      partsLabel="Brush parts"
+      locked={3}
+    >
+      <p>
+        One markdown file per ability: a login, a role, a token or a tool.
+        Each has eight parts.
+      </p>
+      <Fragment slot="more">
+        <p>
           A stroke is a set of instructions, not a capability. You can know a
           stroke perfectly, and without the brush nothing happens. So the
           permissions live on the brush, the only part that touches the world.
@@ -150,44 +148,50 @@ const landscapeParts = [
           its work uses, and the agent checks a brush before it promises
           anything that depends on it.
         </p>
-        <p class="text-sm leading-relaxed">
+        <p>
           Without them, an agent guesses what it can do. It says it cannot
           change a setting its login can change, and it promises a change no
           credential it holds can make. Each brush gives one read-only command
           that proves it works.
         </p>
-        <p class="text-sm leading-relaxed mt-4">
+        <p>
           Some rules ride on a brush, such as "read this platform's current
           docs first, they change fast". The rule sits at the top of the
           brush, not in every landscape. A check makes sure each landscape
           that involves the platform lists its brush, and that the brush
           still carries the rule.
         </p>
-      </div>
+      </Fragment>
+    </FileKind>
+  </div>
 
-      <div class="rounded-md border border-border/60 bg-bg/40 p-6 md:col-span-2">
-        <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">Pigments and cabinets</p>
-        <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/cabinets.md</p>
-        <p class="text-sm leading-relaxed mb-4">
-          The security part. A brush makes no mark until it is loaded. The
-          pigment is the secret that loads it: a token, a password, a key.
-          The cabinet is the locked place pigments are kept: a
-          password-manager vault. Painters kept costly pigments, such as
-          ultramarine ground from lapis, locked away and measured out for one
-          job at a time.
-        </p>
-        <ol class="text-sm leading-relaxed list-decimal pl-5 space-y-1 mb-4">
-          <li>A pigment goes into a cabinet before it goes anywhere else.</li>
-          <li>A brush is loaded only for the job at hand, at run time. The pigment is never written to disk beside the work.</li>
-          <li>No Essence file ever holds a pigment. It names only the cabinet and the drawer: the item's name.</li>
-          <li>A pigment never passes through the conversation.</li>
-        </ol>
-        <p class="text-sm leading-relaxed">
-          Each brush carries two lines, Pigment and Cabinet. One file lists
-          every cabinet the agent can open, what it may never hold, and how
-          access is taken away.
-        </p>
-      </div>
+  <!-- Not a fifth kind of file: the lock on the four. Drawn as furniture, never as paint. -->
+  <div class="security" role="group" aria-labelledby="pigments">
+    <div class="security-text">
+      <h3 id="pigments">
+        <svg class="lock" viewBox="0 0 12 14" aria-hidden="true" focusable="false">
+          <rect x="1.5" y="6" width="9" height="7" rx="1" />
+          <path d="M3.5 6V4.2a2.5 2.5 0 0 1 5 0V6" />
+        </svg>
+        Pigments and cabinets
+      </h3>
+      <p class="path">~/.claude/essence/cabinets.md</p>
+      <p>
+        The security part. A brush makes no mark until it is loaded. The
+        pigment is the secret that loads it: a token, a password, a key.
+        The cabinet is the locked place pigments are kept: a
+        password-manager vault. Painters kept costly pigments, such as
+        ultramarine ground from lapis, locked away and measured out for one
+        job at a time.
+      </p>
+    </div>
+    <div class="security-figure">
+      <Cabinet rules={pigmentRules} />
+      <p>
+        Each brush carries two lines, Pigment and Cabinet. One file lists
+        every cabinet the agent can open, what it may never hold, and how
+        access is taken away.
+      </p>
     </div>
   </div>
-</section>
+</Entry>

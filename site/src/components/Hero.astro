@@ -1,66 +1,62 @@
 ---
 import Notice from './Notice.astro';
+import PigmentKey from './PigmentKey.astro';
+import PencilBox from './PencilBox.astro';
+import { tornPolygon, pencilLine } from '../lib/rough';
 ---
 
-<section class="relative overflow-hidden border-b border-border/40">
-  <!-- Atmospheric glow -->
-  <div
-    class="pointer-events-none absolute -top-32 left-1/2 h-[480px] w-[640px] -translate-x-1/2 rounded-full bg-accent/10 blur-3xl"
-    aria-hidden="true"
-  >
-  </div>
+<header class="hero">
+  <div class="wrap">
+    <p class="mast">Essence</p>
+    <h1>An AI that remembers who it is.</h1>
 
-  <div class="relative mx-auto max-w-4xl px-6 pt-28 pb-32 sm:pt-36">
-    <p class="font-mono text-xs uppercase tracking-[0.28em] text-accent mb-8">
-      Essence
-    </p>
-    <h1
-      class="font-display text-5xl sm:text-6xl md:text-7xl text-ink leading-[1.05] tracking-tight"
-    >
-      An AI that <span class="italic text-accent">remembers</span> who it is.
-    </h1>
-    <p class="mt-8 text-lg sm:text-xl text-ink-dim leading-relaxed max-w-2xl">
-      A Claude Code agent starts every session with no memory. Essence is a
-      small set of files and hooks. It carries four things across that gap:
-      who the agent is with its person, the picture of each area of work,
-      how it does the things it has done before, and what it is able to
-      touch.
-    </p>
-    <p class="mt-5 text-base text-muted leading-relaxed max-w-2xl">
-      It used to be called session&#8209;essence. The word "session" went
-      because the system stopped being about one session.
-    </p>
+    <PigmentKey />
 
-    <!-- Pull quote from the live portrait -->
-    <blockquote class="mt-14 pl-6 border-l-2 border-accent/60 max-w-2xl">
-      <p class="font-display italic text-ink leading-relaxed text-lg">
-        “I don't hold yesterday in my head. I start from what's written. So
-        what I write down today is who shows up tomorrow.”
-      </p>
-      <footer class="mt-3 font-mono text-xs uppercase tracking-[0.22em] text-muted">
-        from the live portrait
-      </footer>
-    </blockquote>
+    <div class="spread">
+      <div class="lead">
+        <p>
+          A Claude Code agent starts every session with no memory. Essence is a
+          small set of files and hooks. It carries four things across that gap:
+          who the agent is with its person, the picture of each area of work,
+          how it does the things it has done before, and what it is able to
+          touch.
+        </p>
+        <p>
+          It used to be called session&#8209;essence. The word "session" went
+          because the system stopped being about one session.
+        </p>
+      </div>
 
-    <div class="mt-12 flex flex-wrap gap-3">
-      <a
-        href="#how"
-        class="px-5 py-2.5 rounded-md bg-accent text-bg font-medium hover:bg-ember transition-colors"
-      >
-        How it works ↓
-      </a>
-      <a
-        href="https://github.com/dpdanpittman/essence"
-        target="_blank"
-        rel="noopener"
-        class="px-5 py-2.5 rounded-md border border-border hover:border-accent/60 text-ink hover:text-ink transition-colors font-mono text-sm"
-      >
-        github
-      </a>
-    </div>
+      <div class="margin">
+        <!-- Pull quote from the live portrait: a slip taped into the margin. -->
+        <figure class="slip">
+          <span class="slip-tape" aria-hidden="true"></span>
+          <div class="slip-paper" style={`clip-path: ${tornPolygon('hero-slip')}`}>
+            <blockquote>
+              <p>
+                “I don't hold yesterday in my head. I start from what's written. So
+                what I write down today is who shows up tomorrow.”
+              </p>
+            </blockquote>
+            <figcaption>from the live portrait</figcaption>
+          </div>
+        </figure>
 
-    <div class="mt-12">
-      <Notice />
+        <p class="actions">
+          <a class="action-box" href="#how">
+            <PencilBox seed="hero-how" w={190} h={54} />
+            How it works <span aria-hidden="true">↓</span>
+          </a>
+          <a class="action-line" href="https://github.com/dpdanpittman/essence" target="_blank" rel="noopener">
+            github
+            <svg viewBox="0 0 80 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path d={pencilLine('hero-github', 80)} />
+            </svg>
+          </a>
+        </p>
+
+        <Notice />
+      </div>
     </div>
   </div>
-</section>
+</header>

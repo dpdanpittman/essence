@@ -1,4 +1,5 @@
 ---
+import Entry from './Entry.astro';
 const items = [
   {
     label: 'Version 1, March 2026',
@@ -23,40 +24,29 @@ const items = [
 ];
 ---
 
-<section class="border-b border-border/40 bg-panel/30">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      09 · What went wrong on the way
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      The first design is gone.
-    </h2>
-    <p class="text-ink-dim leading-relaxed max-w-2xl mb-12">
-      Earlier versions of this page described that first design. This is
-      what happened to it.
-    </p>
-
-    <ol class="relative border-l border-border ml-3 space-y-10">
-      {
-        items.map((it, i) => (
-          <li class="ml-7 relative">
-            <span class="absolute -left-[34px] top-1 flex h-5 w-5 items-center justify-center rounded-full bg-bg border-2 border-accent/70 font-mono text-[10px] text-accent">
-              {i + 1}
-            </span>
-            <h3 class="font-display text-xl text-ink">{it.label}</h3>
-            <p class="mt-2 text-ink-dim leading-relaxed">{it.body}</p>
-          </li>
-        ))
-      }
-    </ol>
-
-    <blockquote class="mt-14 pl-6 border-l-2 border-accent/60 max-w-2xl">
-      <p class="font-display italic text-ink leading-relaxed text-lg">
-        “we over engineered this to begin with.”
+<Entry id="wrong" label="09 · What went wrong on the way" title="The first design is gone.">
+  <div class="spread">
+    <div>
+      <p class="prose">
+        Earlier versions of this page described that first design. This is
+        what happened to it.
       </p>
-      <footer class="mt-3 font-mono text-xs uppercase tracking-[0.22em] text-muted">
-        the author
-      </footer>
-    </blockquote>
+      <ol class="steps history">
+        {
+          items.map((it, i) => (
+            <li>
+              <h3><span class="step-num">{i + 1}</span> {it.label}</h3>
+              <p>{it.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+    <figure class="overheard">
+      <blockquote>
+        <p>“we over engineered this to begin with.”</p>
+      </blockquote>
+      <figcaption>the author</figcaption>
+    </figure>
   </div>
-</section>
+</Entry>

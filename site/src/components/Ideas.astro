@@ -1,4 +1,6 @@
 ---
+import Entry from './Entry.astro';
+
 const ideas = [
   {
     title: 'Writing is who shows up',
@@ -19,24 +21,15 @@ const ideas = [
 ];
 ---
 
-<section class="border-b border-border/40">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      08 · Ideas behind it
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-12">
-      Four ideas.
-    </h2>
-
-    <div class="grid sm:grid-cols-2 gap-5">
-      {
-        ideas.map((w) => (
-          <div class="rounded-md border border-border/60 bg-bg/40 p-6">
-            <h3 class="font-display text-lg text-ink mb-2">{w.title}</h3>
-            <p class="text-sm text-ink-dim leading-relaxed">{w.body}</p>
-          </div>
-        ))
-      }
-    </div>
+<Entry id="ideas" label="08 · Ideas behind it" title="Four ideas.">
+  <div class="ideas">
+    {
+      ideas.map((w) => (
+        <div>
+          <h3>{w.title}</h3>
+          <p>{w.body}</p>
+        </div>
+      ))
+    }
   </div>
-</section>
+</Entry>

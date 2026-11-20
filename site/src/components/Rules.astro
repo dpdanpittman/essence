@@ -1,4 +1,6 @@
 ---
+import Entry from './Entry.astro';
+
 const rules = [
   'One rule or fact per line.',
   'The reason in one clause, or the person\'s own words quoted exactly.',
@@ -10,34 +12,28 @@ const rules = [
 ];
 ---
 
-<section class="border-b border-border/40">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      05 · How the files are written
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Rules from aircraft maintenance manuals.
-    </h2>
-    <p class="text-ink-dim leading-relaxed max-w-2xl mb-10">
+<Entry id="rules" label="05 · How the files are written" title="Rules from aircraft maintenance manuals.">
+  <div class="spread">
+    <p class="prose">
       The writing rules come from ASD&#8209;STE100 Simplified Technical
       English, the controlled language of aircraft maintenance manuals.
       Every line in the portrait and the landscapes follows them.
     </p>
-
-    <ol class="grid sm:grid-cols-2 gap-4">
-      {
-        rules.map((r, i) => (
-          <li class="rounded-md border border-border/60 bg-bg/40 px-5 py-4 text-sm text-ink-dim leading-relaxed">
-            <span class="font-mono text-xs text-accent mr-2">{i + 1}</span>
-            {r}
-          </li>
-        ))
-      }
-    </ol>
-
-    <p class="mt-10 text-sm text-ink-dim italic max-w-2xl">
-      A system for how to build a sentence works better than a list of words
-      to avoid.
-    </p>
+    <div>
+      <ol class="rules">
+        {
+          rules.map((r, i) => (
+            <li>
+              <span class="rule-num">{i + 1}</span>
+              <span>{r}</span>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="rule-coda">
+        A system for how to build a sentence works better than a list of words
+        to avoid.
+      </p>
+    </div>
   </div>
-</section>
+</Entry>

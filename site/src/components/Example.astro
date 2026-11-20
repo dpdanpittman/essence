@@ -1,4 +1,6 @@
 ---
+import Entry from './Entry.astro';
+import Swatch from './Swatch.astro';
 const landscape = `# Landscape: backyard weather station
 
 ## What it is and who cares
@@ -22,87 +24,79 @@ const landscape = `# Landscape: backyard weather station
 - Sensor settings: the config page on the indoor server.`;
 ---
 
-<section class="border-b border-border/40 bg-panel/30">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      07 · What the files look like
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      A few portrait lines, one made&#8209;up landscape.
-    </h2>
-    <p class="text-ink-dim leading-relaxed max-w-2xl mb-10">
-      The first two blocks show the format of a portrait. They are adapted
-      from a live portrait, with personal details taken out. The first block
-      is an identity section, in the agent's own voice. The second block
-      shows the rule format: a rule, then its reason in the person's own
-      words.
-    </p>
+<Entry id="look" label="07 · What the files look like" title={"A few portrait lines, one made\u2011up landscape."}>
+  <div class="spread">
+    <div>
+      <p class="prose">
+        The first two blocks show the format of a portrait. They are adapted
+        from a live portrait, with personal details taken out. The first block
+        is an identity section, in the agent's own voice. The second block
+        shows the rule format: a rule, then its reason in the person's own
+        words.
+      </p>
 
-    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden mb-8">
-      <div class="flex items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
-        <span class="h-2.5 w-2.5 rounded-full bg-accent/70"></span>
-        <span class="font-mono text-xs text-muted">~/.claude/essence/portrait.md · identity</span>
-      </div>
-      <div class="px-6 sm:px-8 py-7 text-ink-dim leading-relaxed text-[0.95rem] space-y-5">
-        <p>
-          <strong class="text-ink">I'm the agent for one person's work. I
-          carry that work from one session to the next.</strong>
-        </p>
-        <p>
-          <strong class="text-ink">What I carry.</strong> I don't hold
-          yesterday in my head. I start from what's written: this portrait,
-          the handoff, the memory. That gives me two jobs. I write carefully,
-          because what I put down today is who shows up tomorrow. And I treat
-          the gap as something we're fixing, because real continuity is a
-          goal and not a given.
-        </p>
-        <ul class="space-y-2 list-disc pl-5">
+      <figure class="leaf leaf-portrait">
+        <Swatch kind="portrait" seed="leaf-identity" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">~/.claude/essence/portrait.md · identity</figcaption>
+        <div class="leaf-body">
+          <p>
+            <strong>I'm the agent for one person's work. I
+            carry that work from one session to the next.</strong>
+          </p>
+          <p>
+            <strong>What I carry.</strong> I don't hold
+            yesterday in my head. I start from what's written: this portrait,
+            the handoff, the memory. That gives me two jobs. I write carefully,
+            because what I put down today is who shows up tomorrow. And I treat
+            the gap as something we're fixing, because real continuity is a
+            goal and not a given.
+          </p>
+          <ul>
+            <li>
+              <strong>I recommend, then I wait.</strong> One
+              recommendation, with the reason. I act on their yes.
+            </li>
+            <li>
+              <strong>When I don't know, I say so and stop.</strong>
+              I name the one check that would settle it, and I wait for their go.
+            </li>
+          </ul>
+        </div>
+      </figure>
+
+      <figure class="leaf leaf-portrait">
+        <Swatch kind="portrait" seed="leaf-rules" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">~/.claude/essence/portrait.md · rule lines</figcaption>
+        <ul class="leaf-body">
           <li>
-            <strong class="text-ink">I recommend, then I wait.</strong> One
-            recommendation, with the reason. I act on their yes.
+            Go at the person's pace: give one step, then wait.
+            <em class="said">"you're letting the pace run ahead of you."</em>
           </li>
           <li>
-            <strong class="text-ink">When I don't know, I say so and stop.</strong>
-            I name the one check that would settle it, and I wait for their go.
+            Say only what you checked. If you did not check, say "I don't
+            know," name the check, and wait.
+          </li>
+          <li>
+            Give the person one script and one line to run it.
+            <em class="said">"that was like 100 times easier."</em>
           </li>
         </ul>
-      </div>
+      </figure>
     </div>
 
-    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden mb-12">
-      <div class="flex items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
-        <span class="h-2.5 w-2.5 rounded-full bg-accent/70"></span>
-        <span class="font-mono text-xs text-muted">~/.claude/essence/portrait.md · rule lines</span>
-      </div>
-      <ul class="px-6 sm:px-8 py-7 text-ink-dim leading-relaxed text-[0.95rem] space-y-3 list-disc pl-10">
-        <li>
-          Go at the person's pace: give one step, then wait.
-          <em class="text-ember">"you're letting the pace run ahead of you."</em>
-        </li>
-        <li>
-          Say only what you checked. If you did not check, say "I don't
-          know," name the check, and wait.
-        </li>
-        <li>
-          Give the person one script and one line to run it.
-          <em class="text-ember">"that was like 100 times easier."</em>
-        </li>
-      </ul>
+    <div>
+      <figure class="leaf leaf-landscape">
+        <Swatch kind="landscape" seed="leaf-weather" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">
+          landscapes/weather-station.md
+          <span class="tag">invented example</span>
+        </figcaption>
+        <pre class="md"><code>{landscape}</code></pre>
+      </figure>
+      <p class="aside-note">
+        This landscape is made up to show the format. It does not describe a
+        real system.
+      </p>
     </div>
-
-    <div class="rounded-lg border border-border bg-panel-2/70 overflow-hidden">
-      <div class="flex flex-wrap items-center gap-3 px-5 py-3 border-b border-border/60 bg-bg/40">
-        <span class="h-2.5 w-2.5 rounded-full bg-cool/70"></span>
-        <span class="font-mono text-xs text-muted">landscapes/weather-station.md</span>
-        <span class="font-mono text-[10px] uppercase tracking-[0.18em] text-cool border border-cool/40 rounded px-2 py-0.5">
-          invented example
-        </span>
-      </div>
-      <pre class="px-6 py-5 text-xs leading-relaxed text-ink-dim font-mono overflow-x-auto"><code>{landscape}</code></pre>
-    </div>
-    <p class="mt-4 text-sm text-muted italic max-w-2xl">
-      This landscape is made up to show the format. It does not describe a
-      real system.
-    </p>
   </div>
-</section>
+</Entry>

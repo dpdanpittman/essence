@@ -342,6 +342,8 @@ The author built Essence with a Claude Code agent of their own. That agent took 
 
 `site/` holds the website. Run `npm install` and `npm run build` in `site/`. The build is static files in `site/dist/`, built for the root of a domain. Serve them from any web server.
 
+The site is Astro with plain CSS. Each section is one component in `site/src/components/`. All styles are in `site/src/styles/site.css`. The four pigment colours are set once there, as custom properties: ultramarine is the portrait, yellow ochre the landscapes, vermilion the strokes, lamp black the brushes. Diagrams use only those properties. The painted edges come from `site/src/lib/rough.ts` at build time, so the page ships no images and no JavaScript.
+
 ## License
 
 [GNU AGPLv3 or later](./LICENSE).

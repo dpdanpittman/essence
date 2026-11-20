@@ -24,7 +24,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `examples/portrait-example.md`, `examples/landscape-example.md`, `examples/stroke-example.md`, `examples/brush-example.md`, `examples/cabinet-example.md`: invented, filled-in files (Sara, Max, a home economics class).
 - `tests/test_essence.py`: offline tests with a fake `claude` on PATH.
 - `docs/history/`: design notes of the retired version 1 and 2. Do not update them.
-- `site/`: the Astro + Tailwind website, with its own `package.json`. `npm run build` writes static files to `site/dist/`.
+- `site/`: the Astro website, with its own `package.json`. Plain CSS in `site/src/styles/site.css`, no Tailwind. One component per section in `site/src/components/`. The pigment colours are defined once, in that stylesheet; `site/src/lib/pigments.ts` says which kind of file each pigment marks, and `site/src/lib/rough.ts` draws the painted edges from a seed. Keep a pigment for its kind of file only. `npm run build` writes static files to `site/dist/`.
 
 ## Commands
 

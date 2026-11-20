@@ -1,37 +1,45 @@
 ---
+import Entry from './Entry.astro';
+import Swatch from './Swatch.astro';
 ---
 
-<section class="border-b border-border/40">
-  <div class="mx-auto max-w-4xl px-6 py-24">
-    <p class="font-mono text-xs uppercase tracking-[0.22em] text-muted mb-6">
-      01 · The gap
-    </p>
-    <h2 class="font-display text-3xl sm:text-4xl text-ink tracking-tight mb-8">
-      Every session starts blank. This is how it remembers.
-    </h2>
+<Entry id="gap" label="01 · The gap" title="Every session starts blank. This is how it remembers.">
+  <div class="spread">
+    <div class="prose">
+      <p>
+        Every Claude Code session boots from scratch. The model is the
+        same. The <em>agent</em> that knows its person's
+        shorthand, corrections and open work is gone.
+      </p>
+      <p>
+        Essence is the agent's memory, kept in files the agent wrote
+        itself. A new session reads them and picks up as the same someone.
+      </p>
+      <p>
+        That has two results. First, the files have to be small enough to
+        read whole every time. Second, the writing has to be careful.
+      </p>
+      <p>
+        What the agent writes today is
+        <strong>who shows up tomorrow</strong>.
+      </p>
+    </div>
 
-    <div class="grid md:grid-cols-2 gap-10 text-ink-dim leading-relaxed">
-      <div>
-        <p class="text-base">
-          Every Claude Code session boots from scratch. The model is the
-          same. The <em class="text-ink">agent</em> that knows its person's
-          shorthand, corrections and open work is gone.
-        </p>
-        <p class="mt-5 text-base">
-          Essence is the agent's memory, kept in files the agent wrote
-          itself. A new session reads them and picks up as the same someone.
-        </p>
+    <!-- The same marks on both pages: what one session paints, the next one finds. -->
+    <div class="gap-figure" aria-hidden="true">
+      <div class="gap-page">
+        <b>today</b>
+        <span>writes</span>
+        <Swatch kind="portrait" seed="gap-portrait" w={160} h={30} />
+        <Swatch kind="landscape" seed="gap-landscape" w={120} h={24} />
       </div>
-      <div>
-        <p class="text-base">
-          That has two results. First, the files have to be small enough to
-          read whole every time. Second, the writing has to be careful.
-        </p>
-        <p class="mt-5 text-base">
-          What the agent writes today is
-          <span class="text-ember">who shows up tomorrow</span>.
-        </p>
+      <div class="gap-void"></div>
+      <div class="gap-page">
+        <b>tomorrow</b>
+        <span>reads</span>
+        <Swatch kind="portrait" seed="gap-portrait" w={160} h={30} />
+        <Swatch kind="landscape" seed="gap-landscape" w={120} h={24} />
       </div>
     </div>
   </div>
-</section>
+</Entry>

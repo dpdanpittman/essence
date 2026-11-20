@@ -1,0 +1,32 @@
+---
+// A painted swatch: an inline SVG with an edge of its own (from `seed`), a darker
+// pooled rim, a few streaks and the shared paper grain. Decorative: aria-hidden.
+import { pigments, type Kind } from '../lib/pigments';
+import { swatchPath, streaks } from '../lib/rough';
+
+interface Props {
+  kind: Kind;
+  seed: string;
+  w?: number;
+  h?: number;
+  class?: string;
+}
+
+const { kind, seed, w = 200, h = 64, class: cls = '' } = Astro.props;
+const d = swatchPath(seed, w, h);
+const s = streaks(seed, w, h);
+---
+
+<svg
+  class:list={['swatch', cls]}
+  viewBox={`0 0 ${w} ${h}`}
+  width={w}
+  height={h}
+  aria-hidden="true"
+  focusable="false"
+>
+  <g filter="url(#grain)" style={`fill: ${pigments[kind].fill}`}>
+    <path d={d} class="swatch-rim" />
+    <path d={s} class="swatch-streak" />
+  </g>
+</svg>
