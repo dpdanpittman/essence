@@ -2,16 +2,11 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Changed
-
-- Site, README and `docs/superego.md`: the text no longer describes the author's private sessions or a personal relationship. It says "the author", "the person" and "the agent". The author's name stays only where the author is credited. The agent's name, Mabus, is told once, in the origin story. The hero quote and the example identity lines are new. The rule examples keep their reasons without names.
-
 ## [3.6.1] - 2026-11-20
 
 ### Changed
 
+- Site, README and `docs/superego.md`: the text no longer describes the author's private sessions or a personal relationship. It says "the author", "the person" and "the agent". The author's name stays only where the author is credited. The agent's name, Mabus, is told once, in the origin story. The hero quote and the example identity lines are new. The rule examples keep their reasons without names.
 - The session-start size warning now starts at 90 percent of `ESSENCE_PORTRAIT_MAX` (144000 bytes by default), read from the same setting as the synthesis cap. It names both numbers. Before, it fired only above 200000 bytes, past the 160000 hard cap (tested).
 - `examples/settings-hooks.json` holds the placeholder `ESSENCE_TZ=YOUR_TIME_ZONE` instead of a real time zone. The README says to replace it.
 - The stroke template says to write "none yet" under Shortcut until the script exists.
