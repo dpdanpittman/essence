@@ -14,9 +14,11 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-nudge.py`: UserPromptSubmit hook. Reminds the agent to update landscapes when the transcript has grown long since the last compaction.
 - `hooks/essence-now.sh`: UserPromptSubmit hook. Prints the current time (`ESSENCE_TZ`, plus UTC) so the agent never estimates it.
 - `hooks/essence-check.py`: Stop hook. Reads the finished reply and blocks the turn when it breaks a rule from the private file `~/.claude/essence/checks.json`. The script holds no rules.
+- `hooks/essence-brush-rules.py`: PostToolUse hook and command. A landscape that involves a platform must list that platform's brush, and the brush must keep its "Before you use this brush" rule. Rules in the private file `~/.claude/essence/brush-rules.json`. Fails open.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.
 - `templates/portrait.md`, `templates/landscape.md`, `templates/stroke.md`, `templates/brush.md`, `templates/cabinet.md`: empty skeletons.
 - `examples/settings-hooks.json`: the hooks block for `~/.claude/settings.json`.
+- `examples/brush-rules-example.json`: an invented platform rule for the brush-rules check.
 - `examples/checks-example.json`: example rules for the check. A real rules file is private and must never be committed.
 - `docs/superego.md`: why a written rule is not enough and how hooks make it hold.
 - `examples/portrait-example.md`, `examples/landscape-example.md`, `examples/stroke-example.md`, `examples/brush-example.md`, `examples/cabinet-example.md`: invented, filled-in files (Sara, Max, a home economics class).
@@ -32,7 +34,7 @@ python3 -m unittest discover -s tests -v
 
 # Syntax and lint checks for the hooks
 bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh hooks/essence-now.sh
-python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py
+python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-brush-rules.py
 shellcheck -S warning hooks/*.sh
 
 # Site

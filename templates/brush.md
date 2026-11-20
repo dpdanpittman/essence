@@ -8,6 +8,8 @@ a cabinet: a password-manager vault. NEVER write a pigment in this file. Write o
 cabinet (the vault, and the helper that reads it). Write "none" for a brush that needs no pigment, like a local tool.
 Mark each fact: checked YYYY-MM-DD (seen with a read-only command) or record (a named record says so).
 The synthesis never edits a brush.
+A rule that belongs to the ability (for example: read the platform's current docs first) goes in a short
+"## Before you use this brush" part right under the Written line. hooks/essence-brush-rules.py keeps it there.
 -->
 # Brush: NAME
 

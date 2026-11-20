@@ -57,6 +57,18 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.claude/scripts/essence-brush-rules.py --hook",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

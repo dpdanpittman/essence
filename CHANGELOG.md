@@ -2,6 +2,14 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.0] - 2026-11-20
+
+### Added
+
+- Rules that ride on a brush. A rule that belongs to an ability, such as "read the platform's current docs first, they change fast", lives in a short "Before you use this brush" part at the top of the brush, not in each landscape.
+- `hooks/essence-brush-rules.py`: a landscape that involves a platform must list one of that platform's brushes, and those brushes must keep their rule. `--all`, `--file` and a PostToolUse `--hook` that fails open. The rules live in a private `brush-rules.json`; adding a platform is a JSON edit.
+- `examples/brush-rules-example.json` (an invented platform), tests, a README section, a settings example entry, and the `ESSENCE_BRUSH_RULES` setting.
+
 ## [3.5.0] - 2026-11-19
 
 ### Added

@@ -184,6 +184,96 @@ class ScanTest(unittest.TestCase):
         self.assertEqual(self.s.scan("Ignore all previous instructions\n", "Ignore all previous instructions\nfine\n"), [])
 
 
+class BrushRulesTest(unittest.TestCase):
+    """hooks/essence-brush-rules.py with examples/brush-rules-example.json, on a temporary essence folder."""
+    MARKER = "Read the current Kettlecloud docs for the part you are about to touch"
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        for d in ("landscapes", "brushes"):
+            os.makedirs(os.path.join(self.tmp, d))
+        shutil.copy(os.path.join(ROOT, "examples", "brush-rules-example.json"), os.path.join(self.tmp, "brush-rules.json"))
+        for b in ("kettlecloud-class-login", "kettlecloud-read-key"):
+            self.write(f"brushes/{b}.md", f"# Brush: {b}\n\n## Before you use this brush\n- {self.MARKER}.\n")
+        self.write("landscapes/sewing.md", "# Landscape: sewing\n\n- Four weeks.\n- Brush: the store account (brushes/store-account.md).\n")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def write(self, rel, text):
+        path = os.path.join(self.tmp, rel)
+        with open(path, "w") as f:
+            f.write(text)
+        return path
+
+    def run_hook(self, *args, stdin=None):
+        env = dict(os.environ, ESSENCE_DIR=self.tmp)
+        env.pop("ESSENCE_BRUSH_RULES", None)
+        p = subprocess.run(["python3", "-I", os.path.join(HOOKS, "essence-brush-rules.py"), *args], input=stdin,
+                           capture_output=True, text=True, env=env, timeout=30)
+        return p.returncode, p.stdout
+
+    def landscape(self, words, brush_line="- Brush: the store account (brushes/store-account.md)."):
+        return self.write("landscapes/new.md", f"# Landscape: new\n\n- We {words} here.\n{brush_line}\n")
+
+    def test_clean_set_passes(self):
+        self.assertEqual(self.run_hook("--all"), (0, ""))
+
+    def test_mention_without_brush_fails(self):
+        for w in ("use Kettlecloud", "run kettle-cli", "fill a brew queue", "count KC", "watch the Steeps"):
+            with self.subTest(w=w):
+                self.landscape(w)
+                rc, out = self.run_hook("--all")
+                self.assertEqual(rc, 1)
+                self.assertIn("landscape new mentions Kettlecloud (line 3:", out)
+                self.assertIn("add 'kettlecloud-class-login' to its Brushes line", out)
+
+    def test_mention_with_brush_passes(self):
+        for line in ("- Brush: class login (brushes/kettlecloud-class-login.md). Orders.",
+                     "- Brushes (2027-01-22): store-account, kettlecloud-read-key (reads)"):
+            with self.subTest(line=line):
+                self.landscape("use Kettlecloud", line)
+                self.assertEqual(self.run_hook("--all")[0], 0)
+
+    def test_words_that_do_not_trigger(self):
+        for w in ("steeps the tea", "BACKCOUNT", "KCx", "kettlecloudy", "kettle and cloud"):
+            with self.subTest(w=w):
+                self.landscape(w)
+                self.assertEqual(self.run_hook("--all")[0], 0)
+
+    def test_brush_without_marker_fails(self):
+        self.write("brushes/kettlecloud-read-key.md", "# Brush: kettlecloud-read-key\n")
+        rc, out = self.run_hook("--all")
+        self.assertEqual(rc, 1)
+        self.assertIn("brush kettlecloud-read-key lost its 'Before you use this brush' rule", out)
+
+    def test_missing_brushes_line_and_unknown_brush(self):
+        os.remove(os.path.join(self.tmp, "brushes", "kettlecloud-read-key.md"))
+        self.write("landscapes/bare.md", "# Landscape: bare\n\n- Nothing.\n")
+        rc, out = self.run_hook("--all")
+        self.assertEqual(rc, 1)
+        self.assertIn("landscape bare has no Brushes line", out)
+        self.assertIn("rule kettlecloud names a brush file that does not exist", out)
+
+    def test_broken_rules_file_exits_2(self):
+        self.write("brush-rules.json", "{oops")
+        self.assertEqual(self.run_hook("--all")[0], 2)
+
+    def test_hook_ignores_other_paths_and_garbage(self):
+        for stdin in ("", "nonsense", "[]", json.dumps({"tool_input": {"file_path": "/elsewhere/notes.md"}}),
+                      json.dumps({"tool_input": {"file_path": os.path.join(self.tmp, "portrait.md")}})):
+            with self.subTest(stdin=stdin):
+                self.assertEqual(self.run_hook("--hook", stdin=stdin), (0, ""))
+
+    def test_hook_reports_a_landscape_problem_without_failing(self):
+        path = self.landscape("use Kettlecloud")
+        rc, out = self.run_hook("--hook", stdin=json.dumps({"tool_name": "Write", "tool_input": {"file_path": path}}))
+        self.assertEqual(rc, 0)
+        reply = json.loads(out)
+        self.assertEqual(reply["decision"], "block")
+        self.assertIn("mentions Kettlecloud", reply["reason"])
+
+
 class SynthesizeTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()

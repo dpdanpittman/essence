@@ -154,6 +154,18 @@ A rule written in the portrait does not act. The agent read it hours ago, and a 
 
 The rules for the check live in a private file, `~/.claude/essence/checks.json`. Start from `examples/checks-example.json`. The full idea, and which rules deserve a hook, is in [docs/superego.md](docs/superego.md).
 
+## Rules that ride on a brush
+
+Some rules belong to an ability, not to an area of work. "Read the platform's current docs before you touch it, they change fast" is true of every job that uses that platform's login. Written into each landscape, it is copied many times and forgotten in the next new one. So the rule lives on the brush: a short "Before you use this brush" part at the top of each brush for that platform. It says what to check, to say what was checked, and to put the rule in the brief of any background agent that will use the brush.
+
+A rule on a brush only works if the landscape names the brush. `hooks/essence-brush-rules.py` makes sure it does. A private file, `~/.claude/essence/brush-rules.json`, lists each platform: the words that mean a landscape involves it, the brushes of which at least one must be on the landscape's Brushes line, and the exact text each of those brushes must still contain. Start from `examples/brush-rules-example.json` (an invented platform). Adding a platform is one more entry in that file.
+
+- `essence-brush-rules.py --all` checks every landscape and every brush the rules name. Exit 0 is clean, 1 prints one plain line per problem, 2 means the rules file is broken.
+- `--file <landscape.md>` checks one landscape.
+- `--hook` is a PostToolUse hook on Write, Edit and MultiEdit. It does nothing unless the edited file is a landscape, a brush or the rules file. On a problem it hands the agent what is missing and the line to add. It fails open: it is a reminder, not a guard, so it never blocks or slows other edits.
+
+Words match whole, so "coworkers" does not count as "Workers". A landscape that only quotes a word still mentions it and must list the brush. Shell edits bypass a tool hook, so run `--all` on a schedule as the net. The check never edits anything.
+
 ## Guarding the memory itself
 
 The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
@@ -183,7 +195,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    ```bash
    mkdir -p ~/.claude/scripts ~/.claude/essence/landscapes ~/.claude/essence/strokes ~/.claude/essence/brushes
-   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-now.sh ~/.claude/scripts/
+   cp hooks/session-start-verify.sh hooks/essence-synthesize.sh hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-now.sh hooks/essence-brush-rules.py ~/.claude/scripts/
    chmod 700 ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh
    ```
 
@@ -266,6 +278,7 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_NUDGE_MB` | `6` | nudge (first reminder) |
 | `ESSENCE_NUDGE_AGAIN_MB` | `3` | nudge (each reminder after that) |
 | `ESSENCE_TZ` | the machine's time zone | now (the person's time zone, an IANA name such as `America/Denver`) |
+| `ESSENCE_BRUSH_RULES` | `$ESSENCE_DIR/brush-rules.json` | brush rules (the rules file) |
 
 ## Tests
 
