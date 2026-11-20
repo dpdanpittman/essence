@@ -78,7 +78,8 @@ const landscapeParts = [
         <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The landscapes</p>
         <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/landscapes/</p>
         <p class="text-sm leading-relaxed mb-4">
-          One markdown file per area of work. Each has six parts.
+          One markdown file per area of work. The template suggests six
+          parts, plus short lists of its strokes and brushes. Use what fits.
         </p>
         <ol class="flex flex-wrap gap-2 mb-4">
           {
@@ -99,8 +100,9 @@ const landscapeParts = [
         <p class="font-mono text-xs uppercase tracking-[0.18em] text-accent mb-2">The strokes</p>
         <p class="font-mono text-xs text-ember mb-4">~/.claude/essence/strokes/</p>
         <p class="text-sm leading-relaxed mb-4">
-          One markdown file per procedure. Each has five parts, and a tested
-          script that does the steps: its shortcut.
+          One markdown file per procedure, in five parts. Its shortcut is a
+          tested script that does the steps. Until that script exists, the
+          stroke says "Shortcut: none yet".
         </p>
         <ol class="flex flex-wrap gap-2 mb-4">
           {
@@ -113,7 +115,10 @@ const landscapeParts = [
         </ol>
         <p class="text-sm leading-relaxed">
           The script does the steps the same way every time and refuses to
-          guess. The stroke holds what a script cannot: when to use it, where
+          guess. A shortcut and a hook are the same kind of thing: a script.
+          A hook is a script the harness starts by itself at a set moment. A
+          shortcut is a script the agent starts when it follows a stroke.
+          The stroke holds what a script cannot: when to use it, where
           to stop and ask, what went wrong before. Each stroke belongs to a
           landscape, and the agent reaches it through that landscape. Dan
           named them in November 2026, after the first one came out of a
@@ -151,6 +156,13 @@ const landscapeParts = [
           change a setting its login can change, and it promises a change no
           credential it holds can make. Each brush gives one read-only command
           that proves it works.
+        </p>
+        <p class="text-sm leading-relaxed mt-4">
+          Some rules ride on a brush, such as "read this platform's current
+          docs first, they change fast". The rule sits at the top of the
+          brush, not in every landscape. A check makes sure each landscape
+          that involves the platform lists its brush, and that the brush
+          still carries the rule.
         </p>
       </div>
 

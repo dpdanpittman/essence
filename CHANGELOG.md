@@ -2,6 +2,24 @@
 
 All notable changes to Essence are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.6.1] - 2026-11-20
+
+### Changed
+
+- The session-start size warning now starts at 90 percent of `ESSENCE_PORTRAIT_MAX` (144000 bytes by default), read from the same setting as the synthesis cap. It names both numbers. Before, it fired only above 200000 bytes, past the 160000 hard cap (tested).
+- `examples/settings-hooks.json` holds the placeholder `ESSENCE_TZ=YOUR_TIME_ZONE` instead of a real time zone. The README says to replace it.
+- The stroke template says to write "none yet" under Shortcut until the script exists.
+
+### Fixed
+
+- README: the portrait cap is `ESSENCE_PORTRAIT_MAX` (default 160000 bytes), not 200 KB. A table names each hook script and its event, instead of a count of "four hooks". The settings table has rows for `ESSENCE_PORTRAIT_MAX` and `ESSENCE_LANDSCAPE_MAX`.
+- README install: a step copies `examples/checks-example.json` to `~/.claude/essence/checks.json`. Without it the Stop check had no rules.
+- Site: landscape parts are a suggested shape. A stroke may say "Shortcut: none yet". The site says that hooks and shortcuts are both scripts, and explains rules that ride on a brush.
+
+### Removed
+
+- `site/Dockerfile`, `site/nginx.conf`, `site/deploy.sh` and `site/k8s/`. They no longer described how the site is served. The site is static files from `npm run build`.
+
 ## [3.6.0] - 2026-11-20
 
 ### Added

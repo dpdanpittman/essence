@@ -41,7 +41,7 @@
           },
           {
             "type": "command",
-            "command": "ESSENCE_TZ=America/Denver bash ~/.claude/scripts/essence-now.sh",
+            "command": "ESSENCE_TZ=YOUR_TIME_ZONE bash ~/.claude/scripts/essence-now.sh",
             "timeout": 5
           }
         ]

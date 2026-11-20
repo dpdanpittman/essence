@@ -15,7 +15,7 @@ Brush: BRUSH (~/.claude/essence/brushes/BRUSH.md). Check it before you start.
 <!-- What the person says or what happens that calls for this stroke. -->
 
 ## Shortcut
-<!-- The command, where its code lives, and its dry-run flag. -->
+<!-- The command, where its code lives, and its dry-run flag. Until the script exists, write: none yet. -->
 
 ## Steps
 <!-- Numbered. Each step is one action. Say where the agent must stop and ask the person. Say what success looks like. -->

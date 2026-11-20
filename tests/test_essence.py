@@ -350,6 +350,19 @@ class SynthesizeTest(unittest.TestCase):
         self.assertIn("cap", self.status()["verdict"])
         self.assertEqual(self.portrait(), self.original)
 
+    def test_session_start_warns_at_90_percent_of_the_cap(self):
+        size = len(read(os.path.join(self.dir, "portrait.md")).encode())
+        hook = os.path.join(HOOKS, "session-start-verify.sh")
+        def out(cap):
+            env = dict(self.env, ESSENCE_PORTRAIT_MAX=str(cap))
+            return subprocess.run(["bash", hook], env=env, capture_output=True, text=True).stdout
+        self.assertNotIn("NEAR ITS CAP", out(size * 2))           # well under 90%: quiet
+        below_cap = out(size + size // 20)                         # over 90%, under the cap: warns
+        self.assertIn("NEAR ITS CAP", below_cap)
+        cap = size + size // 20
+        self.assertIn(f"{cap * 9 // 10} bytes (90% of the cap)", below_cap)
+        self.assertIn(f"At {cap} bytes (ESSENCE_PORTRAIT_MAX)", below_cap)
+
     def test_strokes_are_never_edited(self):
         sd = os.path.join(self.dir, "strokes"); os.makedirs(sd)
         for name, body in (("order.md", "# Stroke: order\n"), ("gone.md", "# Stroke: gone\n")):

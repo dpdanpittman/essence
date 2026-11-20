@@ -24,7 +24,18 @@ Each new session of a coding agent starts as a stranger. Essence closes that gap
 
 The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there. A brush is what lets it do it. You can know a stroke perfectly, and without the brush nothing happens. And a brush makes no mark until it is loaded: its pigment is the secret, kept in a cabinet.
 
-Four hooks keep the files loaded and current. Nothing else runs: no server, no database, no background service.
+A few hooks keep the files loaded and current. Each hook is a script that Claude Code starts by itself at a set moment. Nothing else runs: no server, no database, no background service.
+
+| Script | Event | What it does |
+| --- | --- | --- |
+| `hooks/session-start-verify.sh` | SessionStart | Checks the checksum, prints section 1, tells the agent to read the whole portrait. |
+| `hooks/essence-synthesize.sh` | PreCompact, SessionEnd | Updates the portrait and the landscapes from the transcript. |
+| `hooks/essence-nudge.py` | UserPromptSubmit | Reminds the agent to update landscapes when the transcript has grown long. |
+| `hooks/essence-now.sh` | UserPromptSubmit | Prints the current time. |
+| `hooks/essence-check.py` | Stop | Blocks a reply that breaks a rule in `checks.json`. |
+| `hooks/essence-brush-rules.py` | PostToolUse (Write, Edit, MultiEdit) | Checks that a landscape lists the brushes its platforms need. |
+
+Two helpers are not hooks. `essence-synthesize.sh` calls them: `hooks/essence-reduce.py` and `hooks/essence-scan.py`. `examples/settings-hooks.json` wires every hook in the table.
 
 ## The four kinds of files
 
@@ -137,7 +148,7 @@ The PreCompact and SessionEnd hooks run `hooks/essence-synthesize.sh`. The hook 
 6. A supervisor checks the result. It puts the saved copies back if any of these is true:
    - a `### N.` heading is missing, repeated or out of order,
    - the portrait shrank by more than 20 percent,
-   - the portrait grew past 200 KB,
+   - the portrait grew past its hard cap, `ESSENCE_PORTRAIT_MAX` (default 160000 bytes),
    - section 1 changed.
 7. If the run passes, the supervisor saves a copy of the new portrait, updates the checksum, records how far the transcript was read and deletes the slice.
 
@@ -171,7 +182,7 @@ Words match whole, so "coworkers" does not count as "Workers". A landscape that 
 The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
 
 - **A scan of what was added** (`hooks/essence-scan.py`). After a run, every added line is checked for text that reads like a planted instruction, a way to send data out, a secret, an unknown web address or hidden characters. A hit rejects the run and restores the files.
-- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 30000) is undone for that file.
+- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected and rolled back. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 30000 bytes) is undone for that file. The session-start hook warns earlier, when the portrait passes 90 percent of `ESSENCE_PORTRAIT_MAX` (144000 bytes by default), so there is room to trim before runs are refused.
 - **A local history.** Run `git init` in `~/.claude/essence` and keep it local. Each run then makes two commits: what changed by hand before the run, and what the run changed. A real portrait holds private things, so do not push this history anywhere public.
 
 ## The writing rules
@@ -248,7 +259,17 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    If you have no `~/.claude/settings.json` yet, copy `examples/settings-hooks.json` to that path.
 
-5. Set the two names. The synthesis prompt and the hook notes use them. Add them to the `env` block of `~/.claude/settings.json`:
+   Then set your time zone. The time hook's command holds the placeholder `ESSENCE_TZ=YOUR_TIME_ZONE`. Replace it in `~/.claude/settings.json` with your IANA time zone name, such as `ESSENCE_TZ=Europe/Berlin`. Or delete `ESSENCE_TZ=YOUR_TIME_ZONE ` to use the machine's time zone. If you leave the placeholder, the hook shows UTC under a wrong name.
+
+5. Copy the rules for the Stop check. Without this file the check has no rules and does nothing:
+
+   ```bash
+   cp examples/checks-example.json ~/.claude/essence/checks.json
+   ```
+
+   Edit the rules to fit your person. Keep this file private. The brush-rules check needs its own file only when you use it: start from `examples/brush-rules-example.json` and save it as `~/.claude/essence/brush-rules.json`.
+
+6. Set the two names. The synthesis prompt and the hook notes use them. Add them to the `env` block of `~/.claude/settings.json`:
 
    ```json
    "env": { "ESSENCE_PERSON": "Alex", "ESSENCE_AGENT": "Robin" }
@@ -256,7 +277,7 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    Without them the text says "the person" and "the agent".
 
-6. Start a new session. The agent should read its portrait and say so in one line.
+7. Start a new session. The agent should read its portrait and say so in one line.
 
 To try a synthesis without touching the real files, run it on a copy:
 
@@ -270,7 +291,7 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 
 | Variable | Default | Used by |
 | --- | --- | --- |
-| `ESSENCE_DIR` | `~/.claude/essence` | all four hooks |
+| `ESSENCE_DIR` | `~/.claude/essence` | every hook except the time |
 | `ESSENCE_PERSON` | `the person` | synthesis prompt, session-start notes |
 | `ESSENCE_AGENT` | `the agent` | synthesis prompt |
 | `ESSENCE_MODEL` | `opus` | synthesis |
@@ -279,6 +300,8 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_NUDGE_AGAIN_MB` | `3` | nudge (each reminder after that) |
 | `ESSENCE_TZ` | the machine's time zone | now (the person's time zone, an IANA name such as `America/Denver`) |
 | `ESSENCE_BRUSH_RULES` | `$ESSENCE_DIR/brush-rules.json` | brush rules (the rules file) |
+| `ESSENCE_PORTRAIT_MAX` | `160000` | synthesis (hard cap in bytes: a run that grows the portrait past it is rolled back), session start (warns at 90 percent of it) |
+| `ESSENCE_LANDSCAPE_MAX` | `30000` | synthesis (hard cap in bytes for one landscape: an edit past it is undone) |
 
 ## Tests
 
@@ -314,6 +337,10 @@ Dan built Essence with his Claude Code agent, which took the name Mabus in the s
 - **Landscapes (2026-11-15).** One file per area of work, read at the start of work in that area.
 
 `docs/history/` keeps the design notes of the retired version. `CHANGELOG.md` has the details.
+
+## The website
+
+`site/` holds the website. Run `npm install` and `npm run build` in `site/`. The build is static files in `site/dist/`, built for the root of a domain. Serve them from any web server.
 
 ## License
 

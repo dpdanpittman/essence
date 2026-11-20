@@ -24,7 +24,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `examples/portrait-example.md`, `examples/landscape-example.md`, `examples/stroke-example.md`, `examples/brush-example.md`, `examples/cabinet-example.md`: invented, filled-in files (Sara, Max, a home economics class).
 - `tests/test_essence.py`: offline tests with a fake `claude` on PATH.
 - `docs/history/`: design notes of the retired version 1 and 2. Do not update them.
-- `site/`: the Astro + Tailwind website, with its own `package.json`, Dockerfile, nginx config and deploy files.
+- `site/`: the Astro + Tailwind website, with its own `package.json`. `npm run build` writes static files to `site/dist/`.
 
 ## Commands
 
@@ -51,7 +51,7 @@ cd site && npm install && npm run build     # also: npm run dev, npm run preview
 - Keep the two names as settings (`ESSENCE_PERSON`, `ESSENCE_AGENT`). The prompt uses `@PERSON@`, `@AGENT@`, `@DIR@` and `@SLICE@` placeholders.
 - The synthesis agent gets Read and Edit only. Never give it Bash, Write or network tools.
 - Prose follows the writing rules in the README: short sentences, active voice, no em dashes, no filler words.
-- Do not change deployment files (`site/Dockerfile`, `site/deploy.sh`, `site/k8s/`, `site/nginx.conf`) unless that is the task. An agent does not deploy.
+- An agent does not deploy the site. The repository holds no deployment files.
 - Commit messages: short, imperative, say what changed. Never rewrite published history. Never delete this repository.
 
 ## Traps

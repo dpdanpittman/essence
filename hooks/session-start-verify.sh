@@ -18,7 +18,9 @@
 # the last synthesis did not change the portrait.
 #
 # Settings: ESSENCE_DIR (default ~/.claude/essence),
-#           ESSENCE_PERSON (default "the person"), the name used in the notes.
+#           ESSENCE_PERSON (default "the person"), the name used in the notes,
+#           ESSENCE_PORTRAIT_MAX (default 160000), the synthesis hard cap;
+#           the size warning starts at 90% of it.
 # Wire into ~/.claude/settings.json as the SessionStart hook command.
 # =============================================================================
 
@@ -93,9 +95,14 @@ awk '/^### 1\. IDENTITY/{p=1} /^### 2\./{p=0} p' "$PORTRAIT_FILE"
 
 # Exact Read ranges, each ~55 KB, about 18k tokens (one Read call is capped at 25k), so the whole core loads in a few reads.
 CHUNKS=$(awk -v max=55000 'BEGIN{start=1;b=0} {len=length($0)+1; if(b+len>max && NR>start){printf "offset=%d limit=%d; ", start, NR-start; start=NR; b=0} b+=len} END{printf "offset=%d limit=%d", start, NR-start+1}' "$PORTRAIT_FILE")
+# Warn at 90% of the synthesis hard cap (ESSENCE_PORTRAIT_MAX, same default as
+# essence-synthesize.sh), so there is room to trim before runs are refused.
+PORTRAIT_MAX="${ESSENCE_PORTRAIT_MAX:-160000}"
+case "$PORTRAIT_MAX" in ''|*[!0-9]*) PORTRAIT_MAX=160000 ;; esac
+PORTRAIT_WARN=$(( PORTRAIT_MAX * 9 / 10 ))
 SIZE_NOTE=""
-if [ "${PORTRAIT_BYTES:-0}" -gt 200000 ]; then
-  SIZE_NOTE="> ⚠ **PORTRAIT OVER BUDGET**: core is ${PORTRAIT_BYTES} bytes (soft limit 200 KB). Tell ${PERSON}; dedupe and move stale ACTIVE CONTEXT to section 10.
+if [ "${PORTRAIT_BYTES:-0}" -gt "$PORTRAIT_WARN" ]; then
+  SIZE_NOTE="> ⚠ **PORTRAIT NEAR ITS CAP**: portrait is ${PORTRAIT_BYTES} bytes. The warning starts at ${PORTRAIT_WARN} bytes (90% of the cap). At ${PORTRAIT_MAX} bytes (ESSENCE_PORTRAIT_MAX) synthesis refuses any run that makes it bigger. Tell ${PERSON}; dedupe and move stale ACTIVE CONTEXT to section 10.
 "
 fi
 [ -n "$SIZE_NOTE" ] && echo "$SIZE_NOTE"
