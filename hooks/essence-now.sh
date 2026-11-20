@@ -3,7 +3,7 @@
 # from the person, so the agent reads the time instead of estimating it.
 #
 # Why: an agent has no clock. It guesses the time from timestamps it happened to see in tool output, and the
-# guess drifts. Asked "when is my appointment?", it said "just after 2:00" at 1:40 and counted 20 minutes too
+# guess drifts. Asked for the time, it said "just after 2:00" at 1:40 and counted 20 minutes too
 # few. A rule ("check the time") does not fix that; the fact, in front of it every turn, does.
 #
 # Prints one line, which Claude Code adds to the prompt as context. No model, no network, no state.
