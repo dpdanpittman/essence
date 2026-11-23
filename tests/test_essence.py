@@ -423,6 +423,13 @@ class SynthesizeTest(unittest.TestCase):
         self.assertIn("**Strokes**", read(os.path.join(root, "templates", "portrait.md")))
         self.assertIn("Landscape:", read(os.path.join(root, "examples", "stroke-example.md")))
 
+    def test_prompt_names_the_sketchbook(self):
+        synth = read(os.path.join(HOOKS, "essence-synthesize.sh"))
+        self.assertNotIn("diary", synth)
+        self.assertIn("candidate for the memory files or the sketchbook (you cannot write those)", synth)
+        self.assertIn("Day-to-day state lives in the sketchbook, not here.", synth)
+        self.assertIn("candidates for the memory files or the sketchbook, then", synth)
+
     def test_brushes_are_never_edited(self):
         bd = os.path.join(self.dir, "brushes"); os.makedirs(bd)
         for name, body in (("store.md", "# Brush: store\n"), ("gone.md", "# Brush: gone\n")):

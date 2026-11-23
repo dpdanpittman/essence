@@ -39,7 +39,7 @@ A few hooks keep the files loaded and current. Each hook is a script that Claude
 | --- | --- | --- |
 | `hooks/session-start-verify.sh` | SessionStart | Checks the checksum, prints section 1, tells the agent to read the whole portrait. |
 | `hooks/essence-synthesize.sh` | PreCompact, SessionEnd | Updates the portrait and the landscapes from the transcript. |
-| `hooks/essence-nudge.py` | UserPromptSubmit | Reminds the agent to update landscapes when the transcript has grown long. |
+| `hooks/essence-nudge.py` | UserPromptSubmit | Reminds the agent to update landscapes and the sketchbook when the transcript has grown long. |
 | `hooks/essence-now.sh` | UserPromptSubmit | Prints the current time, and how long since the last message and since the session began. |
 | `hooks/essence-check.py` | Stop | Blocks a reply that breaks a rule in `checks.json`. |
 | `hooks/essence-brush-rules.py` | PostToolUse (Write, Edit, MultiEdit) | Checks that a landscape lists the brushes its platforms need. |
@@ -372,7 +372,7 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 
 | Variable | Default | Used by |
 | --- | --- | --- |
-| `ESSENCE_DIR` | `~/.claude/essence` | every hook except the time |
+| `ESSENCE_DIR` | `~/.claude/essence` | every hook except the time, note, sketchbook-rotate |
 | `ESSENCE_PERSON` | `the person` | synthesis prompt, session-start notes |
 | `ESSENCE_AGENT` | `the agent` | synthesis prompt |
 | `ESSENCE_MODEL` | `opus` | synthesis |

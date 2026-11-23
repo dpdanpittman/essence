@@ -140,7 +140,7 @@ Your source is one file: @SLICE@ . It is a cut-down transcript of the conversati
 
 ## What the portrait is for
 
-The portrait is OPERATIVE memory: what shapes how the next session behaves. For every candidate edit, ask: "would the next session behave differently without this?" If yes, it belongs here. If no but it is worth remembering, name it in your final summary as a candidate for the memory files or the running diary file (you cannot write those). If neither, do not add it.
+The portrait is OPERATIVE memory: what shapes how the next session behaves. For every candidate edit, ask: "would the next session behave differently without this?" If yes, it belongs here. If no but it is worth remembering, name it in your final summary as a candidate for the memory files or the sketchbook (you cannot write those). If neither, do not add it.
 
 ## The shape of the portrait (keep this shape)
 
@@ -172,7 +172,7 @@ The portrait is OPERATIVE memory: what shapes how the next session behaves. For 
 - Change nothing you have no evidence for. Most runs add zero to three lines across these sections.
 
 ### Section 4 (ACTIVE CONTEXT)
-- It holds what stays true for weeks, one fact per line with its date. Day-to-day state lives in the running diary file, not here.
+- It holds what stays true for weeks, one fact per line with its date. Day-to-day state lives in the sketchbook, not here.
 - Update the line for a fact that changed. Add a line for a new durable fact. Mark anything not confirmed as "unconfirmed".
 - Sensitive personal matters: record only what the person reported, as they said it, with the date. Add no interpretation and no advice. Never remove such a line.
 - When a line goes stale, delete it from section 4 and add ONE dated bullet to section 10 under the right period.
@@ -229,7 +229,7 @@ The portrait is OPERATIVE memory: what shapes how the next session behaves. For 
 - Be specific. Do not invent. If the slice is routine (tool work, no correction, no decision, no new fact that lasts), make no edits and say "routine, no edits".
 - Preserve the markdown structure exactly (## header, ### numbered sections, bold sub-headings, one bullet per rule or fact).
 
-When you finish, output a short summary: one line per edit (section or landscape, what changed), then "For section 1" quotes if any, then candidates for the memory files or the running diary file, then anything suspicious. Then exit.
+When you finish, output a short summary: one line per edit (section or landscape, what changed), then "For section 1" quotes if any, then candidates for the memory files or the sketchbook, then anything suspicious. Then exit.
 SYNTHESIS_PROMPT
 PROMPT="${PROMPT//@DIR@/$ESSENCE_DIR}"
 PROMPT="${PROMPT//@SLICE@/$SLICE}"
