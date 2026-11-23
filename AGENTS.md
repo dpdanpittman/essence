@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## What this project is
 
-Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is Claude Code hooks and four kinds of markdown files: one portrait (eleven sections), one landscape per area of work (six parts), one stroke per procedure (five parts, plus a tested script, its shortcut), and one brush per ability (eight parts: a login, role, token or tool, and its permissions). A brush is loaded by its pigment (a secret) kept in a cabinet (a password-manager vault); `cabinets.md` lists the cabinets, never their contents. The files live on the owner's machine in `~/.claude/essence/`. Beside them is the studio: a few short night wake-ups with no task, where the agent has time of its own (`docs/studio.md`). This repository holds the hooks, the studio engine, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later.
+Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is Claude Code hooks and four kinds of markdown files: one portrait (eleven sections), one landscape per area of work (six parts), one stroke per procedure (five parts, plus a tested script, its shortcut), and one brush per ability (eight parts: a login, role, token or tool, and its permissions). A brush is loaded by its pigment (a secret) kept in a cabinet (a password-manager vault); `cabinets.md` lists the cabinets, never their contents. The files live on the owner's machine in `~/.claude/essence/`. Beside them is the studio: a few short night wake-ups with no task, where the agent has time of its own (`docs/studio.md`). This repository holds the hooks, the studio engine, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later. The fifth part is the studio (`studio/`): a few short wake-ups at night with no task, where the agent has time of its own. It is a script, not a file and not a hook.
 
 ## Layout
 
@@ -59,6 +59,7 @@ cd site && npm install && npm run build     # also: npm run dev, npm run preview
 - The synthesis agent gets Read and Edit only. Never give it Bash, Write or network tools.
 - The studio model run has no tools, ever: no Bash, no Read, no Write, no web, no MCP servers. A verb is a word the script recognises from a fixed list and does in plain Python. A verb only reads, or writes inside the studio folder. Only `studio/fetch.py` touches the network, and only hosts in an allowlist. Reading and the channel stay off by default.
 - Studio files are impersonal: "the agent", "the person", "the author". A town appears only as an invented example. `tests/test_studio_public.py` enforces it.
+- The whole repository is impersonal. The one personal name allowed is the author credit, a single line in `README.md` and in `site/src/components/Footer.astro`. `tests/test_studio_public.py` lets that line through and nothing else.
 - Prose follows the writing rules in the README: short sentences, active voice, no em dashes, no filler words.
 - An agent does not deploy the site. The repository holds no deployment files.
 - Commit messages: short, imperative, say what changed. Never rewrite published history. Never delete this repository.
@@ -72,6 +73,8 @@ cd site && npm install && npm run build     # also: npm run dev, npm run preview
 - The session-start hook prints `~/.claude/essence/portrait.md` in its read instruction, even when `ESSENCE_DIR` is set.
 - The session-start hook still carries two notes from version 2: a drift-check notice that fires only if `.drift-check-due` exists, and a status note that reads a `last_run` field version 3 no longer writes.
 - The site build output (`site/dist/`) is not committed.
+- The public history starts with one commit, "a fresh start" (version 3.6.1). Older commits, tags and commit ids quoted in old notes are not in this repository.
+- `README.md` describes the studio near the top and in its own section right after "The four kinds of files". Keep the README, `docs/studio.md`, `docs/setup.md` and the site section saying the same thing when the studio changes.
 
 ## Never commit or make public
 

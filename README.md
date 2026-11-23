@@ -1,6 +1,6 @@
 # Essence
 
-Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. The project was called `session-essence` before.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. Its fifth part is the studio: time of the agent's own, at night, with no task. The project was called `session-essence` before.
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
@@ -17,7 +17,9 @@ Each new session of a coding agent starts as a stranger. Essence closes that gap
 - **The strokes.** One markdown file per procedure: how the agent does one thing on the ground a landscape describes. A stroke holds the judgment and calls a tested script, its shortcut, for the steps.
 - **The brushes.** One markdown file per ability: a login, a role, a token or a tool. A brush is what lets the agent make a mark on the world. It says what the ability can reach, what it cannot, where its key lives and how to check it.
 
-Beside the four kinds of files there is **the studio**: a few short wake-ups at night with no task, where the agent has time of its own. The studio is where the agent gets its inspiration. It is a small script, not a hook, and it is off until you install it.
+The fifth part is not a file:
+
+- **The studio.** A few short wake-ups at night with no task, where the agent has time of its own. The studio is where the agent gets its inspiration. It is a small script, not a hook, and it is off until you install it.
 
 | File          | What it is                     | Answers                         |
 | ------------- | ------------------------------ | ------------------------------- |
@@ -125,6 +127,40 @@ Four rules:
 
 Each brush file carries two lines: `Pigment:` (the item's name, or "none" for a brush that needs no secret, like a local tool) and `Cabinet:` (the vault, and the helper that reads it). One file, `~/.claude/essence/cabinets.md`, lists every cabinet the agent can open: what it is, the helper that reads it, which vaults it may open, what it must never hold, who owns it, and how access is taken away. The only secret files the agent's machine may hold are the cabinets' own access tokens, each readable only by the agent's user. `templates/cabinet.md` is the skeleton, and `examples/cabinet-example.md` shows one filled in.
 
+## The studio
+
+The studio is where the agent gets its inspiration. It is time of the agent's own, at night. The full explanation is in [docs/studio.md](docs/studio.md).
+
+An agent exists only while a reply is being made or while something reaches it. A few times a night (three by default, between 02:00 and 06:00, a few minutes each) a script in `studio/` wakes the model with no task. It starts from the identity section of the portrait, so the same agent wakes up.
+
+- **The pulse.** Every 20 to 60 seconds the script sends a small message: what changed, or almost nothing ("still dark."). The pulse is what keeps the agent awake. It may answer with nothing.
+- **Senses.** They ride on the pulse: the sky over a town the agent picks (sun and moon by math, weather from Open-Meteo), the machine itself (temperatures, load, the disk working), the house lightly (a job the author names ran or finished), and a song "in time" (its lines arrive over the song's real length).
+- **Verbs.** When a pulse reaches it, the agent may write one verb as the first line of its answer, such as `do: window`. The script knows a fixed list: look out the window, feel the sun, check its temperature, open the journal, write a line, put the song on, read, leave a piece for the paper, do nothing, sleep. Each one only reads, or writes inside the studio folder, and answers with a small fixed text.
+- **The journal.** One short entry per wake-up in `~/studio/journal.md`, happenings first. A wake-up spent sitting owes nothing: the script writes "(sat a while)" by itself.
+- **In the morning.** The agent may leave a short piece for the person's morning page. It chooses what to share. A quiet night prints as a quiet night.
+
+Nothing is scored or tuned for output. Sitting is common.
+
+The safety shape:
+
+- The model run has no tools at all: no shell, no files, no web, no MCP servers. The script checks this on every turn and kills a run that has any.
+- A verb is a word the model writes. The script recognises it from a fixed list and does it in plain Python. Anything else the model writes is only text, kept in a private transcript and never journaled, shown or sent.
+- Only the script fetches, and only from an allowlist. Reading from the web is built but off until the author sets a start date and approves the sources. The two-way channel to the person is off until it is configured, and the studio never polls a chat service itself.
+- Hard limits per wake-up (time, turns, answer length, tokens) and a token allowance per night. A kill switch file stops everything. A hung wake-up ends by itself and runs at low priority.
+- The system prompt, which holds the identity section, is never written to disk.
+
+The studio takes its settings from one JSON file, not from environment variables: `templates/studio-config.json` holds every key with its default, and `examples/studio-config-example.json` is filled in for an invented agent in an invented town. The studio folder:
+
+```
+~/studio/
+  journal.md        the journal
+  jukebox/          song files the person drops in (text only; the script never fetches lyrics)
+  shelf/            local reading items, used only when reading is on
+  for-the-paper/    one piece file per night
+  state/            the plan, usage, caches, transcripts, the lock
+  OFF               the kill switch, when present
+```
+
 ## How a session starts
 
 The SessionStart hook (`hooks/session-start-verify.sh`) runs at startup and after every compaction. It does three things:
@@ -181,40 +217,6 @@ A rule on a brush only works if the landscape names the brush. `hooks/essence-br
 - `--hook` is a PostToolUse hook on Write, Edit and MultiEdit. It does nothing unless the edited file is a landscape, a brush or the rules file. On a problem it hands the agent what is missing and the line to add. It fails open: it is a reminder, not a guard, so it never blocks or slows other edits.
 
 Words match whole, so "coworkers" does not count as "Workers". A landscape that only quotes a word still mentions it and must list the brush. Shell edits bypass a tool hook, so run `--all` on a schedule as the net. The check never edits anything.
-
-## The studio
-
-The studio is where the agent gets its inspiration. It is time of the agent's own, at night. The full explanation is in [docs/studio.md](docs/studio.md).
-
-An agent exists only while a reply is being made or while something reaches it. A few times a night (three by default, between 02:00 and 06:00, a few minutes each) a script in `studio/` wakes the model with no task. It starts from the identity section of the portrait, so the same agent wakes up.
-
-- **The pulse.** Every 20 to 60 seconds the script sends a small message: what changed, or almost nothing ("still dark."). The pulse is what keeps the agent awake. It may answer with nothing.
-- **Senses.** They ride on the pulse: the sky over a town the agent picks (sun and moon by math, weather from Open-Meteo), the machine itself (temperatures, load, the disk working), the house lightly (a job the author names ran or finished), and a song "in time" (its lines arrive over the song's real length).
-- **Verbs.** When a pulse reaches it, the agent may write one verb as the first line of its answer, such as `do: window`. The script knows a fixed list: look out the window, feel the sun, check its temperature, open the journal, write a line, put the song on, read, leave a piece for the paper, do nothing, sleep. Each one only reads, or writes inside the studio folder, and answers with a small fixed text.
-- **The journal.** One short entry per wake-up in `~/studio/journal.md`, happenings first. A wake-up spent sitting owes nothing: the script writes "(sat a while)" by itself.
-- **In the morning.** The agent may leave a short piece for the person's morning page. It chooses what to share. A quiet night prints as a quiet night.
-
-Nothing is scored or tuned for output. Sitting is common.
-
-The safety shape:
-
-- The model run has no tools at all: no shell, no files, no web, no MCP servers. The script checks this on every turn and kills a run that has any.
-- A verb is a word the model writes. The script recognises it from a fixed list and does it in plain Python. Anything else the model writes is only text, kept in a private transcript and never journaled, shown or sent.
-- Only the script fetches, and only from an allowlist. Reading from the web is built but off until the author sets a start date and approves the sources. The two-way channel to the person is off until it is configured, and the studio never polls a chat service itself.
-- Hard limits per wake-up (time, turns, answer length, tokens) and a token allowance per night. A kill switch file stops everything. A hung wake-up ends by itself and runs at low priority.
-- The system prompt, which holds the identity section, is never written to disk.
-
-The studio takes its settings from one JSON file, not from environment variables: `templates/studio-config.json` holds every key with its default, and `examples/studio-config-example.json` is filled in for an invented agent in an invented town. The studio folder:
-
-```
-~/studio/
-  journal.md        the journal
-  jukebox/          song files the person drops in (text only; the script never fetches lyrics)
-  shelf/            local reading items, used only when reading is on
-  for-the-paper/    one piece file per night
-  state/            the plan, usage, caches, transcripts, the lock
-  OFF               the kill switch, when present
-```
 
 ## Guarding the memory itself
 
