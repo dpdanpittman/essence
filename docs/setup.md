@@ -18,7 +18,7 @@ There are two ways through the install. `./install.sh` does the mechanical part 
 ### What it costs
 
 - **Tokens at every session start.** Your agent reads the whole portrait into its context at every start and after every compaction. The template is 4373 bytes. A portrait grows over months, up to the hard cap of 160000 bytes (`ESSENCE_PORTRAIT_MAX`). A rough rule for English text is 4 bytes per token, so that is about 1,100 tokens for the template and about 40,000 tokens at the cap. This is an estimate. It was not measured.
-- **Tokens on every prompt.** The time line is about 25 tokens. The nudge adds about 90 tokens, and only when a conversation has grown past 6 MB, then every 3 MB.
+- **Tokens on every prompt.** The time line is about 25 tokens. The nudge adds about 100 tokens, and only when a conversation has grown past 6 MB, then every 3 MB.
 - **A model run at every compaction and every session end.** The synthesis runs `claude -p` with the model `opus` (setting `ESSENCE_MODEL`). It runs only when the new part of the transcript holds at least 3 messages from you (`ESSENCE_MIN_MESSAGES`). Its input is bounded by the code: the transcript slice is at most 600000 bytes, the portrait at most 160000 bytes, and each landscape it opens at most 30000 bytes. It uses several turns with Read and Edit, so it reads some of that more than once. Its token use and its price were not measured. It is billed to the account your `claude` command logs in with.
 - **No model for the checks.** The Stop check, the nudge, the time line and the brush-rules check are local scripts. They use no model and no network.
 - **Disk.** Each synthesis that changes the portrait keeps two copies of it in `~/.claude/essence/portraits/`. Nothing deletes them. At the cap, that is up to 320 KB per run.
@@ -76,7 +76,7 @@ Then run it:
 
 You should see `done:` lines, one per action, and at the end `Next: write section 1 of ~/.claude/essence/portrait.md`. A second run prints `same:` and `kept:` lines and changes nothing. To undo it, run `./install.sh --uninstall` (see Uninstall).
 
-After the installer, go to step 5 and then step 8.
+After the installer, go to step 5, then step 8. Step 9 is optional.
 
 ### The manual path
 
@@ -98,7 +98,7 @@ ls
 ```
 
 ```
-AGENTS.md  CHANGELOG.md  docs  examples  hooks  install.sh  LICENSE  README.md  site  studio  templates  tests
+AGENTS.md  CHANGELOG.md  CLAUDE.md  docs  examples  hooks  install.sh  LICENSE  README.md  site  studio  templates  tests
 ```
 
 Undo: `cd ..` and `rm -rf essence`.
@@ -384,7 +384,7 @@ If `~/.claude/essence` is a git repository, each synthesis makes two commits: wh
 git -C ~/.claude/essence init
 ```
 
-You should see `Initialized empty Git repository in .../.claude/essence/.git/`. Keep this history local. A real portrait holds private things, so never push it to a public remote.
+You should see `Initialized empty Git repository in .../.claude/essence/.git/`. Git may print a few `hint:` lines about the branch name first. They do no harm. Keep this history local. A real portrait holds private things, so never push it to a public remote.
 
 Undo: `rm -rf ~/.claude/essence/.git`.
 
@@ -525,7 +525,13 @@ cp ~/.claude/essence/portraits/<time>-before.md ~/.claude/essence/portrait.md
 (cd ~/.claude/essence && sha256sum portrait.md > portrait.md.sha256)
 ```
 
-With the local history, you can instead restore the file from the commit before the run: `git -C ~/.claude/essence checkout HEAD~1 -- portrait.md`, then write the checksum the same way.
+With the local history, you can instead restore the file from the commit before the run. Git writes the file with your default mode, so set it back to 600, then write the checksum:
+
+```bash
+git -C ~/.claude/essence checkout HEAD~1 -- portrait.md
+chmod 600 ~/.claude/essence/portrait.md
+(cd ~/.claude/essence && sha256sum portrait.md > portrait.md.sha256)
+```
 
 ### After you edit the portrait yourself
 
@@ -642,7 +648,7 @@ To check everything at once:
 python3 ~/.claude/scripts/essence-brush-rules.py --all
 ```
 
-Exit code 0 and no output means clean. Each problem prints one line.
+Exit code 0 and no output means clean. Each problem prints one line, and the exit code is 1. Without a rules file, it prints `broken rules file: rules file .../brush-rules.json does not exist` and exits with code 2. The hook stays silent in that case.
 
 ## Optional: the studio
 
@@ -718,10 +724,10 @@ Then match what you see:
 | `portrait not changed` and `agent exit 0`        | The model found nothing that should change the next session.       | Nothing to fix. A routine session makes no edits.                                                           |
 | `no transcript to read`                          | The hook got no transcript path.                                   | Run it by hand with `--transcript` (see Your first synthesis).                                              |
 
-A run that stopped in the middle can leave files in `~/.claude/essence/run/`. They hold parts of your conversation. Remove them when no synthesis is running:
+A run that stopped in the middle can leave files in `~/.claude/essence/run/` and a lock file, `~/.claude/essence/.synthesis-running`. The files in `run/` hold parts of your conversation. This command removes both, but only when the process named in the lock has ended. Otherwise it prints `a synthesis is running; wait for it`:
 
 ```bash
-ls ~/.claude/essence/.synthesis-running 2>/dev/null || rm -rf ~/.claude/essence/run/*
+if kill -0 "$(cat ~/.claude/essence/.synthesis-running 2>/dev/null)" 2>/dev/null; then echo "a synthesis is running; wait for it"; else rm -f ~/.claude/essence/.synthesis-running; rm -rf ~/.claude/essence/run/*; echo cleaned; fi
 ```
 
 ### PORTRAIT INTEGRITY WARNING at session start
@@ -746,25 +752,30 @@ If a difference is not yours, restore a saved copy (see Roll back to the previou
 
 Symptom: Claude Code reports a problem with your settings when it starts, and no Essence hook runs. `./install.sh` stops with `settings.json is not valid JSON` and changes nothing.
 
-Check: `jq empty ~/.claude/settings.json` prints the line and column of the first error, such as `jq: error (at ~/.claude/settings.json:5): ...` or `parse error: Expected separator between values at line 5, column 3`.
+Check: `jq empty ~/.claude/settings.json` prints the line and column of the first error, such as `jq: parse error: Expected value before ',' at line 46, column 14`.
 
-Fix: restore the backup from before the change:
+Fix: open the file and fix the error at the line `jq` names. A common cause is a comma after the last item of a list or an object, or a comma before the first one. Run `jq empty ~/.claude/settings.json` again until it prints nothing.
+
+If you would rather go back, list the backups, newest first:
 
 ```bash
-ls -t ~/.claude/settings.json.bak* | head -1
-cp ~/.claude/settings.json.bak-essence ~/.claude/settings.json
+ls -t ~/.claude/settings.json.bak*
 ```
 
-The installer's backups are named `settings.json.bak-<time>`. Use the newest one. If there is no backup, open the file and fix the error at the line `jq` names. A common cause is a comma after the last item of a list or an object.
+`settings.json.bak-essence` is the copy from before step 7, and the installer's copies are named `settings.json.bak-<time>`. A backup from before the install has no Essence entries. After you restore it, do step 7 again, or run `./install.sh`:
+
+```bash
+cp ~/.claude/settings.json.bak-essence ~/.claude/settings.json
+```
 
 ### A missing tool
 
 Symptom and fix, per tool:
 
 - **jq missing.** `./install.sh` stops with `missing: jq`. The manual merge in step 7 prints `jq: command not found`. The hooks still run, but without jq the session start skips its status notes. Install jq.
-- **sha256sum missing.** The synthesis stops after the model run, at the checksum: the log ends without a `finished` line, `portrait.md.sha256` is left empty, and every session start shows `PORTRAIT INTEGRITY WARNING`. Install GNU coreutils, write the checksum by hand (above), and remove the leftovers in `~/.claude/essence/run/`.
-- **GNU stat missing** (macOS). The synthesis stops before the model run, right after it saved the `before` copy. Nothing changes. Essence's synthesis does not run on macOS as it is.
-- **python3 missing.** Every hook fails. Claude Code shows a hook error with `python3: command not found`. Install Python 3.
+- **sha256sum missing.** The synthesis stops after the model run, at the checksum. The model's edit stays in the portrait, the log ends without a `finished` line, `portrait.md.sha256` is left empty, and every session start shows `PORTRAIT INTEGRITY WARNING`. Install GNU coreutils. Then check the edit with `diff`, write the checksum by hand (above), and remove the leftovers with the cleanup command above.
+- **GNU stat missing** (macOS). The synthesis prints `stat: illegal option -- c` and stops before the model run, right after it saved the `before` copy. The portrait does not change. The slice stays in `run/`: remove it with the cleanup command above. Essence's synthesis does not run on macOS as it is.
+- **python3 missing.** Every Python hook fails with `python3: command not found` (exit code 127), and the synthesis cannot cut the transcript. The hook log from Your first session shows the error. Install Python 3.
 - **claude missing from the hook's PATH.** See the synthesis table above.
 
 The check in Before you start finds all of these at once.
@@ -811,6 +822,8 @@ You should see a backup line for `settings.json`, `done:  wrote ~/.claude/settin
    ```
 
 5. If you installed the studio, follow Undo in [docs/studio.md](studio.md).
+
+6. If `~/.claude/scripts/` is now empty, remove it: `rmdir ~/.claude/scripts`. `rmdir` refuses a folder that still holds files.
 
 Restart Claude Code. `/hooks` should list no Essence hooks.
 

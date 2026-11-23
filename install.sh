@@ -105,7 +105,7 @@ write_settings() {
 }
 
 if [ -f "$SETTINGS" ] && ! jq empty "$SETTINGS" >/dev/null 2>&1; then
-  fail "$SETTINGS is not valid JSON. Fix it first (jq . $SETTINGS shows where). Nothing was changed."
+  fail "$(t "$SETTINGS") is not valid JSON. Fix it first (jq empty $(t "$SETTINGS") shows where). Nothing was changed."
 fi
 
 # --- uninstall -----------------------------------------------------------------------------------
