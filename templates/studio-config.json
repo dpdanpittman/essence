@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "studio_dir": "~/studio",
+  "kill_switch": null,
+  "names": {
+    "agent": "the agent",
+    "person": "the person"
+  },
+  "town": {
+    "name": null,
+    "latitude": 0.0,
+    "longitude": 0.0,
+    "time_zone": "UTC"
+  },
+  "schedule": {
+    "time_zone": "UTC",
+    "window_start": "02:00",
+    "window_end": "06:00",
+    "end_by": null,
+    "count": 3,
+    "min_gap_minutes": 30
+  },
+  "limits": {
+    "wall_seconds": 300,
+    "min_seconds": 120,
+    "max_turns": 12,
+    "turn_timeout_seconds": 90,
+    "max_answer_chars": 1200,
+    "wakeup_tokens": 150000,
+    "daily_tokens": 400000
+  },
+  "pulse": {
+    "min_seconds": 20,
+    "max_seconds": 60,
+    "song_seconds": 15,
+    "quiet_chance": 0.6
+  },
+  "identity": {
+    "path": null,
+    "start": "### 1. ",
+    "end": "### 2. ",
+    "max_chars": 12000
+  },
+  "model": {
+    "command": ["claude"],
+    "name": "opus",
+    "auth_token_cmd": null,
+    "auth_token_env": "CLAUDE_CODE_OAUTH_TOKEN"
+  },
+  "senses": {
+    "sky": true,
+    "body": true,
+    "house": true,
+    "song": true
+  },
+  "weather": {
+    "enabled": true,
+    "cache_minutes": 30
+  },
+  "body": {
+    "sys_root": "/",
+    "temps": [],
+    "disk": null
+  },
+  "house": {
+    "signals": []
+  },
+  "verbs": {
+    "window": true,
+    "sun": true,
+    "temperature": true,
+    "journal": true,
+    "write": true,
+    "song": true,
+    "read": true,
+    "paper": true,
+    "nothing": true,
+    "sleep": true
+  },
+  "reading": {
+    "start_date": null,
+    "sources": [],
+    "max_chars": 4000
+  },
+  "channel": {
+    "chat_id": null,
+    "allowed_sender_id": null,
+    "inbox_dir": null,
+    "post_command": null,
+    "post_piece": false
+  },
+  "paper": {
+    "enabled": true,
+    "dir": null
+  },
+  "journal": {
+    "max_line_chars": 280,
+    "max_lines_per_wakeup": 3,
+    "tail_entries": 5
+  },
+  "transcripts": {
+    "keep_days": 14
+  }
+}

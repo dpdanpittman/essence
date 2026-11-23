@@ -4,6 +4,14 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+
+- The studio: time of the agent's own, at night. The studio is where the agent gets its inspiration. A few short wake-ups a night (three by default, between 02:00 and 06:00) start the model with no task, from the identity section of the portrait. A pulse every 20 to 60 seconds carries what the agent can sense: the sky over a town it picks, the machine it runs on, the house lightly, and a song in time. The agent may reach for one verb at a time (look out the window, feel the sun, check its temperature, open the journal, write a line, put the song on, read, leave a piece for the paper, do nothing, sleep). The script writes a short journal entry per wake-up, "(sat a while)" when the agent only sat, and a piece file for the person's morning page.
+- The studio's safety shape: the model run has no tools at all. A verb is a word the script recognises from a fixed list and does in plain Python, read-only or inside the studio folder. Only the script fetches, from an allowlist. Reading from the web and the two-way channel are built but off. Hard limits per wake-up (time, turns, answer length, tokens), a token allowance per night and a kill switch.
+- `studio/` (the engine, Python 3.12 standard library), `docs/studio.md`, `templates/studio-config.json`, `examples/studio-config-example.json`, `examples/studio-journal-example.md`, and offline tests with a fake stream-json `claude`. `tests/test_studio_public.py` checks that the studio files hold nothing personal.
+- The studio reads one JSON config file (`--config` or `STUDIO_CONFIG`). It is the one exception to "environment variables only".
+- Site: a new section, "06 · The studio". The sections after it are renumbered.
+
 ### Changed
 
 - Site: new design, "the studio notebook". Toned drawing paper, Alegreya and Alegreya Sans, and one pigment per kind of file that marks that kind in every diagram: ultramarine for the portrait, yellow ochre for the landscapes, vermilion for the strokes, lamp black for the brushes. The cabinet is drawn as a chest of four drawers, one pigment rule on each. The pull quote is a slip taped into the margin. Every painted edge is its own, drawn from a seed at build time. The text is unchanged.

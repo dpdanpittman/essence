@@ -14,6 +14,8 @@ Each new session of a coding agent starts as a stranger. Essence closes that gap
 - **The strokes.** One markdown file per procedure: how the agent does one thing on the ground a landscape describes. A stroke holds the judgment and calls a tested script, its shortcut, for the steps.
 - **The brushes.** One markdown file per ability: a login, a role, a token or a tool. A brush is what lets the agent make a mark on the world. It says what the ability can reach, what it cannot, where its key lives and how to check it.
 
+Beside the four kinds of files there is **the studio**: a few short wake-ups at night with no task, where the agent has time of its own. The studio is where the agent gets its inspiration. It is a small script, not a hook, and it is off until you install it.
+
 | File          | What it is                     | Answers                         |
 | ------------- | ------------------------------ | ------------------------------- |
 | The portrait  | who the agent is               | Who am I, with this person?     |
@@ -177,6 +179,40 @@ A rule on a brush only works if the landscape names the brush. `hooks/essence-br
 
 Words match whole, so "coworkers" does not count as "Workers". A landscape that only quotes a word still mentions it and must list the brush. Shell edits bypass a tool hook, so run `--all` on a schedule as the net. The check never edits anything.
 
+## The studio
+
+The studio is where the agent gets its inspiration. It is time of the agent's own, at night. The full explanation is in [docs/studio.md](docs/studio.md).
+
+An agent exists only while a reply is being made or while something reaches it. A few times a night (three by default, between 02:00 and 06:00, a few minutes each) a script in `studio/` wakes the model with no task. It starts from the identity section of the portrait, so the same agent wakes up.
+
+- **The pulse.** Every 20 to 60 seconds the script sends a small message: what changed, or almost nothing ("still dark."). The pulse is what keeps the agent awake. It may answer with nothing.
+- **Senses.** They ride on the pulse: the sky over a town the agent picks (sun and moon by math, weather from Open-Meteo), the machine itself (temperatures, load, the disk working), the house lightly (a job the author names ran or finished), and a song "in time" (its lines arrive over the song's real length).
+- **Verbs.** When a pulse reaches it, the agent may write one verb as the first line of its answer, such as `do: window`. The script knows a fixed list: look out the window, feel the sun, check its temperature, open the journal, write a line, put the song on, read, leave a piece for the paper, do nothing, sleep. Each one only reads, or writes inside the studio folder, and answers with a small fixed text.
+- **The journal.** One short entry per wake-up in `~/studio/journal.md`, happenings first. A wake-up spent sitting owes nothing: the script writes "(sat a while)" by itself.
+- **In the morning.** The agent may leave a short piece for the person's morning page. It chooses what to share. A quiet night prints as a quiet night.
+
+Nothing is scored or tuned for output. Sitting is common.
+
+The safety shape:
+
+- The model run has no tools at all: no shell, no files, no web, no MCP servers. The script checks this on every turn and kills a run that has any.
+- A verb is a word the model writes. The script recognises it from a fixed list and does it in plain Python. Anything else the model writes is only text, kept in a private transcript and never journaled, shown or sent.
+- Only the script fetches, and only from an allowlist. Reading from the web is built but off until the author sets a start date and approves the sources. The two-way channel to the person is off until it is configured, and the studio never polls a chat service itself.
+- Hard limits per wake-up (time, turns, answer length, tokens) and a token allowance per night. A kill switch file stops everything. A hung wake-up ends by itself and runs at low priority.
+- The system prompt, which holds the identity section, is never written to disk.
+
+The studio takes its settings from one JSON file, not from environment variables: `templates/studio-config.json` holds every key with its default, and `examples/studio-config-example.json` is filled in for an invented agent in an invented town. The studio folder:
+
+```
+~/studio/
+  journal.md        the journal
+  jukebox/          song files the person drops in (text only; the script never fetches lyrics)
+  shelf/            local reading items, used only when reading is on
+  for-the-paper/    one piece file per night
+  state/            the plan, usage, caches, transcripts, the lock
+  OFF               the kill switch, when present
+```
+
 ## Guarding the memory itself
 
 The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
@@ -279,6 +315,18 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
 7. Start a new session. The agent should read its portrait and say so in one line.
 
+8. Optional: the studio. Copy the engine next to the hooks, write its config, and look before anything runs:
+
+   ```bash
+   cp -r studio ~/.claude/scripts/studio
+   mkdir -p ~/.config/studio
+   cp examples/studio-config-example.json ~/.config/studio/config.json
+   PYTHONPATH=~/.claude/scripts python3 -P -m studio wake --dry-run
+   PYTHONPATH=~/.claude/scripts python3 -P -m studio measure
+   ```
+
+   Set the token limits from what `measure` prints. Then add the user timer from [docs/studio.md](docs/studio.md). The studio needs Python 3.12.
+
 To try a synthesis without touching the real files, run it on a copy:
 
 ```bash
@@ -302,6 +350,10 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_BRUSH_RULES` | `$ESSENCE_DIR/brush-rules.json` | brush rules (the rules file) |
 | `ESSENCE_PORTRAIT_MAX` | `160000` | synthesis (hard cap in bytes: a run that grows the portrait past it is rolled back), session start (warns at 90 percent of it) |
 | `ESSENCE_LANDSCAPE_MAX` | `30000` | synthesis (hard cap in bytes for one landscape: an edit past it is undone) |
+| `STUDIO_CONFIG` | `~/.config/studio/config.json` | studio (the one config file; `--config` wins over it) |
+| `STUDIO_DIR` | the config's `studio_dir` | studio (overrides the studio folder, for tests and dry runs) |
+
+The studio is the one exception to "environment variables only". It has too many settings for that, so they live in one JSON file. Every key is in [docs/studio.md](docs/studio.md).
 
 ## Tests
 
@@ -313,6 +365,8 @@ python3 -m unittest discover -s tests -v
 
 They cover the reducer on a tiny transcript, the nudge decision, and the synthesis wrapper: a good edit is kept, a run that removes a heading is rolled back, a run that changes section 1 is rolled back, and a run with too little new conversation is skipped.
 
+The studio tests use a fake `claude` that speaks the same stream format, fake senses and temporary folders. They cover the config, the answer parser, the limits, the kill switch, the journal rules, the schedule, the senses and the command line. `tests/test_studio_public.py` checks that the studio files hold nothing personal.
+
 ## The cold test
 
 Start a cold session. Ask it ten questions about one area of work. It should answer from the landscape alone. If it cannot, the landscape is missing something.
@@ -323,6 +377,7 @@ Start a cold session. Ask it ten questions about one area of work. It should ans
 - It is not a product.
 - Synthesis is not local. It uses the model provider the agent already runs on.
 - The files stay on the owner's machine. Nothing in this repository sends them anywhere.
+- The studio's script fetches the weather for the agent's town from Open-Meteo. The model never touches the web. Weather data by Open-Meteo.com (CC BY 4.0).
 - It runs on Claude Code hooks and assumes Claude Code's transcript format.
 - The session-start hook tells the agent to read `~/.claude/essence/portrait.md`, even when `ESSENCE_DIR` points elsewhere.
 

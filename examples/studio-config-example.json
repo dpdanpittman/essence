@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "studio_dir": "~/studio",
+  "names": {
+    "agent": "Robin",
+    "person": "Alex"
+  },
+  "town": {
+    "name": "Lowmoor",
+    "latitude": 61.2,
+    "longitude": 7.1,
+    "time_zone": "Europe/Oslo"
+  },
+  "schedule": {
+    "time_zone": "Europe/London",
+    "window_start": "02:00",
+    "window_end": "06:00",
+    "end_by": "05:30",
+    "count": 3,
+    "min_gap_minutes": 30
+  },
+  "identity": {
+    "path": "~/.claude/essence/portrait.md",
+    "start": "### 1. IDENTITY",
+    "end": "### 2. "
+  },
+  "model": {
+    "name": "opus"
+  },
+  "body": {
+    "temps": [
+      { "hwmon": "coretemp", "label": "the processor" },
+      { "hwmon": "nvme", "label": "the drive" }
+    ]
+  },
+  "house": {
+    "signals": [
+      {
+        "kind": "unit",
+        "unit": "nightly-backup.service",
+        "running": "the disk is busy: the backup is running",
+        "finished": "the backup finished"
+      },
+      {
+        "kind": "file",
+        "path": "~/notes/morning-page.html",
+        "changed": "the morning page got built"
+      }
+    ]
+  },
+  "reading": {
+    "start_date": null,
+    "sources": []
+  },
+  "channel": {
+    "chat_id": null,
+    "allowed_sender_id": null,
+    "inbox_dir": null,
+    "post_command": null,
+    "post_piece": false
+  }
+}
