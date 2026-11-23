@@ -1,0 +1,29 @@
+{
+  "latitude": 61.2,
+  "longitude": 7.1,
+  "generationtime_ms": 0.05,
+  "utc_offset_seconds": 3600,
+  "timezone": "Europe/Oslo",
+  "timezone_abbreviation": "CET",
+  "elevation": 12.0,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "temperature_2m": "°C",
+    "cloud_cover": "%",
+    "wind_speed_10m": "m/s",
+    "wind_direction_10m": "°",
+    "precipitation": "mm",
+    "weather_code": "wmo code"
+  },
+  "current": {
+    "time": "2026-01-15T09:45",
+    "interval": 900,
+    "temperature_2m": -2.4,
+    "cloud_cover": 92,
+    "wind_speed_10m": 6.3,
+    "wind_direction_10m": 40,
+    "precipitation": 0.2,
+    "weather_code": 71
+  }
+}

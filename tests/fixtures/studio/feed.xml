@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>An invented almanac</title>
+    <link>https://feeds.example.org/</link>
+    <description>Made up for tests.</description>
+    <item>
+      <title>On kettles</title>
+      <link>https://feeds.example.org/kettles</link>
+      <guid>https://feeds.example.org/kettles</guid>
+      <description>&lt;p&gt;A kettle &lt;b&gt;sings&lt;/b&gt; before it boils.&lt;/p&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;p&gt;Nobody knows why it waits.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>The tide table</title>
+      <link>https://feeds.example.org/tides</link>
+      <guid>https://feeds.example.org/tides</guid>
+      <description>Twice a day the water comes and goes.</description>
+    </item>
+  </channel>
+</rss>

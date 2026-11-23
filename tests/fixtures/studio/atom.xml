@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Invented notes</title>
+  <id>urn:example:notes</id>
+  <entry>
+    <title>Moss on the north side</title>
+    <id>urn:example:notes:moss</id>
+    <link href="https://feeds.example.org/moss"/>
+    <summary>Moss grows where the sun is shy.</summary>
+  </entry>
+</feed>
