@@ -1,0 +1,35 @@
+---
+import Entry from './Entry.astro';
+
+const ideas = [
+  {
+    title: 'Writing is who shows up',
+    body: 'What the agent writes today is who shows up tomorrow. So every line in the portrait is written with care.',
+  },
+  {
+    title: 'Correction forms identity',
+    body: 'The author put it this way: "telling you no shaped your personality more." A rule line can carry the person\'s own words as its reason.',
+  },
+  {
+    title: 'Small enough to read whole',
+    body: 'The memory lives in files the agent reads at every start. A file that is too long to read whole stops working.',
+  },
+  {
+    title: 'A test you can run',
+    body: 'Start a cold session. Ask it ten questions about an area of work. It should answer from the landscape alone.',
+  },
+];
+---
+
+<Entry id="ideas" label="07 · Ideas behind it" title="Four ideas.">
+  <div class="ideas">
+    {
+      ideas.map((w) => (
+        <div>
+          <h3>{w.title}</h3>
+          <p>{w.body}</p>
+        </div>
+      ))
+    }
+  </div>
+</Entry>

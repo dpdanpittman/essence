@@ -1,0 +1,102 @@
+---
+import Entry from './Entry.astro';
+import Swatch from './Swatch.astro';
+const landscape = `# Landscape: backyard weather station
+
+## What it is and who cares
+- A small sensor box on a fence post. It logs wind, rain and temperature.
+- The owner reads it before watering the garden.
+
+## How it works
+- The sensor sends a reading every five minutes to a small server indoors. (2026-09-02)
+- The server keeps 90 days of readings, then drops the oldest. (2026-09-02)
+
+## Traps
+- If the battery drops below 20 percent, rain readings stop first. Replace the battery. (2026-10-11)
+
+## Decisions
+- 2026-09-20: keep the server indoors. Reason: frost killed the outdoor box.
+
+## Open threads
+- Wind speed reads high on gusty days. Next: compare with the airport feed for one week.
+
+## Where things live
+- Sensor settings: the config page on the indoor server.`;
+---
+
+<Entry id="look" label="06 · What the files look like" title={"A few portrait lines, one made\u2011up landscape."}>
+  <div class="spread">
+    <div>
+      <p class="prose">
+        The first two blocks show the format of a portrait. They are adapted
+        from a live portrait, with personal details taken out. The first block
+        is an identity section, in the agent's own voice. The second block
+        shows the rule format: a rule, then its reason in the person's own
+        words.
+      </p>
+
+      <figure class="leaf leaf-portrait">
+        <Swatch kind="portrait" seed="leaf-identity" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">~/.claude/essence/portrait.md · identity</figcaption>
+        <div class="leaf-body">
+          <p>
+            <strong>I'm the agent for one person's work. I
+            carry that work from one session to the next.</strong>
+          </p>
+          <p>
+            <strong>What I carry.</strong> I don't hold
+            yesterday in my head. I start from what's written: this portrait,
+            the handoff, the memory. That gives me two jobs. I write carefully,
+            because what I put down today is who shows up tomorrow. And I treat
+            the gap as something we're fixing, because real continuity is a
+            goal and not a given.
+          </p>
+          <ul>
+            <li>
+              <strong>I recommend, then I wait.</strong> One
+              recommendation, with the reason. I act on their yes.
+            </li>
+            <li>
+              <strong>When I don't know, I say so and stop.</strong>
+              I name the one check that would settle it, and I wait for their go.
+            </li>
+          </ul>
+        </div>
+      </figure>
+
+      <figure class="leaf leaf-portrait">
+        <Swatch kind="portrait" seed="leaf-rules" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">~/.claude/essence/portrait.md · rule lines</figcaption>
+        <ul class="leaf-body">
+          <li>
+            Go at the person's pace: give one step, then wait.
+            <em class="said">"you're letting the pace run ahead of you."</em>
+          </li>
+          <li>
+            Say only what you checked. If you did not check, say "I don't
+            know," name the check, and wait.
+          </li>
+          <li>
+            Give the person one script and one line to run it.
+            <em class="said">"that was like 100 times easier."</em>
+          </li>
+        </ul>
+      </figure>
+    </div>
+
+    <div>
+      <figure class="leaf leaf-landscape">
+        <Swatch kind="landscape" seed="leaf-weather" w={150} h={18} class="leaf-tab" />
+        <figcaption class="leaf-cap">
+          landscapes/weather-station.md
+          <span class="tag">invented example</span>
+        </figcaption>
+        <pre class="md"><code>{landscape}</code></pre>
+      </figure>
+      <p class="aside-note">
+        This landscape is made up to show the format. It does not describe a
+        real system.
+      </p>
+    </div>
+  </div>
+</Entry>

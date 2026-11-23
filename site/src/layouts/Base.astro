@@ -1,0 +1,55 @@
+---
+import '../styles/site.css';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Essence · an AI that remembers who it is',
+  description = 'Essence is a small set of files and hooks that carries a Claude Code agent across the gap between sessions: who it is with its person, and the picture of each area of work.',
+} = Astro.props;
+
+// Only the families, styles and weights the stylesheet uses.
+const fonts =
+  'https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;0,800;1,400&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400&display=swap';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href={fonts} />
+  </head>
+  <body>
+    <a class="skip" href="#content">Skip to content</a>
+    <!-- Shared paper grain for every painted swatch. -->
+    <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+      <filter id="grain" x="-2%" y="-2%" width="104%" height="104%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="2" seed="7" result="noise" />
+        <feColorMatrix
+          in="noise"
+          type="matrix"
+          values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -.45 0 0 0 1.12"
+          result="tooth"
+        />
+        <feComposite in="SourceGraphic" in2="tooth" operator="in" />
+      </filter>
+    </svg>
+    <main id="content">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

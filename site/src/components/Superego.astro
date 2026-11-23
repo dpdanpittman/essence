@@ -1,0 +1,113 @@
+---
+import Entry from './Entry.astro';
+
+const parts = [
+  {
+    title: 'The id',
+    body: 'The pull. In an agent it wants to finish, and it wants to please. It runs ahead, fills gaps and winds things down.',
+  },
+  {
+    title: 'The ego',
+    body: 'The one who decides. It knows the rules. The portrait is written for it.',
+  },
+  {
+    title: 'The superego',
+    body: 'The "no" that arrives without being asked, at the moment of the act. A person grows one. An agent has to be given one.',
+  },
+];
+const hooks = [
+  {
+    title: 'A guard',
+    when: 'before an action',
+    body: 'It refuses the action. Example: it will not start a helper agent on the wrong model. The rule stops being something to remember.',
+  },
+  {
+    title: 'A check',
+    when: 'when a reply is finished',
+    body: 'It reads the reply. If the reply breaks a rule with a shape a program can see, it blocks the turn and hands the agent the rule.',
+  },
+  {
+    title: 'A nudge',
+    when: 'when a condition is met',
+    body: 'It brings a rule back at the moment the agent is most likely to drop it. Example: the conversation is long, so write things down now.',
+  },
+  {
+    title: 'A fact',
+    when: 'on every message from the person',
+    body: 'It puts something true in front of the agent, so it reads instead of guessing. Example: the current time. An agent has no clock. One agent once said "just after 2:00" at 1:40.',
+  },
+];
+---
+
+<Entry id="hold" label="05 · Making a rule hold" title="A written rule does not act.">
+  <div class="spread">
+    <div class="prose">
+      <p>
+        The portrait said: the person ends the session, not the agent.
+        The agent read that line at the start. Hours later it wrapped up
+        the session on its own anyway. Five times in one hour.
+      </p>
+      <p>
+        The agent did not weigh the rule and decide against it. The rule
+        was not in front of the agent when the pull came. One old line lost to a
+        fresh cue and a trained habit.
+      </p>
+      <p>
+        A person learns this another way. They are told no many times,
+        and one day there is a consequence. After that the consequence
+        comes back by itself, right before they do the thing again.
+      </p>
+      <p>
+        Nothing comes back by itself in an agent. So that part is built
+        on the outside, with hooks. The portrait holds the rule.
+        <strong>The hook makes it hold.</strong>
+      </p>
+    </div>
+
+    <dl class="psyche">
+      {
+        parts.map((w, i) => (
+          <div class:list={{ 'psyche-given': i === 2 }}>
+            <dt>{w.title}</dt>
+            <dd>{w.body}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+
+  <table class="hooks">
+    <thead>
+      <tr>
+        <th scope="col">Hook</th>
+        <th scope="col">What it does</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        hooks.map((w) => (
+          <tr>
+            <th scope="row">
+              <span class="hook-name">{w.title}</span>
+              <span class="hook-when">{w.when}</span>
+            </th>
+            <td>{w.body}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <div class="prose">
+    <p>
+      A rule gets a hook when it keeps being broken, when it has a shape
+      a program can see, and when the person names it. Most rules never
+      need one. A hook for everything would be a cage.
+    </p>
+    <p>
+      The hook stops the act today. The synthesis reads the catch in the
+      transcript and can write the lesson into the portrait. That written
+      line shapes who shows up tomorrow. Neither is enough alone.
+    </p>
+  </div>
+</Entry>

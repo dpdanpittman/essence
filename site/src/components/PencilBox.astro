@@ -1,0 +1,17 @@
+---
+// A box drawn in pencil, twice over, behind its parent. The parent needs position: relative.
+import { pencilBox } from '../lib/rough';
+
+interface Props {
+  seed: string;
+  w?: number;
+  h?: number;
+}
+
+const { seed, w = 200, h = 52 } = Astro.props;
+---
+
+<svg class="pencil-box" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true" focusable="false">
+  <path d={pencilBox(seed, w, h)} />
+  <path d={pencilBox(seed + '/2', w, h)} class="pencil-box-second" />
+</svg>

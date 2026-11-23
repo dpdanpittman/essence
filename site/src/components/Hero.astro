@@ -1,0 +1,62 @@
+---
+import Notice from './Notice.astro';
+import PigmentKey from './PigmentKey.astro';
+import PencilBox from './PencilBox.astro';
+import { tornPolygon, pencilLine } from '../lib/rough';
+---
+
+<header class="hero">
+  <div class="wrap">
+    <p class="mast">Essence</p>
+    <h1>An AI that remembers who it is.</h1>
+
+    <PigmentKey />
+
+    <div class="spread">
+      <div class="lead">
+        <p>
+          A Claude Code agent starts every session with no memory. Essence is a
+          small set of files and hooks. It carries four things across that gap:
+          who the agent is with its person, the picture of each area of work,
+          how it does the things it has done before, and what it is able to
+          touch.
+        </p>
+        <p>
+          It used to be called session&#8209;essence. The word "session" went
+          because the system stopped being about one session.
+        </p>
+      </div>
+
+      <div class="margin">
+        <!-- Pull quote from the live portrait: a slip taped into the margin. -->
+        <figure class="slip">
+          <span class="slip-tape" aria-hidden="true"></span>
+          <div class="slip-paper" style={`clip-path: ${tornPolygon('hero-slip')}`}>
+            <blockquote>
+              <p>
+                “I don't hold yesterday in my head. I start from what's written. So
+                what I write down today is who shows up tomorrow.”
+              </p>
+            </blockquote>
+            <figcaption>from the live portrait</figcaption>
+          </div>
+        </figure>
+
+        <p class="actions">
+          <a class="action-box" href="#how">
+            <PencilBox seed="hero-how" w={190} h={54} />
+            How it works <span aria-hidden="true">↓</span>
+          </a>
+          <a class="action-line" href="https://github.com/dpdanpittman/essence" target="_blank" rel="noopener">
+            github
+            <svg viewBox="0 0 80 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path d={pencilLine('hero-github', 80)} />
+            </svg>
+          </a>
+        </p>
+
+        <Notice />
+      </div>
+    </div>
+  </div>
+</header>

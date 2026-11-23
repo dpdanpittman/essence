@@ -1,0 +1,45 @@
+---
+import Entry from './Entry.astro';
+import Swatch from './Swatch.astro';
+---
+
+<Entry id="gap" label="01 · The gap" title="Every session starts blank. This is how it remembers.">
+  <div class="spread">
+    <div class="prose">
+      <p>
+        Every Claude Code session boots from scratch. The model is the
+        same. The <em>agent</em> that knows its person's
+        shorthand, corrections and open work is gone.
+      </p>
+      <p>
+        Essence is the agent's memory, kept in files the agent wrote
+        itself. A new session reads them and picks up as the same someone.
+      </p>
+      <p>
+        That has two results. First, the files have to be small enough to
+        read whole every time. Second, the writing has to be careful.
+      </p>
+      <p>
+        What the agent writes today is
+        <strong>who shows up tomorrow</strong>.
+      </p>
+    </div>
+
+    <!-- The same marks on both pages: what one session paints, the next one finds. -->
+    <div class="gap-figure" aria-hidden="true">
+      <div class="gap-page">
+        <b>today</b>
+        <span>writes</span>
+        <Swatch kind="portrait" seed="gap-portrait" w={160} h={30} />
+        <Swatch kind="landscape" seed="gap-landscape" w={120} h={24} />
+      </div>
+      <div class="gap-void"></div>
+      <div class="gap-page">
+        <b>tomorrow</b>
+        <span>reads</span>
+        <Swatch kind="portrait" seed="gap-portrait" w={160} h={30} />
+        <Swatch kind="landscape" seed="gap-landscape" w={120} h={24} />
+      </div>
+    </div>
+  </div>
+</Entry>

@@ -1,0 +1,21 @@
+---
+// One notebook entry: a numbered label in the margin voice, the heading, then the content.
+interface Props {
+  id: string;
+  label: string;
+  title: string;
+  anchor?: string;
+}
+
+const { id, label, title, anchor } = Astro.props;
+---
+
+<section class="entry" id={anchor} aria-labelledby={id}>
+  <div class="wrap">
+    <header class="entry-head">
+      <p class="entry-label">{label}</p>
+      <h2 id={id}>{title}</h2>
+    </header>
+    <slot />
+  </div>
+</section>

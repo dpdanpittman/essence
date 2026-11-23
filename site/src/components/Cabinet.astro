@@ -1,0 +1,24 @@
+---
+// The cabinet, drawn as a chest of four closed drawers in wood and brass.
+// Each drawer's label holder carries one of the four rules. No pigment is drawn:
+// a pigment is never shown, so it never appears as a colour on this page.
+interface Props {
+  rules: string[];
+}
+
+const { rules } = Astro.props;
+---
+
+<div class="cabinet">
+  <div class="cabinet-top" aria-hidden="true"><span class="cabinet-lock"></span></div>
+  <ol class="cabinet-drawers" aria-label="The four rules for pigments">
+    {
+      rules.map((r) => (
+        <li class="drawer">
+          <span class="drawer-label">{r}</span>
+        </li>
+      ))
+    }
+  </ol>
+  <div class="cabinet-plinth" aria-hidden="true"></div>
+</div>

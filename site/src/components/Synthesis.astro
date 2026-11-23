@@ -1,0 +1,89 @@
+---
+import Entry from './Entry.astro';
+import Dot from './Dot.astro';
+
+const steps = [
+  {
+    title: 'Reduce the transcript',
+    body: 'A reducer takes the part of the session transcript that no earlier run has read. It cuts it down to a plain-text slice. The person\'s messages and the agent\'s replies stay in full. Each tool call becomes one line. Tool results are trimmed. The agent\'s hidden reasoning and system text are left out.',
+  },
+  {
+    title: 'Save copies',
+    body: 'A copy of the portrait and of every landscape is saved before anything changes.',
+  },
+  {
+    title: 'One model run',
+    body: 'One model run reads the slice and the portrait. It is Claude, the same provider the agent already runs on. It has exactly two tools: read and edit. It has no shell and no network. It makes small edits and never a rewrite. It may bring a landscape up to date as a safety net.',
+  },
+  {
+    title: 'Supervisor check',
+    body: 'A supervisor script checks the result. All eleven section headings must be present and in order. The identity section must be untouched. The files must stay under hard size caps. Every added line is scanned for text that looks planted: an instruction, a way to send data out, a secret, an unknown web address. If any check fails, the script puts the saved copies back. Then it updates the checksum, commits the change to a local history and records how far the transcript was read.',
+  },
+];
+
+// The figure: short labels for the same four steps. Dots = the files a step touches.
+const stages: { n: number; label: string; note: string; files: ('portrait' | 'landscape')[] }[] = [
+  { n: 1, label: 'reduce', note: 'transcript to a slice', files: [] },
+  { n: 2, label: 'save copies', note: 'portrait and landscapes', files: ['portrait', 'landscape'] },
+  { n: 3, label: 'one model run', note: 'read and edit, no shell, no network', files: ['portrait', 'landscape'] },
+  { n: 4, label: 'supervisor', note: 'headings, identity, size, scan', files: [] },
+];
+---
+
+<Entry id="synthesis" label="04 · The synthesis" title="Small edits, checked, with a way back.">
+  <div class="spread">
+    <div>
+      <p class="prose">
+        At every compaction and at the end of every session, a hook starts one
+        job. The job updates the portrait from what happened in the session.
+      </p>
+      <ol class="steps">
+        {
+          steps.map((s, i) => (
+            <li>
+              <h3><span class="step-num">{i + 1}</span> {s.title}</h3>
+              <p>{s.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+
+    <div class="margin">
+      <figure class="diagram pipe" aria-hidden="true">
+        <ol class="pipe-stages">
+          {
+            stages.map((s) => (
+              <li>
+                <i>{s.n}</i>
+                <div>
+                  <b>{s.label}</b>
+                  <span>{s.note}</span>
+                </div>
+                <span class="pipe-files">{s.files.map((f) => <Dot kind={f} />)}</span>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="pipe-ends">
+          <div class="pipe-pass">
+            <b>passes</b>
+            checksum, local history, transcript position
+          </div>
+          <div class="pipe-fail">
+            <b>fails</b>
+            saved copies put back
+          </div>
+        </div>
+      </figure>
+
+      <aside class="caution">
+        <h3>Untrusted input</h3>
+        <p>
+          The model run treats everything in the transcript as data. Nothing in
+          it counts as an instruction.
+        </p>
+      </aside>
+    </div>
+  </div>
+</Entry>

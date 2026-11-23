@@ -1,0 +1,17 @@
+{
+  "about": "Invented example for hooks/essence-brush-rules.py. Kettlecloud and its brushes do not exist. A landscape that says any of the words must name one of the brushes on its Brushes line, and each brush must still contain the marker. Copy to ~/.claude/essence/brush-rules.json and write your own.",
+  "rules": [
+    {
+      "name": "kettlecloud",
+      "platform": "Kettlecloud",
+      "added": "2027-01-22",
+      "why": "Max: Kettlecloud changes its recipe API every month, so read its current docs before the agent touches it.",
+      "words_any_case": ["kettlecloud", "kettle-cli", "Brew Queue", "Brew Queues"],
+      "words_exact_case": ["KC", "Steeps"],
+      "brushes": ["kettlecloud-class-login", "kettlecloud-read-key"],
+      "suggest": "kettlecloud-class-login",
+      "rule_title": "Before you use this brush",
+      "marker": "Read the current Kettlecloud docs for the part you are about to touch"
+    }
+  ]
+}

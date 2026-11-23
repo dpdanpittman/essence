@@ -1,0 +1,12 @@
+---
+// A small painted dot that marks which file a step reads or writes. `none` = no file.
+import type { Kind } from '../lib/pigments';
+
+interface Props {
+  kind: Kind | 'none';
+}
+
+const { kind } = Astro.props;
+---
+
+<span class:list={['dot', `dot-${kind}`]} aria-hidden="true"></span>

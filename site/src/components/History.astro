@@ -1,0 +1,52 @@
+---
+import Entry from './Entry.astro';
+const items = [
+  {
+    label: 'Version 1, March 2026',
+    body: 'The first design was an MCP server plus five hooks that logged observations. A three-pass synthesis ran on a local model: a "psychologist" pass, a "sociologist" pass and a merge. The local model invented content in both attempts. Synthesis moved to Claude.',
+  },
+  {
+    label: 'Full rewrites',
+    body: 'Each full rewrite of the portrait lost signal. It was like copying a painting from a photograph of a painting. Synthesis became small surgical edits.',
+  },
+  {
+    label: 'Too big to read',
+    body: 'The portrait grew to 668 KB of repeated stories. In November 2026 it was reworked to about 140 KB, one rule or fact per line.',
+  },
+  {
+    label: 'The wrong source',
+    body: 'The observation log held only clipped snippets. One of its two loggers had been silently dropping most of its lines. The synthesis now reads the session transcript, which the harness writes itself. The observation log and its hooks were removed.',
+  },
+  {
+    label: 'Other hooks',
+    body: 'A formatter hook could have rewritten the output of an early synthesis run. The job now runs without the user\'s other hooks.',
+  },
+];
+---
+
+<Entry id="wrong" label="08 · What went wrong on the way" title="The first design is gone.">
+  <div class="spread">
+    <div>
+      <p class="prose">
+        Earlier versions of this page described that first design. This is
+        what happened to it.
+      </p>
+      <ol class="steps history">
+        {
+          items.map((it, i) => (
+            <li>
+              <h3><span class="step-num">{i + 1}</span> {it.label}</h3>
+              <p>{it.body}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+    <figure class="overheard">
+      <blockquote>
+        <p>“we over engineered this to begin with.”</p>
+      </blockquote>
+      <figcaption>the author</figcaption>
+    </figure>
+  </div>
+</Entry>
