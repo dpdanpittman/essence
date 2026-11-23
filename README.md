@@ -4,6 +4,7 @@ Essence gives an AI coding agent a memory of who it is and how to work with its 
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
+- Author: Essence is built by Dan Pittman (https://github.com/dpdanpittman)
 
 ## What it is
 

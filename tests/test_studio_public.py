@@ -159,7 +159,11 @@ class ImpersonalTest(unittest.TestCase):
         hits = [
             line
             for line in res.stdout.splitlines()
-            if line.startswith("+") and not line.startswith("+++") and DIFF_PATTERN.search(line)
+            if line.startswith("+")
+            and not line.startswith("+++")
+            and DIFF_PATTERN.search(line)
+            # The one allowed exception: the author credit line (the site footer and the README).
+            and "Essence is built by" not in line
         ]
         self.assertEqual(len(hits), 0, "personal words in added lines: %d" % len(hits))
 
