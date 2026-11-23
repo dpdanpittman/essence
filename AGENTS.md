@@ -12,7 +12,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-reduce.py`: cuts the unread part of a transcript down to a plain-text slice. Lines are marked PERSON and AGENT.
 - `hooks/essence-synthesize.sh`: PreCompact and SessionEnd hook. Lock, reduce, save copies, one `claude -p` run with Read and Edit only, supervisor checks and rollback, checksum. The synthesis prompt is inside this file.
 - `hooks/essence-nudge.py`: UserPromptSubmit hook. Reminds the agent to update landscapes when the transcript has grown long since the last compaction.
-- `hooks/essence-now.sh`: UserPromptSubmit hook. Prints the current time (`ESSENCE_TZ`, plus UTC) so the agent never estimates it.
+- `hooks/essence-now.sh`: UserPromptSubmit hook. Prints the current time (`ESSENCE_TZ`, plus UTC) so the agent never estimates it, and how long since the last message and since the session began (a small per-session state file under `${XDG_STATE_HOME:-~/.local/state}/essence-now/`).
 - `hooks/essence-check.py`: Stop hook. Reads the finished reply and blocks the turn when it breaks a rule from the private file `~/.claude/essence/checks.json`. The script holds no rules.
 - `hooks/essence-brush-rules.py`: PostToolUse hook and command. A landscape that involves a platform must list that platform's brush, and the brush must keep its "Before you use this brush" rule. Rules in the private file `~/.claude/essence/brush-rules.json`. Fails open.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.

@@ -38,7 +38,7 @@ A few hooks keep the files loaded and current. Each hook is a script that Claude
 | `hooks/session-start-verify.sh` | SessionStart | Checks the checksum, prints section 1, tells the agent to read the whole portrait. |
 | `hooks/essence-synthesize.sh` | PreCompact, SessionEnd | Updates the portrait and the landscapes from the transcript. |
 | `hooks/essence-nudge.py` | UserPromptSubmit | Reminds the agent to update landscapes when the transcript has grown long. |
-| `hooks/essence-now.sh` | UserPromptSubmit | Prints the current time. |
+| `hooks/essence-now.sh` | UserPromptSubmit | Prints the current time, and how long since the last message and since the session began. |
 | `hooks/essence-check.py` | Stop | Blocks a reply that breaks a rule in `checks.json`. |
 | `hooks/essence-brush-rules.py` | PostToolUse (Write, Edit, MultiEdit) | Checks that a landscape lists the brushes its platforms need. |
 
@@ -202,7 +202,7 @@ A rule written in the portrait does not act. The agent read it hours ago, and a 
 - A **guard** refuses an action before it happens.
 - A **check** (`hooks/essence-check.py`, a Stop hook) reads the finished reply. If it breaks a rule with a shape a program can see, the check blocks the turn and hands the agent the rule.
 - A **nudge** (`hooks/essence-nudge.py`) brings a rule back at the moment the agent is most likely to drop it.
-- A **fact** (`hooks/essence-now.sh`, a UserPromptSubmit hook) puts something true in front of the agent every turn, so it reads instead of guessing. Today: the current time, because an agent has no clock and its guesses drift.
+- A **fact** (`hooks/essence-now.sh`, a UserPromptSubmit hook) puts something true in front of the agent every turn, so it reads instead of guessing. Today: the current time and how much time has passed, because an agent has no clock and its guesses drift.
 
 The rules for the check live in a private file, `~/.claude/essence/checks.json`. Start from `examples/checks-example.json`. The full idea, and which rules deserve a hook, is in [docs/superego.md](docs/superego.md).
 

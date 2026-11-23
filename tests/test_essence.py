@@ -120,6 +120,43 @@ print("fake claude done:", mode)
 """
 
 
+class NowTest(unittest.TestCase):
+    """essence-now.sh: the time always; the durations from a per-session state file."""
+
+    def run_hook(self, stdin, state):
+        env = dict(os.environ, XDG_STATE_HOME=state, ESSENCE_TZ="UTC")
+        out = subprocess.run(["bash", os.path.join(HOOKS, "essence-now.sh")], input=stdin, env=env,
+                             capture_output=True, text=True, timeout=10)
+        self.assertEqual(out.returncode, 0)
+        return out.stdout.strip()
+
+    def test_first_then_durations(self):
+        with tempfile.TemporaryDirectory() as st:
+            first = self.run_hook('{"session_id":"s-1"}', st)
+            self.assertIn("First message of this session.", first)
+            self.assertTrue(first.startswith("[Now: ") and first.endswith("never estimate the time.]"))
+            import time
+            now = int(time.time())
+            with open(os.path.join(st, "essence-now", "s-1"), "w") as f:
+                f.write(f"{now - 7800} {now - 1400}\n")
+            later = self.run_hook('{"session_id":"s-1"}', st)
+            self.assertIn("Since the last message: 23 min.", later)
+            self.assertIn("Session so far: 2 h 10 min.", later)
+
+    def test_no_session_or_bad_state_still_prints_the_time(self):
+        with tempfile.TemporaryDirectory() as st:
+            self.assertNotIn("Since", self.run_hook("", st))
+            os.makedirs(os.path.join(st, "essence-now"))
+            with open(os.path.join(st, "essence-now", "s-2"), "w") as f:
+                f.write("garbage here\n")
+            self.assertIn("First message of this session.", self.run_hook('{"session_id":"s-2"}', st))
+
+    def test_session_id_cannot_leave_the_state_folder(self):
+        with tempfile.TemporaryDirectory() as st:
+            self.run_hook('{"session_id":"../../escape"}', st)
+            self.assertEqual(os.listdir(st), ["essence-now"])
+
+
 class CheckTest(unittest.TestCase):
     def setUp(self):
         spec = importlib.util.spec_from_file_location("essence_check", os.path.join(HOOKS, "essence-check.py"))
