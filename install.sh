@@ -53,6 +53,11 @@ done
 
 t() { printf '%s' "${1/#"$HOME"/\~}"; }   # a path as the reader types it: ~/... instead of the full home path
 say() { if [ "$DRY" = 1 ]; then echo "would: $*"; else echo "done:  $*"; fi; }
+backup_name() {   # backup_name FILE: FILE.bak-<time>, with -2, -3 ... added if that name is taken
+  local b="$1.bak-$STAMP" n=2
+  while [ -e "$b" ]; do b="$1.bak-$STAMP-$n"; n=$((n + 1)); done
+  printf '%s' "$b"
+}
 newtmp() {   # a temporary file for the new settings: next to settings.json, or outside ~/.claude on a dry run
   if [ "$DRY" = 1 ]; then mktemp "${TMPDIR:-/tmp}/essence-settings.XXXXXX"; else mkdir -p "$CLAUDE_HOME"; mktemp "$CLAUDE_HOME/settings.json.new.XXXXXX"; fi
 }
@@ -73,6 +78,14 @@ stat -c %s "$REPO/install.sh" >/dev/null 2>&1 || { echo "missing: GNU stat (stat
 [ "$missing" = 0 ] || fail "install the missing tools first (see docs/setup.md, Before you start)"
 python3 -c 'import sys; sys.exit(sys.version_info < (3, 8))' || fail "python3 is older than 3.8"
 command -v claude >/dev/null 2>&1 || echo "warning: the claude command is not on PATH. The synthesis needs it." >&2
+if [ -n "$TZ_NAME" ]; then
+  if ! [[ "$TZ_NAME" =~ ^[A-Za-z0-9_+/-]+$ ]] || ! python3 -c 'import sys, zoneinfo; zoneinfo.ZoneInfo(sys.argv[1])' "$TZ_NAME" 2>/dev/null; then
+    fail "unknown time zone: $TZ_NAME (use an IANA name such as Europe/Berlin)"
+  fi
+  TZ_PREFIX="ESSENCE_TZ=$TZ_NAME "
+else
+  TZ_PREFIX=""
+fi
 
 # The jq filter that removes every hook entry that runs an Essence script, and any group or event left empty.
 STRIP='def essence: (.command // "") | test("\\.claude/scripts/(session-start-verify\\.sh|essence-[A-Za-z-]+\\.(sh|py))");
@@ -94,8 +107,9 @@ write_settings() {
     rm -f "$new"; return 0
   fi
   if [ -f "$SETTINGS" ]; then
-    cp -p "$SETTINGS" "$SETTINGS.bak-$STAMP"
-    echo "done:  backed up $(t "$SETTINGS") to $(t "$SETTINGS.bak-$STAMP")"
+    local bak; bak="$(backup_name "$SETTINGS")"
+    cp -p "$SETTINGS" "$bak"
+    echo "done:  backed up $(t "$SETTINGS") to $(t "$bak")"
     chmod --reference="$SETTINGS" "$new" 2>/dev/null || true
   else
     chmod 600 "$new"
@@ -129,7 +143,7 @@ fi
 for f in "${HOOK_FILES[@]}"; do
   src="$REPO/hooks/$f"; dst="$SCRIPTS/$f"
   if [ -e "$dst" ] && cmp -s "$src" "$dst"; then echo "same:  $(t "$dst")"; continue; fi
-  if [ -e "$dst" ]; then run cp -p "$dst" "$dst.bak-$STAMP"; say "backed up $(t "$dst") to $(t "$dst.bak-$STAMP")"; fi
+  if [ -e "$dst" ]; then bak="$(backup_name "$dst")"; run cp -p "$dst" "$bak"; say "backed up $(t "$dst") to $(t "$bak")"; fi
   run cp "$src" "$dst"; run chmod 700 "$dst"; say "copied $f to $(t "$SCRIPTS") (mode 700)"
 done
 
@@ -148,14 +162,6 @@ copy_once "$REPO/templates/portrait.md" "$ESSENCE/portrait.md"
 copy_once "$REPO/examples/checks-example.json" "$ESSENCE/checks.json"
 
 # --- 5. settings.json ------------------------------------------------------------------------------
-if [ -n "$TZ_NAME" ]; then
-  if ! [[ "$TZ_NAME" =~ ^[A-Za-z0-9_+/-]+$ ]] || ! python3 -c 'import sys, zoneinfo; zoneinfo.ZoneInfo(sys.argv[1])' "$TZ_NAME" 2>/dev/null; then
-    fail "unknown time zone: $TZ_NAME (use an IANA name such as Europe/Berlin)"
-  fi
-  TZ_PREFIX="ESSENCE_TZ=$TZ_NAME "
-else
-  TZ_PREFIX=""
-fi
 tmp="$(newtmp)"
 { if [ -f "$SETTINGS" ]; then cat "$SETTINGS"; else echo '{}'; fi; } | jq --slurpfile block "$REPO/examples/settings-hooks.json" --arg tz "$TZ_PREFIX" --arg person "$PERSON" --arg agent "$AGENT" "
   ($STRIP)
