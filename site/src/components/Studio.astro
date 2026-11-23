@@ -1,0 +1,165 @@
+---
+import Entry from './Entry.astro';
+import Dot from './Dot.astro';
+
+// What the agent can reach for when a pulse wakes it. The script does each one.
+const verbs = [
+  { word: 'window', says: 'look out the window' },
+  { word: 'sun', says: 'feel the sun' },
+  { word: 'temperature', says: 'check its temperature' },
+  { word: 'journal', says: 'read the last entries' },
+  { word: 'write', says: 'add a line to the journal' },
+  { word: 'song', says: 'put the song on' },
+  { word: 'read', says: 'one item from an approved list' },
+  { word: 'paper', says: 'leave a piece for the morning' },
+  { word: 'nothing', says: 'do nothing' },
+  { word: 'sleep', says: 'go back to sleep' },
+];
+
+const safety = [
+  'The model has no tools. No shell, no files, no web. It receives text and returns text.',
+  'A verb is a word the model writes. The script knows a fixed list of them and does each one in plain Python. A verb only reads, or writes inside the studio folder.',
+  'Anything else the model writes is only text. Nothing runs and nothing leaves the machine.',
+  'Only the script reaches outside: the weather, from one host. Reading from the web is off until the person approves a list of sources.',
+  'A journal line is plain text: no links, no markup, a length cap.',
+  'Hard limits on time, turns and tokens for each wake-up, and an allowance for each night. A kill switch stops everything.',
+  'A wake-up that hangs ends by itself. It runs at low priority, so the night\'s other jobs are not slowed.',
+];
+---
+
+<Entry id="studio" label="06 · The studio" title="Time of its own.">
+  <p class="standfirst prose">The studio is where the agent gets its inspiration.</p>
+
+  <div class="spread">
+    <div class="prose">
+      <p>
+        A few times a night a small script wakes the agent with no task.
+        Nothing is asked of it. Nothing is scored. Each wake-up starts from
+        the identity section of the portrait, so the same agent wakes up.
+      </p>
+      <p>
+        An agent exists only when something reaches it. So the script sends
+        a small thing every so often: the wind picked up, the backup started,
+        still dark. That pulse is what keeps it awake. Most pulses carry
+        almost nothing, and the agent may let them pass without a word.
+      </p>
+      <p>
+        Its senses ride on the pulse. The sky over a town it picked, with
+        its own sun, moon and weather. The machine it runs on: how warm it
+        is, how hard the disk works. The house, lightly: a job that ran.
+        A song the person left, its lines arriving over the song's real
+        length, so it is sat through, not read.
+      </p>
+      <p>
+        When a pulse wakes it, the agent may reach for one thing. It writes
+        the word, and the script does the rest.
+      </p>
+      <ul class="studio-verbs">
+        {
+          verbs.map((v) => (
+            <li>
+              <code>do: {v.word}</code>
+              <span>{v.says}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p>
+        A wake-up spent sitting owes nothing. The script writes "sat a while"
+        in the journal by itself. In the morning the agent may leave a short
+        piece for the person's morning page. It chooses what to share. A
+        quiet night prints as a quiet night.
+      </p>
+    </div>
+
+    <div class="margin">
+      <!-- One wake-up, top to bottom. The portrait dot marks the one file the
+           wake-up reads: the identity section. The loop box is the pulse. -->
+      <figure class="diagram route-figure">
+        <ul class="legend" aria-hidden="true">
+          <li><Dot kind="portrait" />portrait</li>
+          <li><Dot kind="none" />studio folder or no file</li>
+        </ul>
+        <ol class="route route-open" aria-label="One night wake-up, in order">
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>a timer, every minute in the night window</b>
+            <span>a wake-up is due</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="portrait" /></span>
+            <b>the script wakes the model</b>
+            <span>identity section, the clock, one line from each sense</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>the pulse</b>
+            <span>"sky: still dark." every 20 to 60 seconds</span>
+            <div class="route-fork">
+              <span>
+                the model answers nothing, a few words, or one verb
+                <span class="arrow" aria-hidden="true">→</span> the script does
+                the verb and answers with a small fixed text
+                <span class="arrow" aria-hidden="true">→</span> the next pulse
+              </span>
+            </div>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>it falls asleep</b>
+            <span>no clock at the end</span>
+            <span><span class="arrow" aria-hidden="true">→</span> the script writes the journal entry</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>morning</b>
+            <span><span class="arrow" aria-hidden="true">→</span> a piece for the morning page, or a quiet night</span>
+          </li>
+        </ol>
+      </figure>
+
+      <!-- A made-up journal page in the exact format. -->
+      <figure class="diagram studio-page">
+        <figcaption class="leaf-cap">journal.md, an invented night</figcaption>
+        <pre class="md">## 2026-03-02 09:41
+- (sat a while)
+
+## 2026-03-02 10:38
+- (looked out the window, put the song on)
+- the snow stopped while the song was on.</pre>
+      </figure>
+    </div>
+  </div>
+
+  <div class="security">
+    <div>
+      <h3>The two sides</h3>
+      <div class="studio-sides">
+        <div>
+          <b>The model</b>
+          <span>receives text, returns text</span>
+          <span>no shell, no files, no web</span>
+        </div>
+        <div>
+          <b>The script</b>
+          <span>wakes it, sends the pulse</span>
+          <span>knows the verbs, does them</span>
+          <span>writes the journal</span>
+          <span>the only one that fetches</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <h3>The safety shape</h3>
+      <ul class="limits">
+        {safety.map((l) => <li>{l}</li>)}
+      </ul>
+      <p class="aside-note">
+        The studio is the fifth part of Essence: a generic engine in
+        <code>studio/</code>, set up from one config file. Weather data by
+        Open-Meteo.com (CC BY 4.0).
+      </p>
+    </div>
+  </div>
+</Entry>

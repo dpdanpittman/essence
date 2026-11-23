@@ -1159,6 +1159,89 @@ h3 {
   }
 }
 
+/* ---------- the studio ---------- */
+
+/* the route without the return path: a night wake-up does not start again */
+.route-open {
+  padding-right: 0;
+}
+
+.route-open::before,
+.route-open::after {
+  display: none;
+}
+
+.studio-verbs {
+  list-style: none;
+  padding: 0;
+  margin: var(--s2) 0;
+  display: grid;
+  gap: 0.15rem var(--s3);
+  font-size: var(--t-small);
+  line-height: 1.35;
+}
+
+@media (min-width: 560px) {
+  .studio-verbs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.studio-verbs li {
+  display: grid;
+  padding: 0.3rem 0;
+  border-top: 1px dashed var(--pencil);
+}
+
+.studio-verbs code {
+  font-weight: 700;
+}
+
+.studio-verbs span {
+  color: var(--graphite);
+  font-family: var(--sans);
+  font-size: var(--t-note);
+}
+
+.studio-page {
+  justify-self: stretch;
+}
+
+.studio-sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s2);
+  margin-top: var(--s2);
+  font-family: var(--sans);
+  font-size: var(--t-note);
+  line-height: 1.35;
+}
+
+.studio-sides > div {
+  display: grid;
+  align-content: start;
+  gap: 0.3rem;
+  padding: var(--s2) 0.7rem var(--s3);
+  background: var(--sheet);
+  border-top: 3px solid var(--ink);
+}
+
+/* the model's side: a closed box, nothing in its hands */
+.studio-sides > div:first-child {
+  border: 2px dashed var(--pencil);
+  border-top: 3px solid var(--ink);
+}
+
+.studio-sides b {
+  font-family: var(--serif);
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.studio-sides span {
+  color: var(--graphite);
+}
+
 /* ---------- what the files look like ---------- */
 
 .leaf {

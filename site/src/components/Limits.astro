@@ -3,12 +3,12 @@ import Entry from './Entry.astro';
 
 const limits = [
   'It is built for one person and one agent.',
-  'The public repository holds the hooks, the templates and the tests.',
+  'The public repository holds the hooks, the studio engine, the templates and the tests.',
   'Synthesis is no longer local. It uses the model provider the agent already runs on. The files stay on the owner\'s machine.',
 ];
 ---
 
-<Entry id="limits" label="10 · Limits and code" title="What it is not.">
+<Entry id="limits" label="11 · Limits and code" title="What it is not.">
   <div class="spread">
     <ul class="limits">
       {limits.map((l) => <li>{l}</li>)}
@@ -17,8 +17,8 @@ const limits = [
     <div class="repo">
       <h3>The repository</h3>
       <p>
-        The repository holds the hooks, the templates and the tests.
-        Its README has the install steps.
+        The repository holds the hooks, the studio engine, the templates
+        and the tests. Its README has the install steps.
       </p>
       <p>Its old name was session-essence.</p>
       <p>
