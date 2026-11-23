@@ -617,7 +617,7 @@ To add your own rule, add one object to the `rules` list, with an `id`, a `break
 jq -r '.rules[].id' ~/.claude/essence/checks.json
 ```
 
-Test the rule by hand. This feeds the Stop hook the same JSON Claude Code sends: the reply that just finished and the path of a transcript whose last message from you is `thanks`:
+Test the rule by hand. This feeds the Stop hook the same JSON Claude Code sends: the finished reply and the path of a transcript whose last message from you is `thanks`:
 
 ```bash
 printf '%s\n' '{"type":"user","message":{"content":"thanks"}}' > /tmp/essence-check-test.jsonl
