@@ -565,7 +565,9 @@ def _sun(ctx, _arg: str) -> VerbResult:
     rise, sett = sun_events(now.astimezone(tz).date(), tz, lat, lon)
     local = now.astimezone(tz)
     degrees = abs(round(alt))
-    if alt >= RISE_SET_ALTITUDE:
+    if RISE_SET_ALTITUDE <= alt < 0.5:
+        first = f"The sun is right on the horizon in the {compass(az)}. It gives little warmth."
+    elif alt >= RISE_SET_ALTITUDE:
         unit = "degree" if degrees == 1 else "degrees"
         first = f"The sun is up, {degrees} {unit} above the horizon in the {compass(az)}."
         if alt < 10:

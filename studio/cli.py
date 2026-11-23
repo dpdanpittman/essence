@@ -105,7 +105,8 @@ def cmd_status(cfg, paths: Paths, out, now: datetime) -> int:
         out("last wake-up: none yet")
     else:
         out(f"last wake-up: {last.get('night', '?')} {_hhmm(last.get('started'), zone)}, "
-            f"{last.get('turns', 0)} turns, ended: {last.get('reason', '?')}")
+            f"{last.get('turns', 0)} turns, ended: {last.get('reason', '?')}"
+            + (f" ({last['detail']})" if isinstance(last.get("detail"), str) else ""))
     today = now.astimezone(zone).date()
     try:
         from . import reading
@@ -175,7 +176,7 @@ def cmd_wake(cfg, paths: Paths, args, out) -> int:
                 out("studio: busy (another run holds the lock)")
                 return 0
             o = wake.run(cfg, paths, session_factory=wake.fake_session_factory, fetch=None, collect_channel=False)
-        out(f"studio: wake-up {o.n} ended ({o.reason}), {o.turns} turns, {o.usage.total()} tokens")
+        out(f"studio: wake-up {o.n} ended ({o.reason}{', ' + o.detail if o.detail else ''}), {o.turns} turns, {o.usage.total()} tokens")
         return o.exit_code
     folder.ensure(paths)
     with schedule.Lock(paths.lock) as lock:
@@ -183,7 +184,7 @@ def cmd_wake(cfg, paths: Paths, args, out) -> int:
             out("studio: busy (another run holds the lock)")
             return 0
         o = wake.run(cfg, paths)
-    out(f"studio: wake-up {o.n} ended ({o.reason}), {o.turns} turns, {o.usage.total()} tokens")
+    out(f"studio: wake-up {o.n} ended ({o.reason}{', ' + o.detail if o.detail else ''}), {o.turns} turns, {o.usage.total()} tokens")
     return o.exit_code
 
 

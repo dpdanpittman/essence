@@ -2,6 +2,7 @@
 
 Run from the repository root:  python3 -m unittest discover -s tests -v
 """
+import hashlib
 import io
 import json
 import os
@@ -288,7 +289,28 @@ class TestModel(Base):
             "claude", "-p", "--model", "opus", "--restricted", "--strict-mcp-config", "--no-session-persistence",
             "--disable-slash-commands", "--permission-prompts", "none", "--tools", "",
             "--disallowedTools", "Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch,Task,Read,Glob,Grep",
-            "--system-prompt", "SP", "--input-format", "stream-json", "--output-format", "stream-json", "--verbose"])
+            "--system-prompt-file", "SP", "--input-format", "stream-json", "--output-format", "stream-json",
+            "--verbose"])
+
+    def test_prompt_never_in_argv(self):
+        # The identity text must not reach argv (readable by any local account through /proc).
+        s, _ = self.session("prompt")
+        r = s.send("WAKE", 20, lambda: None)
+        want = hashlib.sha256(("system prompt " + MARKER).encode()).hexdigest()
+        self.assertEqual(r.text, f"sha={want} same=True inargv=False")
+        self.assertNotIn(MARKER, " ".join(s.proc.args))
+        self.assertTrue(any(a.startswith("/dev/fd/") for a in s.proc.args))
+
+    def test_prompt_fd_is_sealed_and_rereadable(self):
+        fd = model.prompt_fd("abc " + MARKER)
+        try:
+            with self.assertRaises(OSError):
+                os.write(fd, b"x")
+            for _ in range(2):
+                with open(f"/proc/self/fd/{fd}", encoding="utf-8") as f:
+                    self.assertEqual(f.read(), "abc " + MARKER)
+        finally:
+            os.close(fd)
 
     def test_ok_usage_per_turn(self):
         s, _ = self.session("ok", ["hello", "do: window"])
@@ -714,6 +736,33 @@ class TestPaper(Base):
         data, _ = self.paper(paths, cfg)
         self.assertEqual((data["text"], data["quiet"]), (None, False))
 
+    def test_loop_bug_still_finishes(self):
+        # A bug inside the loop (here: a verb result whose text is not a str) must not skip _finish:
+        # the ledger, the journal, the paper file and the log line are all still written.
+        def v_bad(ctx, arg):
+            r = VerbResult("ok", "looked out the window")
+            object.__setattr__(r, "text", None)
+            return r
+        cfg = self.cfg()
+        o, paths, _ = self.run_wake(cfg, [".", "do: window", "do: sleep"],
+                                    verbs=[VerbSpec("window", "look out", False, v_bad)])
+        self.assertEqual((o.reason, o.exit_code, o.turns), ("error", 1, 2))
+        self.assertEqual(limits.night_usage(paths, wake.last_wakeup(paths)["night"]).total(), 220)
+        self.assertEqual(wake.last_wakeup(paths)["reason"], "error")
+        self.assertIn("woke with a start", self.journal_text(paths))
+        data, _ = self.paper(paths, cfg)
+        self.assertFalse(data["quiet"])
+
+    def test_finish_writes_fail_alone(self):
+        # A failed journal write must not stop the ledger and the log line.
+        cfg = self.cfg()
+        with mock.patch.object(journal, "append_entry", side_effect=OSError("disk full")):
+            o, paths, _ = self.run_wake(cfg, [".", "do: sleep"])
+        self.assertEqual((o.reason, o.detail), ("error", "write-failed:journal"))
+        last = wake.last_wakeup(paths)
+        self.assertEqual((last["reason"], last["detail"], last["turns"]), ("error", "write-failed:journal", 2))
+        self.assertEqual(limits.night_usage(paths, last["night"]).total(), 220)
+
     def test_active_but_nothing_shared(self):
         cfg = self.cfg()
         self.run_wake(cfg, [".", "do: sleep"])
@@ -766,6 +815,70 @@ class TestPaper(Base):
 
 
 # ---- 7. schedule ------------------------------------------------------------------------------
+
+class TestRobustness(Base):
+    def test_stale_cli_config_swept(self):
+        cfg = self.cfg()
+        paths = Paths.from_config(cfg)
+        folder.ensure(paths)
+        stale = os.path.join(paths.state, "cli-config-999999-1")
+        os.mkdir(stale, 0o700)
+        with open(os.path.join(stale, "x.json"), "w") as f:
+            f.write("{}")
+        own = os.path.join(paths.state, f"cli-config-{os.getpid()}-7")
+        os.mkdir(own, 0o700)
+        other = os.path.join(paths.state, "plan-keep.json")
+        with open(other, "w") as f:
+            f.write("{}")
+        self.run_wake(cfg, [".", "do: sleep"])
+        self.assertFalse(os.path.exists(stale))
+        self.assertTrue(os.path.isdir(own))
+        self.assertTrue(os.path.exists(other))
+
+    def manual_cfg(self):
+        return self.cfg({"schedule": {"time_zone": "America/Chicago", "window_start": "02:00",
+                                      "window_end": "06:00", "end_by": "05:25"}})
+
+    def test_manual_wake_after_end_by_refused(self):
+        cfg = self.manual_cfg()
+        clock = Clock(datetime(2027, 1, 12, 11, 43, tzinfo=timezone.utc))  # 05:43 Chicago
+        o, paths, s = self.run_wake(cfg, ["."] * 5, clock=clock)
+        self.assertEqual((o.reason, o.exit_code, o.started_model, s), ("late", 0, False, []))
+
+    def test_manual_wake_in_window_capped_at_end_by(self):
+        cfg = self.cfg({"schedule": {"time_zone": "America/Chicago", "window_start": "02:00",
+                                     "window_end": "06:00", "end_by": "05:25"},
+                        "limits": {"wall_seconds": 300, "min_seconds": 300, "max_turns": 40}})
+        clock = Clock(datetime(2027, 1, 12, 11, 23, tzinfo=timezone.utc))  # 05:23 Chicago
+        o, _, _ = self.run_wake(cfg, ["."] * 50, clock=clock, on_send=lambda t, i: clock.sleep(10))
+        self.assertIn(o.reason, ("time", "deadline"))
+        self.assertLessEqual(clock.t, datetime(2027, 1, 12, 11, 25, 30, tzinfo=timezone.utc))
+
+    def test_short_write_raises(self):
+        path = os.path.join(self.tmp, "j.md")
+        calls = []
+
+        def fake_write(fd, data):
+            calls.append(bytes(data))
+            return 0 if len(calls) > 1 else 3
+        with mock.patch.object(folder.os, "write", fake_write):
+            with self.assertRaises(OSError):
+                folder.append_private(path, "abcdef")
+        self.assertEqual(calls, [b"abcdef", b"def"])  # the rest, never the same bytes twice
+
+    def test_auth_error_detail(self):
+        self.assertEqual(model.error_detail({"is_error": True, "result": "Failed to authenticate: token revoked"}),
+                         "auth")
+        self.assertEqual(model.error_detail({"is_error": True, "result": "Not logged in · Please run /login"}),
+                         "auth")
+        self.assertIsNone(model.error_detail({"is_error": True, "result": "Overloaded"}))
+        cfg = self.cfg()
+        o, paths, _ = self.run_wake(cfg, [ModelReply("error", detail="auth")])
+        self.assertEqual((o.reason, o.detail), ("model-error", "auth"))
+        last = wake.last_wakeup(paths)
+        self.assertEqual(last["detail"], "auth")
+        self.assertNotIn("revoked", json.dumps(last))
+
 
 class TestSchedule(Base):
     def sched_cfg(self, **sched):
@@ -856,6 +969,23 @@ class TestSchedule(Base):
         schedule.tick(cfg, paths, now, lambda at, n: self.fail("not due"), rng=random.Random(5))
         plan = schedule.read_plan(paths, "2027-01-12")
         self.assertEqual(len(plan["entries"]), 3)
+
+    def test_damaged_plan_gives_no_new_wakeups(self):
+        # A plan damaged after the night began must not be redrawn (that could exceed count).
+        cfg = self.sched_cfg()
+        paths = Paths.from_config(cfg)
+        folder.ensure(paths)
+        now = datetime(2027, 1, 12, 3, 0, tzinfo=ZoneInfo("America/Chicago"))
+        with open(paths.plan("2027-01-12"), "w") as f:
+            f.write('{"night": "2027-01-12", "entr')
+        schedule.tick(cfg, paths, now, lambda at, n: self.fail("ran from a redrawn plan"), rng=random.Random(5))
+        self.assertEqual(schedule.read_plan(paths, "2027-01-12")["entries"], [])
+        # Plan file gone, but a planned wake-up is already logged for the night: same rule.
+        folder.append_private(paths.wakeups, json.dumps({"night": "2027-01-13", "planned": "x", "reason": "slept"})
+                              + "\n")
+        schedule.tick(cfg, paths, now + timedelta(days=1), lambda at, n: self.fail("redrawn"),
+                      rng=random.Random(5))
+        self.assertEqual(schedule.read_plan(paths, "2027-01-13")["entries"], [])
 
     def test_lock_busy(self):
         cfg = self.sched_cfg()

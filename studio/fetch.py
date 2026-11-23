@@ -8,6 +8,7 @@ only go to another allowed https host, the body is capped at ``max_bytes``,
 one try, a fixed User-Agent, no cookies.
 """
 
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -55,6 +56,35 @@ def build_opener(allow_hosts: Sequence[str]) -> urllib.request.OpenerDirector:
     return urllib.request.build_opener(_GuardedRedirects(allow_hosts))
 
 
+_clock = time.monotonic  # tests replace it
+CHUNK = 64 * 1024
+
+
+def _read_bounded(resp, max_bytes: int, deadline: float) -> bytes:
+    """Read the body in small pieces with one overall deadline.
+
+    The socket timeout only limits each read; a server that trickles bytes could otherwise hold
+    the fetch far longer. read1 returns after one underlying read, so the deadline is checked
+    between reads (worst case: the deadline plus one socket timeout)."""
+    read1 = getattr(resp, "read1", None)
+    parts = []
+    got = 0
+    while True:
+        if _clock() > deadline:
+            raise FetchError("fetch took too long")
+        want = min(CHUNK, max_bytes + 1 - got)
+        try:
+            chunk = read1(want) if read1 is not None else resp.read(want)
+        except (OSError, ValueError) as exc:
+            raise FetchError(f"read failed: {type(exc).__name__}") from None
+        if not chunk:
+            return b"".join(parts)
+        parts.append(chunk)
+        got += len(chunk)
+        if got > max_bytes:
+            raise FetchError("response too large")
+
+
 def fetch_text(
     url: str,
     allow_hosts: Sequence[str],
@@ -69,6 +99,7 @@ def fetch_text(
     Raises ``FetchError`` on any refusal or failure.
     """
     _check_url(url, allow_hosts)
+    deadline = _clock() + timeout
     if opener is None:
         opener = build_opener(allow_hosts)
     req = urllib.request.Request(
@@ -93,10 +124,7 @@ def fetch_text(
                 length = int(raw_len.strip())
         if length is not None and length > max_bytes:
             raise FetchError("response too large")
-        try:
-            body = resp.read(max_bytes + 1)
-        except (OSError, ValueError) as exc:
-            raise FetchError(f"read failed: {type(exc).__name__}") from None
+        body = _read_bounded(resp, max_bytes, deadline)
         if len(body) > max_bytes:
             raise FetchError("response too large")
         charset = "utf-8"

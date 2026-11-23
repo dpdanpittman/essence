@@ -94,6 +94,22 @@ def read_plan(paths: Paths, night: str) -> Optional[dict]:
     return data
 
 
+def planned_runs_logged(paths: Paths, night: str) -> bool:
+    """True when wakeups.jsonl already has a planned wake-up for this night."""
+    try:
+        with open(paths.wakeups, encoding="utf-8") as f:
+            for ln in f:
+                try:
+                    d = json.loads(ln)
+                except ValueError:
+                    continue
+                if isinstance(d, dict) and d.get("night") == night and d.get("planned"):
+                    return True
+    except OSError:
+        return False
+    return False
+
+
 def save_plan(paths: Paths, plan: dict) -> None:
     write_private(paths.plan(plan["night"]), json.dumps(plan, indent=1) + "\n")
 
@@ -163,7 +179,13 @@ def tick(cfg, paths: Paths, now: datetime, run_wakeup: Callable, rng: Optional[r
         night = night_of(cfg, now)
         plan = read_plan(paths, night)
         if plan is None:
-            plan = new_plan(cfg, night, rng or random.Random(os.urandom(16)), now)
+            if os.path.lexists(paths.plan(night)) or planned_runs_logged(paths, night):
+                # The plan was lost or damaged after the night began. Drawing fresh times could
+                # give more than `count` wake-ups, so this night gets no more.
+                plan = {"night": night, "made": now.astimezone(tz(cfg)).isoformat(timespec="seconds"),
+                        "entries": [], "note": "plan unreadable; no more wake-ups tonight"}
+            else:
+                plan = new_plan(cfg, night, rng or random.Random(os.urandom(16)), now)
             save_plan(paths, plan)
         if mark_missed(plan, now):
             save_plan(paths, plan)

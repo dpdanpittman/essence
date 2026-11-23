@@ -6,6 +6,7 @@ checked and a run that shows any tool is killed at once. Also: a scripted FakeSe
 from __future__ import annotations
 
 import ctypes
+import fcntl
 import json
 import os
 import queue
@@ -47,13 +48,17 @@ class TokenError(Exception):
 
 # ---- command, environment, token ----------------------------------------------------------------
 
-def build_command(cfg, system_prompt: str) -> list:
-    """The exact argv (contract section 0). Never run through a shell."""
+def build_command(cfg, prompt_path: str) -> list:
+    """The exact argv (contract section 0). Never run through a shell.
+
+    The system prompt holds the identity text, so it never goes on the command line, where any
+    local account could read it through /proc/<pid>/cmdline. The CLI reads it from `prompt_path`,
+    which is /dev/fd/<n> of an in-memory file handed to the child (see prompt_fd)."""
     return list(cfg.model.command) + [
         "-p", "--model", cfg.model.name, "--restricted", "--strict-mcp-config", "--no-session-persistence",
         "--disable-slash-commands", "--permission-prompts", "none", "--tools", "",
         "--disallowedTools", DISALLOWED,
-        "--system-prompt", system_prompt,
+        "--system-prompt-file", prompt_path,
         "--input-format", "stream-json", "--output-format", "stream-json", "--verbose",
     ]
 
@@ -94,6 +99,30 @@ def load_token(cfg, environ=os.environ) -> str:
     if not token or "\n" in token:
         raise TokenError("token command gave no usable token")
     return token
+
+
+def prompt_fd(text: str) -> int:
+    """An in-memory, sealed, read-only-content file holding `text`. Never on disk, not in argv.
+
+    Opening /dev/fd/<n> of a memfd gives a fresh read from the start, so the CLI may read it more
+    than once. Only the same user (or root) can open another process's /proc/<pid>/fd entries."""
+    fd = os.memfd_create("studio-prompt", os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+    try:
+        data = text.encode("utf-8")
+        view = memoryview(data)
+        while view:
+            n = os.write(fd, view)
+            view = view[n:]
+        try:
+            fcntl.fcntl(fd, fcntl.F_ADD_SEALS,
+                        fcntl.F_SEAL_SEAL | fcntl.F_SEAL_SHRINK | fcntl.F_SEAL_GROW | fcntl.F_SEAL_WRITE)
+        except (AttributeError, OSError):
+            pass
+        os.lseek(fd, 0, os.SEEK_SET)
+        return fd
+    except BaseException:
+        os.close(fd)
+        raise
 
 
 def check_cwd(path: str) -> None:
@@ -140,6 +169,21 @@ def user_line(text: str) -> bytes:
     return (json.dumps({"type": "user", "message": {"role": "user", "content": text}}) + "\n").encode("utf-8")
 
 
+AUTH_HINTS = ("authenticat", "oauth", "log in", "/login", "not logged in", "api key", "unauthorized")
+
+
+def error_detail(ev) -> Optional[str]:
+    """A fixed word for a failed result: "auth" when it reads like a login problem, else None.
+
+    Only this word is kept; the CLI's own message is never stored or printed."""
+    parts = [ev.get("subtype"), ev.get("result"), ev.get("error")]
+    errs = ev.get("errors")
+    if isinstance(errs, list):
+        parts.extend(errs)
+    blob = " ".join(p for p in parts if isinstance(p, str)).lower()
+    return "auth" if any(h in blob for h in AUTH_HINTS) else None
+
+
 # ---- the real session ---------------------------------------------------------------------------
 
 class ClaudeSession:
@@ -169,14 +213,21 @@ class ClaudeSession:
                     continue
             self.config_dir = cand
         env = build_env(environ, cfg.model.auth_token_env, token, self.config_dir)
-        argv = build_command(cfg, system_prompt)
+        try:
+            pfd = prompt_fd(system_prompt)
+        except OSError as e:
+            self._drop_config_dir()
+            raise ModelStartError(f"could not hold the system prompt ({type(e).__name__})") from None
+        argv = build_command(cfg, f"/dev/fd/{pfd}")
         try:
             self.proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                         stderr=subprocess.DEVNULL, cwd=cwd, env=env,
+                                         stderr=subprocess.DEVNULL, cwd=cwd, env=env, pass_fds=(pfd,),
                                          start_new_session=True, preexec_fn=_child_setup, close_fds=True)
         except OSError as e:
             self._drop_config_dir()
             raise ModelStartError(f"could not start the model command ({type(e).__name__})") from None
+        finally:
+            os.close(pfd)
         self.pgid = self.proc.pid
         self.events: "queue.Queue" = queue.Queue()
         self.reader = threading.Thread(target=self._read, daemon=True)
@@ -283,7 +334,7 @@ class ClaudeSession:
                 self.last_input = Usage(usage.input, usage.cache_creation, usage.cache_read, 0)
                 result = ev.get("result")
                 if ev.get("is_error") or not isinstance(result, str):
-                    return ModelReply("error", usage=usage, cost_usd=self.cost)
+                    return ModelReply("error", usage=usage, cost_usd=self.cost, detail=error_detail(ev))
                 return ModelReply("ok", text=result[:self.max_chars], usage=usage, cost_usd=self.cost)
 
     def _drop_config_dir(self) -> None:

@@ -85,6 +85,7 @@ class ModelReply:
     usage: Usage = Usage()
     cost_usd: Optional[float] = None     # process cumulative, last seen
     estimated: bool = False              # usage guessed for a killed turn
+    detail: Optional[str] = None         # a fixed word for an error ("auth"), never the CLI's message
 
 
 class ModelSession(Protocol):

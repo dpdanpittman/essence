@@ -14,8 +14,11 @@ Behaviour comes from env FAKE_CLAUDE_MODE:
   slowstart sleeps 5 s, then behaves like ok
   envnames  like ok, but the answer is the sorted names of its environment (names only, never values)
             and whether CLAUDE_CONFIG_DIR exists
+  prompt    like ok, but the answer reports on --system-prompt-file: the sha256 of its text, whether two
+            reads agree, and whether that text also appears anywhere in argv
 Answers for ok come from the file named by FAKE_CLAUDE_ANSWERS, one per line, "\\n" for a newline.
 """
+import hashlib
 import json
 import os
 import sys
@@ -79,6 +82,14 @@ def main():
         if mode == "envnames":
             cd = os.environ.get("CLAUDE_CONFIG_DIR")
             text = " ".join(sorted(os.environ)) + " configdir=" + ("exists" if cd and os.path.isdir(cd) else "none")
+        if mode == "prompt":
+            path = sys.argv[sys.argv.index("--system-prompt-file") + 1]
+            with open(path, encoding="utf-8") as f:
+                first = f.read()
+            with open(path, encoding="utf-8") as f:
+                second = f.read()
+            text = "sha=%s same=%s inargv=%s" % (hashlib.sha256(first.encode()).hexdigest(), first == second,
+                                                  any(first and first in a for a in sys.argv))
         turn += 1
         emit({"type": "assistant", "message": {"content": [{"type": "text", "text": text}]}})
         emit({"type": "result", "subtype": "success", "result": text, "is_error": mode == "error",

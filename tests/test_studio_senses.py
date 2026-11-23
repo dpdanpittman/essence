@@ -234,6 +234,19 @@ class SkySenseAndVerbs(Base):
         self.assertTrue(up.changed)
         self.assertIn("the wind picked up.", up.text)
 
+    def test_sun_near_horizon_is_on_the_horizon(self):
+        cfg = self.cfg()
+        c = self.ctx(cfg, self.NOW, lambda u, h: self.canned())
+        specs = {v.name: v for v in senses.verbs(cfg)}
+        for alt in (-0.8, 0.0, 0.4):
+            with mock.patch.object(sky, "sun_position", lambda *a, _alt=alt: (_alt, 135.0)):
+                t = specs["sun"].handler(c, "").text
+            self.assertTrue(t.startswith("The sun is right on the horizon in the south-east."), (alt, t))
+        with mock.patch.object(sky, "sun_position", lambda *a: (-3.0, 135.0)):
+            self.assertTrue(specs["sun"].handler(c, "").text.startswith("The sun is down, 3 degrees below"))
+        with mock.patch.object(sky, "sun_position", lambda *a: (2.0, 135.0)):
+            self.assertTrue(specs["sun"].handler(c, "").text.startswith("The sun is up, 2 degrees above"))
+
     def test_window_and_sun(self):
         cfg = self.cfg()
         c = self.ctx(cfg, self.NOW, lambda u, h: self.canned())
@@ -246,7 +259,7 @@ class SkySenseAndVerbs(Base):
         self.assertEqual(w.happened, "looked out the window")
         sun = specs["sun"].handler(c, "")
         self.assertEqual(sun.happened, "felt the sun")
-        self.assertRegex(sun.text, r"^The sun is (up|down), \d+ degrees? (above|below) the horizon")
+        self.assertRegex(sun.text, r"^The sun is ((up|down), \d+ degrees? (above|below)|right on) the horizon")
         self.assertRegex(sun.text, r"(rose|rises) at \d\d:\d\d")
         self.assertLessEqual(len(sun.text), 600)
 
@@ -278,7 +291,10 @@ class FakeResp:
         return self._url
 
     def read(self, n=-1):
-        return self._body if n < 0 else self._body[:n]
+        # Reads consume the body, like a real response.
+        out = self._body if n < 0 else self._body[:n]
+        self._body = self._body[len(out):]
+        return out
 
     def close(self):
         self.closed = True
@@ -297,6 +313,25 @@ class FakeOpener:
 
 class Fetch(unittest.TestCase):
     HOSTS = ["a.example"]
+
+    def test_trickle_hits_overall_deadline(self):
+        # A server that trickles bytes must not hold the fetch past one overall deadline.
+        class Trickle(FakeResp):
+            def read1(self, n=-1):
+                Trickle.t += 4.0  # each tiny read "takes" 4 s
+                return b"x"
+        Trickle.t = 0.0
+        op = FakeOpener(Trickle(b""))
+        with mock.patch.object(fetch, "_clock", lambda: Trickle.t):
+            with self.assertRaises(fetch.FetchError) as cm:
+                fetch.fetch_text("https://a.example/x", self.HOSTS, timeout=10, opener=op)
+        self.assertIn("too long", str(cm.exception))
+        self.assertLessEqual(Trickle.t, 16.0)
+
+    def test_chunked_body_is_whole(self):
+        body = b"a" * (fetch.CHUNK * 3 + 7)
+        op = FakeOpener(FakeResp(body))
+        self.assertEqual(len(fetch.fetch_text("https://a.example/x", self.HOSTS, opener=op)), len(body))
 
     def test_ok(self):
         op = FakeOpener(FakeResp(b"fine"))

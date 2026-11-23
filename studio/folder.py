@@ -100,9 +100,18 @@ def write_private(path: str, text: str) -> None:
 
 
 def append_private(path: str, text: str) -> None:
-    """Append text in one write call (O_APPEND), creating the file 0600 if needed."""
+    """Append text (O_APPEND), creating the file 0600 if needed.
+
+    Normally one write call. A short write (a full disk) continues with the bytes not yet written,
+    never the same bytes twice; if nothing more can be written it raises OSError, so the caller
+    can record "journal-short-write"-style failures instead of silently keeping half an entry."""
+    data = memoryview(text.encode("utf-8"))
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
     try:
-        os.write(fd, text.encode("utf-8"))
+        while data:
+            n = os.write(fd, data)
+            if n <= 0:
+                raise OSError("short write")
+            data = data[n:]
     finally:
         os.close(fd)
