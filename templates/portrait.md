@@ -28,7 +28,7 @@ Shape rules:
 
 ### 4. ACTIVE CONTEXT
 
-<!-- Facts that stay true for weeks, one per line with a date. Day-to-day state goes in the running diary file. Under 15 KB. -->
+<!-- Facts that stay true for weeks, one per line with a date. Day-to-day state goes in the sketchbook. Under 15 KB. -->
 
 ### 5. LESSONS
 
@@ -63,7 +63,7 @@ Shape rules:
 **How to use them**
 
 - When work starts in an area on the list, read its landscape whole before you act.
-- A landscape says what is true now. History goes in the running diary file.
+- A landscape says what is true now. History goes in the sketchbook.
 - When you learn something lasting in an area, update its landscape in the same turn.
 - Write one fact per line, with its date and a mark: checked, record or assumed.
 - If new work fits no landscape, tell the person and propose a new one.

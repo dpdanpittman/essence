@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """essence-nudge: a UserPromptSubmit hook. When the conversation has grown long since the last compaction, it prints
 one short reminder, which the harness puts in front of the agent with the user's next message:
-update the landscapes you worked in and the running diary file NOW, while you still hold the picture.
+update the landscapes you worked in and the sketchbook NOW, while you still hold the picture. When the sketchbook's
+current month is over ESSENCE_SKETCHBOOK_WARN_KB (default 400), the reminder also says to rotate it early.
 
 Why: a landscape can only be written by the session that built the understanding. A hook that runs at compaction
 time is too late, because it cannot give the agent a turn to write.
@@ -21,7 +22,21 @@ DIR = os.environ.get("ESSENCE_DIR") or os.path.expanduser("~/.claude/essence")
 STATE = os.path.join(DIR, "nudge-state.json")
 FIRST = float(os.environ.get("ESSENCE_NUDGE_MB", "6")) * 1_000_000
 AGAIN = float(os.environ.get("ESSENCE_NUDGE_AGAIN_MB", "3")) * 1_000_000
+WARN_KB = os.environ.get("ESSENCE_SKETCHBOOK_WARN_KB", "400")
 SUMMARY = b"This session is being continued from a previous conversation"
+
+
+def sketchbook_note(d=None, warn_kb=None):
+    """One sentence when the sketchbook's current month is over the size mark, else ''."""
+    try:
+        limit = max(1, int(warn_kb or WARN_KB)) * 1024
+        size = os.path.getsize(os.path.join(d or DIR, "sketchbook", "current.md"))
+    except (OSError, ValueError):
+        return ""
+    if size <= limit:
+        return ""
+    return (f" The sketchbook's current month is {size // 1024} KB, over the {limit // 1024} KB mark: "
+            "rotate it early (sketchbook-rotate --early).")
 
 
 def scan(path, start):
@@ -85,7 +100,8 @@ def main():
             print(f"[Essence nudge] This conversation has grown about {grown / 1e6:.0f} MB since the last compaction, "
                   "so a compaction may be near. Before you go on: update every landscape you worked in "
                   "(portrait section 11: rewrite its open threads, add new traps and decisions with dates) and bring "
-                  "the running diary file up to date. Do it in this turn, then answer the user's message. "
+                  "the sketchbook up to date (one clock-stamped sketch per change, with note)." + sketchbook_note() +
+                  " Do it in this turn, then answer the user's message. "
                   "This note is from a hook, not from the user.")
     except Exception:
         pass

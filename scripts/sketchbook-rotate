@@ -1,0 +1,385 @@
+#!/usr/bin/env python3
+"""
+sketchbook-rotate: start a new month of the sketchbook when the month changed. Part of Essence (docs/sketchbook.md).
+
+  sketchbook-rotate [--dry-run] [--early] [--now "YYYY-MM-DD HH:MM"] [--dir D] [--compat-link-glob PATTERN]
+
+Run it once a day from a timer (docs/sketchbook.md has a systemd user timer). It does nothing unless the month changed
+or --early is given. A rotation, under an exclusive lock on <dir>/.lock (the `note` script takes the same lock):
+
+  1. reads the old month (the file current.md points at) and never changes it;
+  2. writes <dir>/YYYY-MM.md (YYYY-MM-DD.md with --early) starting with an "OPEN ITEMS (carried from <old>)" page:
+     copies of the newest IN FLIGHT block, the newest WORK LIST block and the newest block of each open list
+     ("OPEN LIST", "PERSONAL OPEN LIST", "OPEN: ...") of the old month, re-stamped with the clock and marked carried.
+     An IN FLIGHT block older than 18 hours keeps its old stamp, so a reader still treats it as absent.
+     With ESSENCE_SKETCHBOOK_SCOPE=work (the default), a block whose header says PERSONAL is not carried.
+     The file is written to a temporary name and renamed, so a reader never sees half a file;
+  3. repoints current.md atomically (a temporary symlink, then a rename);
+  4. copies to the end of the new month any lines that a writer without the lock appended to the old month
+     while 1 to 3 ran (they also stay in the old month);
+  5. with --compat-link-glob, for example "~/notes/handoff-*.md", makes a symlink with the "*" replaced by the
+     first day of the new month (or today with --early) pointing at the new month, unless a link that matches the
+     pattern already points there. Old links are never changed. This keeps old readers that look for the newest
+     file by name working.
+
+A run in a month that already rotated only makes sure that compatibility link exists. Every run ends with the size
+check: when the current month is over ESSENCE_SKETCHBOOK_WARN_KB (default 400), one line on stdout and the same line
+in <dir>/.size-warning; the file goes away when the month is under the mark again.
+
+Settings: ESSENCE_DIR (default ~/.claude/essence; the folder is $ESSENCE_DIR/sketchbook), ESSENCE_TZ (an IANA time
+zone; default the machine's), ESSENCE_SKETCHBOOK_SCOPE (work|all, default work), ESSENCE_SKETCHBOOK_WARN_KB.
+Exit codes: 0 done (rotated, nothing to do, or a dry run); 1 an unexpected error; 2 refused, nothing changed;
+3 the lock is busy. Python 3.9 or newer, standard library only.
+"""
+import argparse
+import datetime
+import fcntl
+import glob
+import os
+import re
+import sys
+import tempfile
+import time
+
+try:
+    import zoneinfo
+except ImportError:                      # Python before 3.9
+    zoneinfo = None
+
+STALE_S = 18 * 3600
+LOCK_WAIT_S = 30
+
+_MONTH_FILE = re.compile(r"^(\d{4})-(\d{2})(?:-(\d{2}))?\.md$")
+# "- 2027-01-14 16:05 CET text" (the zone word is optional; old hand-typed entries may carry a "~")
+_STAMPED = re.compile(r"^- (~?)(\d{4}-\d{2}-\d{2}) (~?\d{1,2}:\d{2})((?: [A-Za-z0-9+-]{1,6})?) (.*)$")
+_NEW_ENTRY = re.compile(r"^(?:- ~?\d{4}-\d{2}-\d{2}\b|#)")
+KINDS = [
+    ("in-flight", re.compile(r"^IN FLIGHT(?=\s*\(|\s*:|\s*$)")),
+    ("work-list", re.compile(r"^WORK LIST(?=\s*\(|\s*:|\s*$)")),
+    ("open-list", re.compile(r"^(?:[A-Z][A-Z'&/-]* )*OPEN LIST(?=\s*[,:(]|\s*$)|^OPEN(?=\s*[:(])")),
+]
+
+
+class Refused(Exception):
+    pass
+
+
+class Busy(Exception):
+    pass
+
+
+def zone():
+    name = os.environ.get("ESSENCE_TZ", "").strip()
+    if name and zoneinfo is not None:
+        try:
+            return zoneinfo.ZoneInfo(name)
+        except Exception:
+            raise Refused("ESSENCE_TZ is not a known time zone")
+    return datetime.datetime.now().astimezone().tzinfo
+
+
+def stamp(now):
+    z = now.strftime("%Z")
+    return now.strftime("%Y-%m-%d %H:%M") + (" " + z if re.fullmatch(r"[A-Za-z0-9+-]{1,6}", z or "") else "")
+
+
+# ---------------------------------------------------------------- reading blocks (pure)
+
+def blocks(lines):
+    """Every block of a carried kind, oldest first."""
+    out = []
+    for i, line in enumerate(lines):
+        m = _STAMPED.match(line)
+        if m:
+            text, dashed = m.group(5), True
+        elif line.startswith("## "):
+            text, dashed = line[3:], False
+        else:
+            continue
+        for kind, rx in KINDS:
+            k = rx.match(text)
+            if not k:
+                continue
+            j = i + 1
+            if dashed:
+                while j < len(lines) and lines[j].strip() and lines[j][0].isspace():
+                    j += 1
+            else:
+                while j < len(lines) and not _NEW_ENTRY.match(lines[j]):
+                    j += 1
+                while j > i + 1 and not lines[j - 1].strip():
+                    j -= 1
+            at = (f"{m.group(2)} {m.group(3).lstrip('~')}", m.group(4).strip()) if dashed else None
+            out.append({"kind": kind, "name": k.group(0), "start": i, "end": j, "dashed": dashed,
+                        "header": line, "text": text, "stamp": at})
+            break
+    return out
+
+
+def newest(lines, scope="work"):
+    best = {}
+    for b in blocks(lines):
+        if scope != "all" and "PERSONAL" in b["text"].upper():
+            continue
+        key = b["kind"] if b["kind"] != "open-list" else ("open-list", b["name"])
+        best[key] = b
+    return sorted(best.values(), key=lambda b: b["start"])
+
+
+def _stamp_time(at, tz):
+    try:
+        return datetime.datetime.strptime(at[0], "%Y-%m-%d %H:%M").replace(tzinfo=tz)
+    except (TypeError, ValueError):
+        return None
+
+
+def carried_header(b, now, old_name):
+    """The header re-stamped and marked carried. The kind words stay first, so a reader's header pattern matches."""
+    name = b["name"]
+    if b["dashed"]:
+        rest = b["text"][len(name):]
+        old = b["stamp"][0] + (" " + b["stamp"][1] if b["stamp"][1] else "")
+        at = _stamp_time(b["stamp"], now.tzinfo)
+        if b["kind"] == "in-flight" and (at is None or (now - at).total_seconds() > STALE_S):
+            return f"- {old} {name} (carried from {old_name}, stale){rest}"
+        return f"- {stamp(now)} {name} (carried from {old} in {old_name}){rest}"
+    rest = b["header"][3 + len(name):]
+    return f"## {name} (carried at {stamp(now)} from {old_name}){rest}"
+
+
+def open_items_page(lines, now, old_name, new_month, scope="work"):
+    old_label = old_name[:-3] if old_name.endswith(".md") else old_name
+    carried = newest(lines, scope)
+    out = [f"# Sketchbook {new_month}", "",
+           f"## OPEN ITEMS (carried from {old_label})", "",
+           f"Written by sketchbook-rotate at {stamp(now)}. Copies, not moves: the originals stay in {old_name}, "
+           "which is never changed. Each block below is the newest of its kind there, re-stamped and marked carried.",
+           ""]
+    if not carried:
+        out += ["(nothing to carry: no In flight, work list or open list block was found)", ""]
+    for b in carried:
+        out.append(carried_header(b, now, old_name))
+        out.extend(lines[b["start"] + 1:b["end"]])
+        out.append("")
+    out += ["## Sketches", "",
+            f"- {stamp(now)} New month started by sketchbook-rotate (carried {len(carried)} block(s) from {old_name}).",
+            ""]
+    return "\n".join(out), len(carried)
+
+
+def empty_month(month, now):
+    return (f"# Sketchbook {month}\n\n## OPEN ITEMS (carried from nothing)\n\n(the first month)\n\n## Sketches\n\n"
+            f"- {stamp(now)} Sketchbook started.\n")
+
+
+# ---------------------------------------------------------------- file system
+
+def _target(dir_):
+    cur = os.path.join(dir_, "current.md")
+    if not os.path.islink(cur):
+        raise Refused("current.md is missing or not a symlink")
+    name = os.path.basename(os.readlink(cur))
+    real = os.path.realpath(cur)
+    if os.path.dirname(real) != os.path.realpath(dir_) or not _MONTH_FILE.match(name) or not os.path.isfile(real):
+        raise Refused("current.md does not point at a month file in the sketchbook folder")
+    return name, real
+
+
+def link_date(month_file):
+    m = _MONTH_FILE.match(month_file)
+    return f"{m.group(1)}-{m.group(2)}-{m.group(3) or '01'}"
+
+
+def ensure_compat(pattern, dir_, month_file, dry):
+    """Make the compatibility link for month_file exist. Returns 'off', 'ok', 'made' or 'would make'."""
+    if not pattern:
+        return "off"
+    pattern = os.path.expanduser(pattern)
+    if pattern.count("*") != 1 or "*" in os.path.dirname(pattern):
+        raise Refused("--compat-link-glob needs exactly one * in the file name")
+    want = os.path.join(os.path.realpath(dir_), month_file)
+    for other in glob.glob(pattern):
+        if os.path.islink(other) and os.path.realpath(other) == want:
+            return "ok"
+    link = pattern.replace("*", link_date(month_file))
+    if os.path.lexists(link):
+        raise Refused(f"{os.path.basename(link)} already exists and does not point at {month_file}")
+    if dry:
+        return "would make"
+    os.symlink(want, link)
+    return "made"
+
+
+def _lock(dir_):
+    fd = os.open(os.path.join(dir_, ".lock"), os.O_WRONLY | os.O_CREAT, 0o600)
+    end = time.monotonic() + LOCK_WAIT_S
+    while True:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            return fd
+        except BlockingIOError:
+            if time.monotonic() > end:
+                os.close(fd)
+                raise Busy("the sketchbook lock is busy")
+            time.sleep(0.2)
+
+
+def _write_new(path, text, mode):
+    fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), prefix=".rotate-")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(text)
+            f.flush()
+            os.fsync(f.fileno())
+        os.chmod(tmp, mode)
+        if os.path.lexists(path):
+            raise Refused(f"{os.path.basename(path)} appeared during the rotation")
+        os.rename(tmp, path)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def _repoint(dir_, name):
+    tmp = os.path.join(dir_, f".current-{os.getpid()}")
+    if os.path.lexists(tmp):
+        os.unlink(tmp)
+    os.symlink(name, tmp)
+    os.replace(tmp, os.path.join(dir_, "current.md"))
+
+
+def init(dir_, now):
+    """Start an empty sketchbook: <dir>/YYYY-MM.md and current.md. Never touches an existing one."""
+    if os.path.lexists(os.path.join(dir_, "current.md")):
+        return "kept"
+    os.makedirs(dir_, mode=0o700, exist_ok=True)
+    name = f"{now:%Y-%m}.md"
+    path = os.path.join(dir_, name)
+    if not os.path.exists(path):
+        _write_new(path, empty_month(name[:-3], now), 0o600)
+    _repoint(dir_, name)
+    return "made"
+
+
+def warn_bytes():
+    try:
+        return max(1, int(os.environ.get("ESSENCE_SKETCHBOOK_WARN_KB", "400"))) * 1024
+    except ValueError:
+        return 400 * 1024
+
+
+def size_check(dir_, dry, limit=None):
+    limit = limit or warn_bytes()
+    name, real = _target(dir_)
+    size = os.path.getsize(real)
+    warn = os.path.join(dir_, ".size-warning")
+    line = None
+    if size > limit:
+        line = (f"sketchbook: {name} is {size // 1024} KB, over the {limit // 1024} KB mark; "
+                "rotate early with sketchbook-rotate --early")
+    if not dry:
+        if line:
+            fd, tmp = tempfile.mkstemp(dir=dir_, prefix=".size-")
+            with os.fdopen(fd, "w") as f:
+                f.write(line + "\n")
+            os.replace(tmp, warn)
+        elif os.path.exists(warn):
+            os.unlink(warn)
+    return line
+
+
+def rotate(dir_, now, dry=False, early=False, compat=None, scope="work", say=print):
+    month = now.strftime("%Y-%m")
+    old_name, old_real = _target(dir_)
+    new_name = f"{now:%Y-%m-%d}.md" if early else f"{month}.md"
+    if old_name == new_name or (old_name.startswith(month) and not early):
+        made = ensure_compat(compat, dir_, old_name, dry)
+        say(f"sketchbook: already on {old_name}, nothing to rotate (compat link {made})")
+        return "nothing"
+    new_path = os.path.join(dir_, new_name)
+    if dry:
+        with open(old_real, encoding="utf-8", errors="replace") as f:
+            lines = f.read().splitlines()
+        _, n = open_items_page(lines, now, old_name, new_name[:-3], scope)
+        if os.path.lexists(new_path):
+            say(f"sketchbook: dry run: {new_name} exists, would repoint current.md to it")
+        else:
+            say(f"sketchbook: dry run: would write {new_name} carrying {n} block(s) from {old_name}, "
+                "repoint current.md")
+        if compat:
+            say(f"sketchbook: dry run: compat link {ensure_compat(compat, dir_, new_name, True)}")
+        return "would rotate"
+    fd = _lock(dir_)
+    try:
+        if os.path.lexists(new_path):
+            if not os.path.isfile(new_path) or os.path.islink(new_path):
+                raise Refused(f"{new_name} exists and is not a plain file")
+            _repoint(dir_, new_name)
+            result, n = "repointed", 0
+        else:
+            with open(old_real, "rb") as f:
+                raw = f.read()
+            lines = raw.decode("utf-8", errors="replace").splitlines()
+            text, n = open_items_page(lines, now, old_name, new_name[:-3], scope)
+            _write_new(new_path, text, os.stat(old_real).st_mode & 0o777)
+            _repoint(dir_, new_name)
+            late = os.path.getsize(old_real) - len(raw)
+            if late > 0:
+                with open(old_real, "rb") as f:
+                    f.seek(len(raw))
+                    tail = f.read().decode("utf-8", errors="replace")
+                if not tail.endswith("\n"):
+                    tail += "\n"
+                with open(new_path, "a", encoding="utf-8") as f:
+                    f.write(f"- {stamp(now)} LATE LINES: {late} bytes landed on {old_name} during the rotation; "
+                            "copied here (they also stay there):\n" + tail)
+                say(f"sketchbook: {late} bytes appended to {old_name} during the rotation were copied over")
+            result = "rotated"
+    finally:
+        os.close(fd)
+    made = ensure_compat(compat, dir_, new_name, False)
+    say(f"sketchbook: {result} {old_name} -> {new_name}, carried {n} block(s), compat link {made}")
+    return result
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(description="Start a new month of the sketchbook when the month changed.")
+    p.add_argument("--dry-run", action="store_true", help="say what would happen, write nothing")
+    p.add_argument("--early", action="store_true", help="rotate now (over the size mark): writes YYYY-MM-DD.md")
+    p.add_argument("--init", action="store_true", help="start an empty sketchbook if there is none")
+    p.add_argument("--now", help='"YYYY-MM-DD HH:MM" in ESSENCE_TZ (tests)')
+    p.add_argument("--dir", default=None, help="the sketchbook folder (default $ESSENCE_DIR/sketchbook)")
+    p.add_argument("--compat-link-glob", default=None, help='for example "~/notes/handoff-*.md"')
+    a = p.parse_args(argv)
+    dir_ = a.dir or os.path.join(os.environ.get("ESSENCE_DIR") or os.path.expanduser("~/.claude/essence"),
+                                 "sketchbook")
+    scope = "all" if os.environ.get("ESSENCE_SKETCHBOOK_SCOPE", "work").strip().lower() == "all" else "work"
+    try:
+        tz = zone()
+        now = (datetime.datetime.strptime(a.now, "%Y-%m-%d %H:%M").replace(tzinfo=tz) if a.now
+               else datetime.datetime.now(tz))
+        if a.init:
+            if a.dry_run:
+                print("sketchbook: dry run: would start an empty sketchbook" if not
+                      os.path.lexists(os.path.join(dir_, "current.md")) else "sketchbook: exists, kept")
+                return 0
+            print(f"sketchbook: {init(dir_, now)} {os.path.join(dir_, 'current.md')}")
+            return 0
+        rotate(dir_, now, dry=a.dry_run, early=a.early, compat=a.compat_link_glob, scope=scope)
+        line = size_check(dir_, a.dry_run)
+        if line:
+            print(line)
+        return 0
+    except Refused as e:
+        print(f"sketchbook: refused: {e}", file=sys.stderr)
+        return 2
+    except Busy as e:
+        print(f"sketchbook: {e}", file=sys.stderr)
+        return 3
+    except Exception as e:
+        print(f"sketchbook: failed: {type(e).__name__}: {e}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

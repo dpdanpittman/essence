@@ -1,6 +1,6 @@
 # Essence
 
-Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. Its fifth part is the studio: time of the agent's own, at night, with no task. The project was called `session-essence` before.
+Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. Its fifth part is the studio: time of the agent's own, at night, with no task. Its sixth part is the sketchbook: the agent's running notes, one file per month, so a new session can pick the thread back up. The project was called `session-essence` before.
 
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
@@ -13,13 +13,14 @@ Essence gives an AI coding agent a memory of who it is and how to work with its 
 Each new session of a coding agent starts as a stranger. Essence closes that gap with four kinds of files that live on the owner's machine, in `~/.claude/essence/`:
 
 - **The portrait.** One markdown file with eleven sections. It tells each new session who the agent is and how to work with its person.
-- **The landscapes.** One markdown file per area of work. A landscape says what is true now in that area. A separate running diary file keeps the history.
+- **The landscapes.** One markdown file per area of work. A landscape says what is true now in that area. The sketchbook keeps the history.
 - **The strokes.** One markdown file per procedure: how the agent does one thing on the ground a landscape describes. A stroke holds the judgment and calls a tested script, its shortcut, for the steps.
 - **The brushes.** One markdown file per ability: a login, a role, a token or a tool. A brush is what lets the agent make a mark on the world. It says what the ability can reach, what it cannot, where its key lives and how to check it.
 
-The fifth part is not a file:
+The fifth and sixth parts are not one file each:
 
 - **The studio.** A few short wake-ups at night with no task, where the agent has time of its own. The studio is where the agent gets its inspiration. It is a small script, not a hook, and it is off until you install it.
+- **The sketchbook.** The agent's running notes: what happened today, what is in flight, what waits on the person. A folder with one file per month and a pointer to the current one. Each entry is a sketch, one line stamped by the clock.
 
 | File          | What it is                     | Answers                         |
 | ------------- | ------------------------------ | ------------------------------- |
@@ -28,6 +29,7 @@ The fifth part is not a file:
 | The stroke    | the motion on that ground      | How do I do this one thing?     |
 | The brush     | the ability that makes a mark  | What can I actually touch?      |
 | The pigment and the cabinet | the secret that loads a brush, and the locked vault it is kept in | Where is the key, and who holds it? |
+| The sketchbook | the running notes, one file per month | What is happening right now? |
 
 The portrait is who the agent is. A landscape is the ground it stands on. A stroke is how it does one thing there. A brush is what lets it do it. You can know a stroke perfectly, and without the brush nothing happens. And a brush makes no mark until it is loaded: its pigment is the secret, kept in a cabinet.
 
@@ -41,6 +43,8 @@ A few hooks keep the files loaded and current. Each hook is a script that Claude
 | `hooks/essence-now.sh` | UserPromptSubmit | Prints the current time, and how long since the last message and since the session began. |
 | `hooks/essence-check.py` | Stop | Blocks a reply that breaks a rule in `checks.json`. |
 | `hooks/essence-brush-rules.py` | PostToolUse (Write, Edit, MultiEdit) | Checks that a landscape lists the brushes its platforms need. |
+
+The session-start hook also names the sketchbook and the parts of it to read; the nudge hook asks for it to be brought up to date. Two commands in `scripts/` are not hooks: `note` appends a sketch, and `sketchbook-rotate` starts a new month.
 
 Two helpers are not hooks. `essence-synthesize.sh` calls them: `hooks/essence-reduce.py` and `hooks/essence-scan.py`. `examples/settings-hooks.json` wires every hook in the table.
 
@@ -73,7 +77,7 @@ A landscape has six parts:
 5. Open threads
 6. Where things live
 
-Every line has the form `- fact (date, checked|record|assumed)`. "Checked" means seen first hand. "Record" means taken from a document or a message. "Assumed" means not yet confirmed. When a fact stops being true, the line goes. History belongs in the running diary file.
+Every line has the form `- fact (date, checked|record|assumed)`. "Checked" means seen first hand. "Record" means taken from a document or a message. "Assumed" means not yet confirmed. When a fact stops being true, the line goes. History belongs in the sketchbook.
 
 ### The strokes
 
@@ -161,6 +165,20 @@ The studio takes its settings from one JSON file, not from environment variables
   OFF               the kill switch, when present
 ```
 
+## The sketchbook
+
+The sketchbook is the agent's running notes: what happened today, what is in flight, what waits on the person, what was just decided. The full explanation is in [docs/sketchbook.md](docs/sketchbook.md).
+
+The portrait gives the agent back its character after a compaction. The sketchbook lets it pick the thread back up. A pattern that keeps showing up in the sketches becomes a rule in the portrait, a fact in a landscape, or a stroke.
+
+- **One file per month.** `~/.claude/essence/sketchbook/2027-02.md`, with `current.md` a symlink to the current month. Every reader and writer uses `current.md`.
+- **Three kinds of entry, all appended.** A sketch: one line, stamped by the clock with `note "<text>"`. The In flight block: `W.` waits on the person, `R.` runs, `F.` just finished; the newest block wins, and one older than 18 hours counts as absent. The work list block: the person's ordered list. Nothing is edited in place.
+- **The rules.** Append only. The clock stamps every entry. Never a secret. The person's words in quotes. A guess written as a guess. Never read the whole sketchbook: the open items page, the newest In flight block, the newest work list and the last 150 lines, the rest by grep.
+- **What it may hold.** The person chooses at setup: `ESSENCE_SKETCHBOOK_SCOPE=work` (the default, work only) or `all` (anything the person brings up). Never a secret either way.
+- **Rotation.** `scripts/sketchbook-rotate` runs once a day from a timer. On the first run of a new month it starts the new file with an open items page carried from the old one (the newest In flight block, work list and open lists, re-stamped), moves `current.md`, and leaves the old month untouched. Past 400 KB in one month it says to rotate early. A lock keeps a rotation and a `note` apart.
+
+`templates/sketchbook-month.md` is an empty month and `examples/sketchbook-example.md` an invented one.
+
 ## How a session starts
 
 The SessionStart hook (`hooks/session-start-verify.sh`) runs at startup and after every compaction. It does three things:
@@ -175,7 +193,7 @@ Hook output is capped, so a plain `cat` of the portrait gets cut. The hook print
 
 Section 11 of the portrait lists each landscape with its trigger words. When work starts in one of those areas, the agent reads that landscape whole before it acts.
 
-A landscape can only be written well by the session that built the understanding. The UserPromptSubmit hook (`hooks/essence-nudge.py`) watches how much the session transcript has grown since the last compaction. Past a threshold (6 MB by default, then every 3 MB), it adds one short reminder to the next prompt: update the landscapes you worked in and the running diary file, in this turn. The synthesis run also updates landscapes whose subject shows in the conversation.
+A landscape can only be written well by the session that built the understanding. The UserPromptSubmit hook (`hooks/essence-nudge.py`) watches how much the session transcript has grown since the last compaction. Past a threshold (6 MB by default, then every 3 MB), it adds one short reminder to the next prompt: update the landscapes you worked in and the sketchbook, in this turn. The synthesis run also updates landscapes whose subject shows in the conversation.
 
 ## How synthesis works
 
@@ -332,6 +350,16 @@ You need Linux, bash, Python 3, `jq`, `shasum`, `sha256sum`, GNU `stat`, and the
 
    Set the token limits from what `measure` prints. Then add the user timer from [docs/studio.md](docs/studio.md). The studio needs Python 3.12.
 
+9. The sketchbook. Copy the two commands and start the first month:
+
+   ```bash
+   cp scripts/note scripts/sketchbook-rotate ~/.claude/scripts/
+   chmod 700 ~/.claude/scripts/note ~/.claude/scripts/sketchbook-rotate
+   python3 ~/.claude/scripts/sketchbook-rotate --init
+   ```
+
+   Decide what it may hold and set `ESSENCE_SKETCHBOOK_SCOPE` (`work` or `all`) in the `env` block. Then add the daily timer from [docs/sketchbook.md](docs/sketchbook.md). The installer does the copy and the first month; `--sketchbook-scope work|all` sets the scope.
+
 To try a synthesis without touching the real files, run it on a copy:
 
 ```bash
@@ -351,7 +379,9 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_MIN_MESSAGES` | `3` | synthesis (fewer new messages from the person: skip) |
 | `ESSENCE_NUDGE_MB` | `6` | nudge (first reminder) |
 | `ESSENCE_NUDGE_AGAIN_MB` | `3` | nudge (each reminder after that) |
-| `ESSENCE_TZ` | the machine's time zone | now (the person's time zone, an IANA name such as `America/Denver`) |
+| `ESSENCE_TZ` | the machine's time zone | now, note, sketchbook-rotate (the person's time zone, an IANA name such as `Europe/Berlin`) |
+| `ESSENCE_SKETCHBOOK_SCOPE` | `work` | session start, sketchbook-rotate (`work`: work only, PERSONAL lists are not carried; `all`: anything the person brings up; never a secret) |
+| `ESSENCE_SKETCHBOOK_WARN_KB` | `400` | sketchbook-rotate, nudge (the size mark for one month) |
 | `ESSENCE_BRUSH_RULES` | `$ESSENCE_DIR/brush-rules.json` | brush rules (the rules file) |
 | `ESSENCE_PORTRAIT_MAX` | `160000` | synthesis (hard cap in bytes: a run that grows the portrait past it is rolled back), session start (warns at 90 percent of it) |
 | `ESSENCE_LANDSCAPE_MAX` | `30000` | synthesis (hard cap in bytes for one landscape: an edit past it is undone) |
@@ -371,6 +401,8 @@ python3 -m unittest discover -s tests -v
 They cover the reducer on a tiny transcript, the nudge decision, and the synthesis wrapper: a good edit is kept, a run that removes a heading is rolled back, a run that changes section 1 is rolled back, and a run with too little new conversation is skipped.
 
 The studio tests use a fake `claude` that speaks the same stream format, fake senses and temporary folders. They cover the config, the answer parser, the limits, the kill switch, the journal rules, the schedule, the senses and the command line. `tests/test_studio_public.py` checks that the studio files hold nothing personal.
+
+`tests/test_sketchbook.py` covers the rotation in temporary folders (a month change, the carried blocks, the scope, a second run, the compatibility link, old months untouched, a dry run, the lock, late lines, the size mark), `note`, the hook lines and the installer.
 
 ## The cold test
 

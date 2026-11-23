@@ -1,0 +1,116 @@
+---
+import Entry from './Entry.astro';
+import Dot from './Dot.astro';
+
+// The rules every sketch follows.
+const rules = [
+  'Append only. A correction is a new sketch that says what it corrects.',
+  'The clock stamps every entry. The agent never types a time.',
+  'Never a secret. Key names and vault item names only.',
+  'The person chooses at setup what else may go in: work only (the default), or everything.',
+  'The person\'s words go in quotes, exactly as said.',
+  'A guess is written as a guess.',
+  'Never read whole. The open items, the newest In flight block, the newest work list, the last 150 lines. The rest by grep.',
+];
+---
+
+<Entry id="sketchbook" label="07 · The sketchbook" title="What is happening right now.">
+  <p class="standfirst prose">The sketchbook is the agent's running notes. Each entry is a sketch.</p>
+
+  <div class="spread">
+    <div class="prose">
+      <p>
+        The portrait says who the agent is. A landscape says what is true
+        in one area of work. Neither says what happened this morning, what
+        is running, or what waits on the person. After a compaction, the
+        portrait gives the agent back its character. The sketchbook lets it
+        pick the thread back up.
+      </p>
+      <p>
+        A sketch is one line, stamped by the clock with a small command,
+        <code>note</code>. Two kinds of block sit among the sketches: the In
+        flight block (waiting on the person, running, just finished) and the
+        work list. The newest block of each kind wins. Nothing is ever
+        edited in place.
+      </p>
+      <p>
+        A painter keeps a sketchbook every day, and most of it is never
+        shown. What keeps coming back gets painted properly. A pattern that
+        shows up in the sketches again and again becomes a rule in the
+        portrait, a fact in a landscape, or a stroke.
+      </p>
+      <p>
+        One file per month. A pointer, <code>current.md</code>, always names
+        the current month, so nothing that reads the sketchbook needs to
+        know about months. On the first night of a month a small script
+        starts the new file with an open items page: the newest In flight
+        block, the newest work list and the open lists, carried over. The
+        old month stays as it was, searchable.
+      </p>
+    </div>
+
+    <div class="margin">
+      <figure class="diagram route-figure">
+        <ul class="legend" aria-hidden="true">
+          <li><Dot kind="none" />the sketchbook folder</li>
+        </ul>
+        <ol class="route route-open" aria-label="A month change, in order">
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>a timer, just after midnight</b>
+            <span>did the month change? if not, nothing happens</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>the script takes the lock</b>
+            <span>a note waits a moment</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>the new month</b>
+            <span>open items carried, re-stamped, marked carried</span>
+          </li>
+          <li>
+            <span class="route-dots"><Dot kind="none" /></span>
+            <b>current.md moves</b>
+            <span><span class="arrow" aria-hidden="true">→</span> the old month is never changed</span>
+          </li>
+        </ol>
+      </figure>
+
+      <!-- A made-up page in the exact format. -->
+      <figure class="diagram studio-page">
+        <figcaption class="leaf-cap">sketchbook/2027-02.md, an invented day</figcaption>
+        <pre class="md">- 2027-02-03 15:10 CET Lesson on Friday.
+- 2027-02-03 15:12 CET IN FLIGHT (current):
+  W. Oven repair: confirm Thursday
+  R. 14:50 Pattern cards: printing
+  F. 15:05 Allergen note sent</pre>
+      </figure>
+    </div>
+  </div>
+
+  <div class="security">
+    <div>
+      <h3>The rules</h3>
+      <ul class="limits">
+        {rules.map((l) => <li>{l}</li>)}
+      </ul>
+    </div>
+
+    <div>
+      <h3>Where it sits</h3>
+      <ul class="limits">
+        <li>The session-start hook names the parts to read and the scope.</li>
+        <li>The nudge hook asks for the sketchbook to be brought up to date, and warns past 400 KB in one month.</li>
+        <li>A landscape holds no history. The sketchbook keeps it.</li>
+        <li>The studio's journal is the agent's own. The sketchbook is the work.</li>
+      </ul>
+      <p class="aside-note">
+        The sketchbook is the sixth part of Essence: two small commands in
+        <code>scripts/</code>, <code>note</code> and
+        <code>sketchbook-rotate</code>, and a folder of month files.
+      </p>
+    </div>
+  </div>
+</Entry>

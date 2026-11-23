@@ -13,6 +13,7 @@ There are two ways through the install. `./install.sh` does the mechanical part 
 - A time line on every prompt (`[Now: ...]`), so your agent reads the time instead of guessing it.
 - A nudge when a conversation grows long: a reminder to write down what it learned before the context is compacted.
 - A check on every finished reply. If the reply breaks a rule in `~/.claude/essence/checks.json`, the turn is blocked once and your agent is told the rule.
+- A sketchbook at `~/.claude/essence/sketchbook/`: your agent's running notes, one file per month, written one clock-stamped line at a time with `note`. The session-start hook tells your agent which parts of it to read.
 - Optional: landscapes, strokes, brushes and a list of cabinets (the four kinds of files in the README), and the brush-rules check.
 
 ### What it costs
@@ -74,7 +75,14 @@ Then run it:
 ./install.sh --tz Europe/Berlin --person Alex --agent Robin
 ```
 
-You should see `done:` lines, one per action, and at the end `Next: write section 1 of ~/.claude/essence/portrait.md`. A second run prints `same:` and `kept:` lines and changes nothing. To undo it, run `./install.sh --uninstall` (see Uninstall).
+You should see `done:` lines, one per action, among them `started the sketchbook`, and at the end `Next: write section 1 of ~/.claude/essence/portrait.md`. A second run prints `same:` and `kept:` lines and changes nothing. To undo it, run `./install.sh --uninstall` (see Uninstall).
+
+**One question before you run it for real: what may the sketchbook hold?** The sketchbook is your agent's running notes. It never holds a secret. Besides work, it can hold what you bring up about the rest of your life (health, money, family), or stay with work only. Pick one:
+
+- work only: leave the option out, or add `--sketchbook-scope work`. This is the default.
+- everything you bring up: add `--sketchbook-scope all`. Choose this when you use your agent for personal things too and the sketchbook stays on this machine.
+
+The installer writes your answer as `ESSENCE_SKETCHBOOK_SCOPE` in the `env` block of `settings.json`. You can change it there later. [docs/sketchbook.md](sketchbook.md) has the rules.
 
 After the installer, go to step 5, then step 8. Step 9 is optional. To update the hooks after a `git pull`, run `./install.sh` again: it replaces only the scripts that changed, and keeps a backup of each.
 
@@ -141,6 +149,19 @@ ls -ld ~/.claude/essence
 ```
 
 Undo, only while the folder is still empty: `rm -r ~/.claude/essence`.
+
+Then start the sketchbook, your agent's running notes. Copy its two commands next to the hooks and make the first month:
+
+```bash
+cp scripts/note scripts/sketchbook-rotate ~/.claude/scripts/
+chmod 700 ~/.claude/scripts/note ~/.claude/scripts/sketchbook-rotate
+mkdir -p ~/.claude/essence/sketchbook && chmod 700 ~/.claude/essence/sketchbook
+python3 ~/.claude/scripts/sketchbook-rotate --init
+```
+
+You should see `sketchbook: made .../sketchbook/current.md`. `current.md` is a symlink to this month's file, such as `2027-02.md`. Decide what the sketchbook may hold (see the question under the short path) and, in step 7, add `"ESSENCE_SKETCHBOOK_SCOPE": "work"` or `"all"` to the `env` block. Put `note` on your PATH so your agent can call it by name: `ln -s ~/.claude/scripts/note ~/.local/bin/note`.
+
+Undo: `rm -r ~/.claude/essence/sketchbook ~/.claude/scripts/note ~/.claude/scripts/sketchbook-rotate`.
 
 #### 4. Start the portrait from the template
 
@@ -347,13 +368,14 @@ Undo: `cp ~/.claude/settings.json.bak-essence ~/.claude/settings.json`.
 This step is for review. It changes nothing. Run it after the manual steps or after the installer.
 
 ```bash
-stat -c '%A %n' ~/.claude/essence ~/.claude/essence/portrait.md ~/.claude/essence/checks.json ~/.claude/scripts/*
+stat -c '%A %n' ~/.claude/essence ~/.claude/essence/sketchbook ~/.claude/essence/portrait.md ~/.claude/essence/checks.json ~/.claude/scripts/*
 ```
 
 You should see:
 
 ```
 drwx------ ~/.claude/essence
+drwx------ ~/.claude/essence/sketchbook
 -rw------- ~/.claude/essence/portrait.md
 -rw------- ~/.claude/essence/checks.json
 -rwx------ ~/.claude/scripts/essence-brush-rules.py
@@ -363,7 +385,9 @@ drwx------ ~/.claude/essence
 -rwx------ ~/.claude/scripts/essence-reduce.py
 -rwx------ ~/.claude/scripts/essence-scan.py
 -rwx------ ~/.claude/scripts/essence-synthesize.sh
+-rwx------ ~/.claude/scripts/note
 -rwx------ ~/.claude/scripts/session-start-verify.sh
+-rwx------ ~/.claude/scripts/sketchbook-rotate
 ```
 
 `stat` prints the full path of your home folder where this shows `~`. Other scripts you keep in `~/.claude/scripts/` show up too.
@@ -374,7 +398,7 @@ Now run the session-start hook by hand. It is the same command Claude Code runs:
 echo '{"source":"startup"}' | bash ~/.claude/scripts/session-start-verify.sh
 ```
 
-You should see `## Essence Portrait`, a note that `portrait.md.sha256` does not exist yet, your section 1, and a block that starts with `READ YOUR ENTIRE PORTRAIT NOW` and gives Read ranges such as `offset=1 limit=101`. The note about the checksum is expected until the first synthesis that changes the portrait.
+You should see `## Essence Portrait`, a note that `portrait.md.sha256` does not exist yet, your section 1, and a block that starts with `READ YOUR ENTIRE PORTRAIT NOW` and gives Read ranges such as `offset=1 limit=101`, then a `Sketchbook` block that names the parts of it to read and the scope. The note about the checksum is expected until the first synthesis that changes the portrait.
 
 #### 9. Optional: keep a local history
 
@@ -664,6 +688,16 @@ PYTHONPATH=~/.claude/scripts python3 -P -m studio wake --dry-run
 
 The dry run uses no model, writes nothing and fetches nothing. The studio runs a real model at night when the timer is on, three short wake-ups by default, every night. Run `studio measure` first (it runs the real model a few times) and set the token limits from what it prints, before you turn the timer on.
 
+## Optional: the sketchbook's monthly rotation
+
+The sketchbook starts a new file each month, with the open items of the old month carried to the top of the new one. `sketchbook-rotate` does it, from a daily user timer that does nothing unless the month changed. Look first:
+
+```bash
+python3 ~/.claude/scripts/sketchbook-rotate --dry-run
+```
+
+You should see `sketchbook: already on YYYY-MM.md, nothing to rotate`. [docs/sketchbook.md](sketchbook.md) has the two unit files and the commands to turn the timer on. Without the timer the sketchbook still works; it just stays in one file until you run the rotation yourself.
+
 ## Troubleshooting
 
 ### A hook does not fire
@@ -803,10 +837,10 @@ You should see a backup line for `settings.json`, `done:  wrote ~/.claude/settin
    cp ~/.claude/settings.json ~/.claude/settings.json.bak-uninstall
    ```
 
-2. Remove every hook entry that runs an Essence script, and the two name settings. Your other hooks stay:
+2. Remove every hook entry that runs an Essence script, the two name settings and the sketchbook scope. Your other hooks stay:
 
    ```bash
-   jq 'def essence: (.command // "") | test("\\.claude/scripts/(session-start-verify\\.sh|essence-[A-Za-z-]+\\.(sh|py))"); if .hooks then .hooks |= (with_entries(.value |= (map(.hooks |= map(select(essence | not))) | map(select((.hooks | length) > 0)))) | with_entries(select((.value | length) > 0))) else . end | if .hooks == {} then del(.hooks) else . end | if .env then .env |= del(.ESSENCE_PERSON, .ESSENCE_AGENT) else . end | if .env == {} then del(.env) else . end' ~/.claude/settings.json.bak-uninstall > ~/.claude/settings.json
+   jq 'def essence: (.command // "") | test("\\.claude/scripts/(session-start-verify\\.sh|essence-[A-Za-z-]+\\.(sh|py))"); if .hooks then .hooks |= (with_entries(.value |= (map(.hooks |= map(select(essence | not))) | map(select((.hooks | length) > 0)))) | with_entries(select((.value | length) > 0))) else . end | if .hooks == {} then del(.hooks) else . end | if .env then .env |= del(.ESSENCE_PERSON, .ESSENCE_AGENT, .ESSENCE_SKETCHBOOK_SCOPE) else . end | if .env == {} then del(.env) else . end' ~/.claude/settings.json.bak-uninstall > ~/.claude/settings.json
    ```
 
 3. Check that no Essence entry is left. You should see `0`:
@@ -818,10 +852,10 @@ You should see a backup line for `settings.json`, `done:  wrote ~/.claude/settin
 4. Remove the scripts:
 
    ```bash
-   rm ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-scan.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh ~/.claude/scripts/essence-check.py ~/.claude/scripts/essence-brush-rules.py
+   rm ~/.claude/scripts/session-start-verify.sh ~/.claude/scripts/essence-synthesize.sh ~/.claude/scripts/essence-reduce.py ~/.claude/scripts/essence-scan.py ~/.claude/scripts/essence-nudge.py ~/.claude/scripts/essence-now.sh ~/.claude/scripts/essence-check.py ~/.claude/scripts/essence-brush-rules.py ~/.claude/scripts/note ~/.claude/scripts/sketchbook-rotate
    ```
 
-5. If you installed the studio, follow Undo in [docs/studio.md](studio.md).
+5. If you installed the studio, follow Undo in [docs/studio.md](studio.md). If you turned on the sketchbook timer, follow Undo in [docs/sketchbook.md](sketchbook.md).
 
 6. If `~/.claude/scripts/` is now empty, remove it: `rmdir ~/.claude/scripts`. `rmdir` refuses a folder that still holds files.
 
@@ -829,7 +863,7 @@ Restart Claude Code. `/hooks` should list no Essence hooks.
 
 ### What is left, and how to remove it
 
-`~/.claude/essence/` stays: the portrait, the landscapes, the strokes, the brushes, `checks.json`, the saved copies and the logs. The backups `settings.json.bak-*` stay in `~/.claude/`.
+`~/.claude/essence/` stays: the portrait, the landscapes, the strokes, the brushes, the sketchbook, `checks.json`, the saved copies and the logs. The backups `settings.json.bak-*` stay in `~/.claude/`.
 
 To remove your Essence files too, make an archive first, then delete the folder:
 

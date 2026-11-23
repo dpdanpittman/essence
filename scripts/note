@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# note: append one sketch to the sketchbook, stamped by the clock, never by the agent. Part of Essence
+# (docs/sketchbook.md).
+#   note "text of the sketch"        or        printf '%s\n' "text" | note
+# Writes "- YYYY-MM-DD HH:MM ZONE <text>" at the end of $ESSENCE_DIR/sketchbook/current.md (default
+# ~/.claude/essence/sketchbook/current.md). The time comes from the clock in ESSENCE_TZ (an IANA name such as
+# Europe/Berlin; default the machine's time zone). Several lines become one. Append only.
+# It holds the sketchbook lock (<folder>/.lock, the one sketchbook-rotate takes) while it appends, so a sketch never
+# lands in the middle of a rotation. Why the clock: an agent that types a time guesses it, and the guess drifts.
+# Exit codes: 0 written, 1 nothing written (empty text, no sketchbook, lock busy).
+set -eu
+dir="${ESSENCE_DIR:-$HOME/.claude/essence}/sketchbook"
+f="$dir/current.md"
+if [ $# -gt 0 ]; then text="$*"; else text=$(cat); fi
+text=$(printf '%s' "$text" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+[ -n "$text" ] || { echo "note: empty text, nothing written" >&2; exit 1; }
+[ -e "$f" ] || { echo "note: no sketchbook at $f (run: sketchbook-rotate --init)" >&2; exit 1; }
+if command -v flock >/dev/null 2>&1; then
+  exec 9>>"$dir/.lock"
+  flock -w 10 9 || { echo "note: the sketchbook is busy (a rotation?), nothing written; try again" >&2; exit 1; }
+fi
+if [ -n "${ESSENCE_TZ:-}" ]; then stamp=$(TZ="$ESSENCE_TZ" date '+%Y-%m-%d %H:%M %Z'); else stamp=$(date '+%Y-%m-%d %H:%M %Z'); fi
+printf -- '- %s %s\n' "$stamp" "$text" >> "$f"
+echo "note: added at $stamp to $(basename "$(readlink -f "$f")")"

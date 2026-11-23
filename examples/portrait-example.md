@@ -56,7 +56,7 @@ Invented example. Sara, Max and the class do not exist.
 ### 11. LANDSCAPES
 **How to use them**
 - When work starts in an area on the list, read its landscape whole before you act.
-- A landscape says what is true now. History goes in the running diary file.
+- A landscape says what is true now. History goes in the sketchbook.
 - When you learn something lasting in an area, update its landscape in the same turn.
 
 **The landscapes**

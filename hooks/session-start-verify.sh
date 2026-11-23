@@ -21,6 +21,8 @@
 #           ESSENCE_PERSON (default "the person"), the name used in the notes,
 #           ESSENCE_PORTRAIT_MAX (default 160000), the synthesis hard cap;
 #           the size warning starts at 90% of it.
+#           ESSENCE_SKETCHBOOK_SCOPE (work|all, default work), named in the
+#           sketchbook note, printed when sketchbook/current.md exists.
 # Wire into ~/.claude/settings.json as the SessionStart hook command.
 # =============================================================================
 
@@ -114,3 +116,19 @@ cat <<EOF
 > Standing rule: read the ENTIRE portrait at every session start and after every compaction. Never skip, never sample.
 > Then tell ${PERSON} in one short line that the portrait is loaded. Sections 2-10 are how ${PERSON} wants you to work.
 EOF
+
+# --- The sketchbook (docs/sketchbook.md) -------------------------------------
+# The running notes: what is happening now. Never read whole; the hook names the parts to read.
+SKETCH_FILE="$ESSENCE_DIR/sketchbook/current.md"
+if [ -e "$SKETCH_FILE" ]; then
+  case "${ESSENCE_SKETCHBOOK_SCOPE:-work}" in
+    all) SCOPE_TEXT="work and personal, as ${PERSON} chose; never a secret" ;;
+    *)   SCOPE_TEXT="work only; never a secret" ;;
+  esac
+  SKETCH_BYTES=$(wc -c < "$SKETCH_FILE" 2>/dev/null | tr -d ' ')
+  cat <<EOF
+
+> 📓 **Sketchbook**: \`${SKETCH_FILE/#"$HOME"/\~}\` (${SKETCH_BYTES:-0} bytes). Never read it whole. Read its OPEN ITEMS page (the top), the newest IN FLIGHT block, the newest WORK LIST block and the last 150 lines. Find anything else with grep.
+> Write to it only with \`note "<text>"\` (the clock stamps it), append only. Scope: ${SCOPE_TEXT}.
+EOF
+fi

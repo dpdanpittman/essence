@@ -4,7 +4,7 @@ Instructions for AI coding agents working in this repository. Humans should star
 
 ## What this project is
 
-Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is Claude Code hooks and four kinds of markdown files: one portrait (eleven sections), one landscape per area of work (six parts), one stroke per procedure (five parts, plus a tested script, its shortcut), and one brush per ability (eight parts: a login, role, token or tool, and its permissions). A brush is loaded by its pigment (a secret) kept in a cabinet (a password-manager vault); `cabinets.md` lists the cabinets, never their contents. The files live on the owner's machine in `~/.claude/essence/`. Beside them is the studio: a few short night wake-ups with no task, where the agent has time of its own (`docs/studio.md`). This repository holds the hooks, the studio engine, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later. The fifth part is the studio (`studio/`): a few short wake-ups at night with no task, where the agent has time of its own. It is a script, not a file and not a hook.
+Essence gives a Claude Code agent a memory of who it is and how to work with its person. It is Claude Code hooks and four kinds of markdown files: one portrait (eleven sections), one landscape per area of work (six parts), one stroke per procedure (five parts, plus a tested script, its shortcut), and one brush per ability (eight parts: a login, role, token or tool, and its permissions). A brush is loaded by its pigment (a secret) kept in a cabinet (a password-manager vault); `cabinets.md` lists the cabinets, never their contents. The files live on the owner's machine in `~/.claude/essence/`. Beside them is the studio: a few short night wake-ups with no task, where the agent has time of its own (`docs/studio.md`). The sixth part is the sketchbook: the agent's running notes, one file per month in `~/.claude/essence/sketchbook/` with `current.md` pointing at the current month (`docs/sketchbook.md`). This repository holds the hooks, the studio engine, the templates, invented examples, tests and the project website. It was called `session-essence` before. License: AGPL-3.0-or-later. The fifth part is the studio (`studio/`): a few short wake-ups at night with no task, where the agent has time of its own. It is a script, not a file and not a hook.
 
 ## Layout
 
@@ -17,6 +17,10 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-brush-rules.py`: PostToolUse hook and command. A landscape that involves a platform must list that platform's brush, and the brush must keep its "Before you use this brush" rule. Rules in the private file `~/.claude/essence/brush-rules.json`. Fails open.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.
 - `studio/`: the studio engine, a Python 3.12 standard-library package run as `python3 -P -m studio`. `cli.py` (commands), `config.py` (the one JSON config), `wake.py` (the wake-up loop), `model.py` (the tool-less stream-json model run), `wire.py` (system prompt and answer parser), `pulse.py`, `limits.py`, `journal.py`, `schedule.py`, `folder.py`, `types.py`. Senses and sense verbs: `sky.py`, `body.py`, `house.py`, `song.py`, `reading.py`, `channel.py`, `senses.py`. `fetch.py` is the only module that touches the network.
+- `scripts/note`: appends one clock-stamped sketch to `sketchbook/current.md` under the sketchbook lock (`ESSENCE_TZ`).
+- `scripts/sketchbook-rotate`: starts a new month when the month changed (open items page carried, `current.md` moved, old month untouched), `--init`, `--early`, `--dry-run`, `--compat-link-glob`; the 400 KB size mark. Python standard library.
+- `docs/sketchbook.md`: what the sketchbook is, the format, the rules, rotation, setup, the timer and undo. `templates/sketchbook-month.md`: an empty month. `examples/sketchbook-example.md`: an invented month (Sara, Max, the class).
+- `tests/test_sketchbook.py`: offline tests for the rotation, `note`, the hook lines, the installer and the impersonal check over the sketchbook files.
 - `docs/setup.md`: the setup guide for a first-time user. Follow it in a clean home folder after a change to the install.
 - `install.sh`: the mechanical part of the install. Safe to run twice, backs up what it changes, `--dry-run` and `--uninstall`.
 - `docs/studio.md`: what the studio is, its safety shape, every config key, the commands, install and undo.
@@ -39,10 +43,11 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 python3 -m unittest discover -s tests -v
 
 # Syntax and lint checks for the hooks
-bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh hooks/essence-now.sh
+bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh hooks/essence-now.sh scripts/note
+python3 -m py_compile scripts/sketchbook-rotate
 python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-brush-rules.py
 python3 -m py_compile studio/*.py
-shellcheck -S warning hooks/*.sh install.sh
+shellcheck -S warning hooks/*.sh install.sh scripts/note
 
 # Site
 cd site && npm install && npm run build     # also: npm run dev, npm run preview
@@ -74,7 +79,8 @@ cd site && npm install && npm run build     # also: npm run dev, npm run preview
 - The session-start hook still carries two notes from version 2: a drift-check notice that fires only if `.drift-check-due` exists, and a status note that reads a `last_run` field version 3 no longer writes.
 - The site build output (`site/dist/`) is not committed.
 - The public history starts with one commit, "a fresh start" (version 3.6.1). Older commits, tags and commit ids quoted in old notes are not in this repository.
-- `README.md` describes the studio near the top and in its own section right after "The four kinds of files". Keep the README, `docs/studio.md`, `docs/setup.md` and the site section saying the same thing when the studio changes.
+- `README.md` describes the studio near the top and in its own section right after "The four kinds of files"; the sketchbook's section follows the studio's. Keep the README, `docs/studio.md` / `docs/sketchbook.md`, `docs/setup.md` and the site sections (`Studio.astro`, `Sketchbook.astro`) saying the same thing when either changes.
+- The sketchbook's block headers are read by the person's own tools too (a status screen, a check). Keep the kind words first in a header (`IN FLIGHT (`, `WORK LIST (`), also in a carried header.
 
 ## Never commit or make public
 

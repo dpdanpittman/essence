@@ -3,13 +3,15 @@
 # Essence installer: the mechanical part of docs/setup.md.
 # =============================================================================
 # Run it from the repository folder:
-#     ./install.sh [--dry-run] [--tz ZONE] [--person NAME] [--agent NAME]
+#     ./install.sh [--dry-run] [--tz ZONE] [--person NAME] [--agent NAME] [--sketchbook-scope work|all]
 #     ./install.sh --uninstall [--dry-run]
 #
 # Install does five things, and is safe to run again (for example after a git pull):
 #   1. Checks the tools the hooks need.
-#   2. Copies the hook scripts to ~/.claude/scripts/. A script that is already there and differs is backed up first.
-#   3. Makes ~/.claude/essence/ (mode 700) with landscapes/, strokes/ and brushes/.
+#   2. Copies the hook scripts and the two sketchbook commands (note, sketchbook-rotate) to ~/.claude/scripts/.
+#      A script that is already there and differs is backed up first.
+#   3. Makes ~/.claude/essence/ (mode 700) with landscapes/, strokes/, brushes/ and sketchbook/, and starts the
+#      sketchbook (sketchbook/YYYY-MM.md and current.md) if there is none.
 #   4. Copies the portrait template and the example check rules, ONLY if those files do not exist yet.
 #   5. Adds the Essence hook entries from examples/settings-hooks.json to ~/.claude/settings.json.
 #      Old Essence entries are removed first, so a second run does not add copies. Your other hooks and
@@ -19,9 +21,12 @@
 #                uses the machine's time zone.
 # --person NAME  sets ESSENCE_PERSON in the env block of settings.json.
 # --agent NAME   sets ESSENCE_AGENT in the env block of settings.json.
+# --sketchbook-scope work|all
+#                sets ESSENCE_SKETCHBOOK_SCOPE: what the sketchbook may hold besides work. Without it the
+#                setting is left as it is (unset means work only). Never a secret either way.
 # --dry-run      prints what it would do, and changes nothing.
 # --uninstall    removes the Essence hook entries, the two name settings and the copied scripts.
-#                It never touches ~/.claude/essence/ (your portrait). Remove that by hand if you want it gone.
+#                It never touches ~/.claude/essence/ (your portrait and sketchbook). Remove that by hand if you want it gone.
 #
 # It never overwrites a portrait, a checks.json or a broken settings.json.
 # Exit codes: 0 done, 1 a check failed or a file is broken, 2 a usage error.
@@ -36,8 +41,9 @@ SETTINGS="$CLAUDE_HOME/settings.json"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 HOOK_FILES=(session-start-verify.sh essence-synthesize.sh essence-reduce.py essence-scan.py
             essence-nudge.py essence-now.sh essence-check.py essence-brush-rules.py)
+TOOL_FILES=(note sketchbook-rotate)   # commands from scripts/, not hooks
 
-DRY=0; UNINSTALL=0; TZ_NAME=""; PERSON=""; AGENT=""
+DRY=0; UNINSTALL=0; TZ_NAME=""; PERSON=""; AGENT=""; SCOPE=""
 usage() { sed -n '5,7p' "$0" | sed 's/^# \{0,5\}//' >&2; exit 2; }
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -46,6 +52,7 @@ while [ $# -gt 0 ]; do
     --tz) TZ_NAME="${2:-}"; [ -n "$TZ_NAME" ] || usage; shift 2;;
     --person) PERSON="${2:-}"; [ -n "$PERSON" ] || usage; shift 2;;
     --agent) AGENT="${2:-}"; [ -n "$AGENT" ] || usage; shift 2;;
+    --sketchbook-scope) SCOPE="${2:-}"; [ "$SCOPE" = work ] || [ "$SCOPE" = all ] || usage; shift 2;;
     -h|--help) usage;;
     *) echo "install.sh: unknown argument $1" >&2; usage;;
   esac
@@ -126,11 +133,11 @@ fi
 if [ "$UNINSTALL" = 1 ]; then
   if [ -f "$SETTINGS" ]; then
     tmp="$(newtmp)"
-    jq "$STRIP"' | if (.env | type) == "object" then .env |= del(.ESSENCE_PERSON, .ESSENCE_AGENT)
+    jq "$STRIP"' | if (.env | type) == "object" then .env |= del(.ESSENCE_PERSON, .ESSENCE_AGENT, .ESSENCE_SKETCHBOOK_SCOPE)
                    | if .env == {} then del(.env) else . end else . end' "$SETTINGS" > "$tmp"
     write_settings "$tmp"
   fi
-  for f in "${HOOK_FILES[@]}"; do
+  for f in "${HOOK_FILES[@]}" "${TOOL_FILES[@]}"; do
     [ -e "$SCRIPTS/$f" ] || continue
     run rm -f "$SCRIPTS/$f"; say "removed $(t "$SCRIPTS/$f")"
   done
@@ -146,12 +153,19 @@ for f in "${HOOK_FILES[@]}"; do
   if [ -e "$dst" ]; then bak="$(backup_name "$dst")"; run cp -p "$dst" "$bak"; say "backed up $(t "$dst") to $(t "$bak")"; fi
   run cp "$src" "$dst"; run chmod 700 "$dst"; say "copied $f to $(t "$SCRIPTS") (mode 700)"
 done
+for f in "${TOOL_FILES[@]}"; do
+  src="$REPO/scripts/$f"; dst="$SCRIPTS/$f"
+  if [ -e "$dst" ] && cmp -s "$src" "$dst"; then echo "same:  $(t "$dst")"; continue; fi
+  if [ -e "$dst" ]; then bak="$(backup_name "$dst")"; run cp -p "$dst" "$bak"; say "backed up $(t "$dst") to $(t "$bak")"; fi
+  run cp "$src" "$dst"; run chmod 700 "$dst"; say "copied $f to $(t "$SCRIPTS") (mode 700)"
+done
 
 # --- 3. the essence folder -----------------------------------------------------------------------
-for d in "$ESSENCE" "$ESSENCE/landscapes" "$ESSENCE/strokes" "$ESSENCE/brushes"; do
+for d in "$ESSENCE" "$ESSENCE/landscapes" "$ESSENCE/strokes" "$ESSENCE/brushes" "$ESSENCE/sketchbook"; do
   [ -d "$d" ] || { run mkdir -p "$d"; say "made $(t "$d")"; }
 done
 if [ ! -d "$ESSENCE" ] || [ "$(stat -c %a "$ESSENCE")" != 700 ]; then run chmod 700 "$ESSENCE"; say "set $(t "$ESSENCE") to mode 700"; fi
+if [ ! -d "$ESSENCE/sketchbook" ] || [ "$(stat -c %a "$ESSENCE/sketchbook")" != 700 ]; then run chmod 700 "$ESSENCE/sketchbook"; say "set $(t "$ESSENCE/sketchbook") to mode 700"; fi
 
 # --- 4. first files, never overwritten -------------------------------------------------------------
 copy_once() {   # copy_once SOURCE TARGET
@@ -160,18 +174,28 @@ copy_once() {   # copy_once SOURCE TARGET
 }
 copy_once "$REPO/templates/portrait.md" "$ESSENCE/portrait.md"
 copy_once "$REPO/examples/checks-example.json" "$ESSENCE/checks.json"
+if [ -e "$ESSENCE/sketchbook/current.md" ] || [ -L "$ESSENCE/sketchbook/current.md" ]; then
+  echo "kept:  $(t "$ESSENCE/sketchbook/current.md") exists; not changed"
+else
+  run env ESSENCE_DIR="$ESSENCE" ${TZ_NAME:+ESSENCE_TZ="$TZ_NAME"} python3 "$REPO/scripts/sketchbook-rotate" --init >/dev/null
+  say "started the sketchbook: $(t "$ESSENCE/sketchbook")/$(date +%Y-%m).md and current.md"
+fi
 
 # --- 5. settings.json ------------------------------------------------------------------------------
 tmp="$(newtmp)"
-{ if [ -f "$SETTINGS" ]; then cat "$SETTINGS"; else echo '{}'; fi; } | jq --slurpfile block "$REPO/examples/settings-hooks.json" --arg tz "$TZ_PREFIX" --arg person "$PERSON" --arg agent "$AGENT" "
+{ if [ -f "$SETTINGS" ]; then cat "$SETTINGS"; else echo '{}'; fi; } | jq --slurpfile block "$REPO/examples/settings-hooks.json" --arg tz "$TZ_PREFIX" --arg person "$PERSON" --arg agent "$AGENT" --arg scope "$SCOPE" "
   ($STRIP)
   | (\$block[0] | walk(if type == \"string\" then sub(\"ESSENCE_TZ=YOUR_TIME_ZONE \"; \$tz) else . end) | .hooks) as \$b
   | .hooks = (reduce (\$b | keys[]) as \$k ((.hooks // {}); .[\$k] = ((.[\$k] // []) + \$b[\$k])))
   | if \$person != \"\" then .env.ESSENCE_PERSON = \$person else . end
   | if \$agent != \"\" then .env.ESSENCE_AGENT = \$agent else . end
+  | if \$scope != \"\" then .env.ESSENCE_SKETCHBOOK_SCOPE = \$scope else . end
 " > "$tmp"
 write_settings "$tmp"
 
 echo
 echo "Next: write section 1 of $(t "$ESSENCE/portrait.md") with your agent, then start a new Claude Code session."
 echo "See docs/setup.md, Your first session."
+if [ -z "$SCOPE" ] && ! jq -e '.env.ESSENCE_SKETCHBOOK_SCOPE' "$SETTINGS" >/dev/null 2>&1; then
+  echo "Sketchbook scope: work only (the default). To let it hold personal notes too, run again with --sketchbook-scope all."
+fi
