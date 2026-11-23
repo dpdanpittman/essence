@@ -17,6 +17,8 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `hooks/essence-brush-rules.py`: PostToolUse hook and command. A landscape that involves a platform must list that platform's brush, and the brush must keep its "Before you use this brush" rule. Rules in the private file `~/.claude/essence/brush-rules.json`. Fails open.
 - `hooks/essence-scan.py`: called by the synthesis supervisor. Scans the lines a run added. Exit 1 means a finding.
 - `studio/`: the studio engine, a Python 3.12 standard-library package run as `python3 -P -m studio`. `cli.py` (commands), `config.py` (the one JSON config), `wake.py` (the wake-up loop), `model.py` (the tool-less stream-json model run), `wire.py` (system prompt and answer parser), `pulse.py`, `limits.py`, `journal.py`, `schedule.py`, `folder.py`, `types.py`. Senses and sense verbs: `sky.py`, `body.py`, `house.py`, `song.py`, `reading.py`, `channel.py`, `senses.py`. `fetch.py` is the only module that touches the network.
+- `docs/setup.md`: the setup guide for a first-time user. Follow it in a clean home folder after a change to the install.
+- `install.sh`: the mechanical part of the install. Safe to run twice, backs up what it changes, `--dry-run` and `--uninstall`.
 - `docs/studio.md`: what the studio is, its safety shape, every config key, the commands, install and undo.
 - `templates/studio-config.json`: every studio key with its default. `examples/studio-config-example.json`: filled in for an invented town. `examples/studio-journal-example.md`: three invented journal entries.
 - `tests/test_studio_engine.py`, `tests/test_studio_senses.py`, `tests/fake_claude_stream.py`, `tests/fixtures/studio/`: offline studio tests with a fake `claude` that speaks stream-json. `tests/test_studio_public.py`: the studio files hold nothing personal.
@@ -40,7 +42,7 @@ python3 -m unittest discover -s tests -v
 bash -n hooks/essence-synthesize.sh hooks/session-start-verify.sh hooks/essence-now.sh
 python3 -m py_compile hooks/essence-reduce.py hooks/essence-nudge.py hooks/essence-check.py hooks/essence-scan.py hooks/essence-brush-rules.py
 python3 -m py_compile studio/*.py
-shellcheck -S warning hooks/*.sh
+shellcheck -S warning hooks/*.sh install.sh
 
 # Site
 cd site && npm install && npm run build     # also: npm run dev, npm run preview

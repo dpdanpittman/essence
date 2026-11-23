@@ -6,6 +6,8 @@ Essence gives an AI coding agent a memory of who it is and how to work with its 
 - Website: https://essence.mabus.ai
 - Author: Essence is built by Dan Pittman (https://github.com/dpdanpittman)
 
+**Start here:** [docs/setup.md](docs/setup.md) takes you from nothing to a working install in one evening: requirements, install (by hand or with `./install.sh`), the first session, the first synthesis, troubleshooting and uninstall.
+
 ## What it is
 
 Each new session of a coding agent starts as a stranger. Essence closes that gap with four kinds of files that live on the owner's machine, in `~/.claude/essence/`:
