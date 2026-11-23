@@ -11,6 +11,7 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 - `studio/` (the engine, Python 3.12 standard library), `docs/studio.md`, `templates/studio-config.json`, `examples/studio-config-example.json`, `examples/studio-journal-example.md`, and offline tests with a fake stream-json `claude`. `tests/test_studio_public.py` checks that the studio files hold nothing personal.
 - The studio reads one JSON config file (`--config` or `STUDIO_CONFIG`). It is the one exception to "environment variables only".
 - Site: a new section, "06 · The studio". The sections after it are renumbered.
+- Studio hardening after review: the system prompt goes to the model command as `--system-prompt-file /dev/fd/<n>` (a sealed in-memory file), never as an argument other local accounts could read. Any error inside a wake-up still writes the ledger and the log line (reason `error`), and each closing write fails alone. Stale per-run CLI config folders are swept under the lock. A damaged plan is not redrawn mid-night. A hand-run `wake` ends by `end_by` and is refused after it. A fetch has one overall deadline. A short journal write is reported, never repeated. An auth failure is marked `auth`. The sun verb says "right on the horizon" near sunrise and sunset (all tested).
 
 ### Changed
 

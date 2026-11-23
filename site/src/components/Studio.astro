@@ -19,7 +19,8 @@ const verbs = [
 const safety = [
   'The model has no tools. No shell, no files, no web. It receives text and returns text.',
   'A verb is a word the model writes. The script knows a fixed list of them and does each one in plain Python. A verb only reads, or writes inside the studio folder.',
-  'Anything else the model writes is only text. Nothing runs and nothing leaves the machine.',
+  'Anything else the model writes is only text. Nothing runs, and the script sends it nowhere.',
+  'The identity text is never written to disk or put on a command line, where other accounts could read it.',
   'Only the script reaches outside: the weather, from one host. Reading from the web is off until the person approves a list of sources.',
   'A journal line is plain text: no links, no markup, a length cap.',
   'Hard limits on time, turns and tokens for each wake-up, and an allowance for each night. A kill switch stops everything.',
