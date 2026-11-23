@@ -76,7 +76,7 @@ Then run it:
 
 You should see `done:` lines, one per action, and at the end `Next: write section 1 of ~/.claude/essence/portrait.md`. A second run prints `same:` and `kept:` lines and changes nothing. To undo it, run `./install.sh --uninstall` (see Uninstall).
 
-After the installer, go to step 5, then step 8. Step 9 is optional.
+After the installer, go to step 5, then step 8. Step 9 is optional. To update the hooks after a `git pull`, run `./install.sh` again: it replaces only the scripts that changed, and keeps a backup of each.
 
 ### The manual path
 
