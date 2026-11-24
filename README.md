@@ -2,6 +2,10 @@
 
 Essence gives an AI coding agent a memory of who it is and how to work with its person. It is a set of Claude Code hooks and four kinds of markdown files: a portrait, landscapes, strokes and brushes, plus one list of cabinets for the secrets that load the brushes. Its fifth part is the studio: time of the agent's own, at night, with no task. Its sixth part is the sketchbook: the agent's running notes, one file per month, so a new session can pick the thread back up. The project was called `session-essence` before.
 
+![The SessionStart hook prints the portrait's identity section and tells the agent to read the whole file; after an edit outside the pipeline it prints an integrity warning](docs/demo.png)
+
+_Real output of `hooks/session-start-verify.sh` on the invented example portrait. Lines are wrapped to fit, and one emoji and one standing-rule line are left out._
+
 - Repository: https://github.com/dpdanpittman/essence
 - Website: https://essence.mabus.ai
 - Author: Essence is built by Dan Pittman (https://github.com/dpdanpittman)
