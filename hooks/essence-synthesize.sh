@@ -34,7 +34,7 @@ SCRIPTS="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL="${ESSENCE_MODEL:-opus}"
 MIN_PERSON="${ESSENCE_MIN_MESSAGES:-3}"    # fewer new messages from the person than this: nothing to learn, skip
 PORTRAIT_MAX="${ESSENCE_PORTRAIT_MAX:-160000}"    # hard cap in bytes: a run that grows the portrait past it is refused
-LANDSCAPE_MAX="${ESSENCE_LANDSCAPE_MAX:-30000}"  # hard cap in bytes for one landscape: an edit past it is undone
+LANDSCAPE_MAX="${ESSENCE_LANDSCAPE_MAX:-60000}"  # hard cap in bytes for one landscape: an edit past it is undone
 PERSON="${ESSENCE_PERSON:-the person}"
 AGENT="${ESSENCE_AGENT:-the agent}"
 TRANSCRIPT=""; DRY=0; WAIT=0
@@ -211,7 +211,7 @@ The portrait is OPERATIVE memory: what shapes how the next session behaves. For 
 - A landscape says what is true NOW. Remove a line that the slice shows is no longer true. Do not keep history in it.
 - Keep its headings and its shape: one fact per line, each with its date and marked as checked, from the record, or assumed. Mark what the slice does not settle as "unconfirmed".
 - Add nothing that the slice does not show. If the slice does not touch a landscape, do not open it.
-- Keep each landscape under 30 KB.
+- Keep each landscape under 60 KB.
 - Never edit a file in @DIR@/strokes/. A stroke is a procedure the person and @AGENT@ wrote with a tested script. Keep a landscape's "Stroke:" lines as they are.
 - Never edit a file in @DIR@/brushes/. A brush is an ability (a login, role, token or tool) with its permissions. Keep a landscape's "Brush:" lines as they are.
 

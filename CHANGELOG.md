@@ -20,6 +20,7 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 ### Changed
 
+- The default landscape cap (`ESSENCE_LANDSCAPE_MAX`) is 60000 bytes, up from 30000. A landscape at its cap takes no more edits from the synthesis, so a busy area of work stopped learning. The landscape template, the synthesis prompt and the site say 60 KB.
 - Site: new design, "the studio notebook". Toned drawing paper, Alegreya and Alegreya Sans, and one pigment per kind of file that marks that kind in every diagram: ultramarine for the portrait, yellow ochre for the landscapes, vermilion for the strokes, lamp black for the brushes. The cabinet is drawn as a chest of four drawers, one pigment rule on each. The pull quote is a slip taped into the margin. Every painted edge is its own, drawn from a seed at build time. The text is unchanged.
 - Site: Tailwind is gone. The site is Astro with one plain stylesheet, `site/src/styles/site.css`, and no client JavaScript. The dark theme, Inter, Newsreader, JetBrains Mono and the breathing animation are removed.
 - Site: a skip link, visible focus outlines, the hooks as a table, and the footer outside `main`.

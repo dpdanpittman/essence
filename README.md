@@ -245,7 +245,7 @@ Words match whole, so "coworkers" does not count as "Workers". A landscape that 
 The synthesis reads a conversation that can include text from web pages and other machines. Three things guard what it writes.
 
 - **A scan of what was added** (`hooks/essence-scan.py`). After a run, every added line is checked for text that reads like a planted instruction, a way to send data out, a secret, an unknown web address or hidden characters. A hit rejects the run and restores the files.
-- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected and rolled back. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 30000 bytes) is undone for that file. The session-start hook warns earlier, when the portrait passes 90 percent of `ESSENCE_PORTRAIT_MAX` (144000 bytes by default), so there is room to trim before runs are refused.
+- **Hard size caps.** A run that grows the portrait past `ESSENCE_PORTRAIT_MAX` (default 160000 bytes) is rejected and rolled back. A landscape edit past `ESSENCE_LANDSCAPE_MAX` (default 60000 bytes) is undone for that file. The session-start hook warns earlier, when the portrait passes 90 percent of `ESSENCE_PORTRAIT_MAX` (144000 bytes by default), so there is room to trim before runs are refused.
 - **A local history.** Run `git init` in `~/.claude/essence` and keep it local. Each run then makes two commits: what changed by hand before the run, and what the run changed. A real portrait holds private things, so do not push this history anywhere public.
 
 ## The writing rules
@@ -388,7 +388,7 @@ This calls the real `claude` command on a temporary copy of the essence folder a
 | `ESSENCE_SKETCHBOOK_WARN_KB` | `400` | sketchbook-rotate, nudge (the size mark for one month) |
 | `ESSENCE_BRUSH_RULES` | `$ESSENCE_DIR/brush-rules.json` | brush rules (the rules file) |
 | `ESSENCE_PORTRAIT_MAX` | `160000` | synthesis (hard cap in bytes: a run that grows the portrait past it is rolled back), session start (warns at 90 percent of it) |
-| `ESSENCE_LANDSCAPE_MAX` | `30000` | synthesis (hard cap in bytes for one landscape: an edit past it is undone) |
+| `ESSENCE_LANDSCAPE_MAX` | `60000` | synthesis (hard cap in bytes for one landscape: an edit past it is undone) |
 | `STUDIO_CONFIG` | `~/.config/studio/config.json` | studio (the one config file; `--config` wins over it) |
 | `STUDIO_DIR` | the config's `studio_dir` | studio (overrides the studio folder, for tests and dry runs) |
 

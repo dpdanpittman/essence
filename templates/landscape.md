@@ -3,7 +3,7 @@ Essence landscape template. Copy to ~/.claude/essence/landscapes/<name>.md and l
 Line format: - fact (date, checked|record|assumed)
   checked = seen first hand, record = from a document or a message, assumed = not yet confirmed.
 A landscape says what is true now. Remove a line when it stops being true. History goes in the sketchbook.
-Keep each landscape under 30 KB.
+Keep each landscape under 60 KB.
 List the strokes that act on this ground in the part they act on: - Stroke: <name> (strokes/<name>.md). Shortcut: <command>.
 List the brushes this work uses in a short Brushes part: - Brush: <name> (brushes/<name>.md). <one phrase on scope>.
 -->

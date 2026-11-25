@@ -414,7 +414,7 @@ class SynthesizeTest(unittest.TestCase):
 
     def test_prompt_cap_and_templates_know_strokes(self):
         synth = read(os.path.join(HOOKS, "essence-synthesize.sh"))
-        self.assertIn('ESSENCE_LANDSCAPE_MAX:-30000', synth)
+        self.assertIn('ESSENCE_LANDSCAPE_MAX:-60000', synth)
         self.assertIn("Never edit a file in @DIR@/strokes/", synth)
         root = os.path.dirname(HOOKS)
         stroke = read(os.path.join(root, "templates", "stroke.md"))
