@@ -2,6 +2,8 @@
 import Notice from './Notice.astro';
 import PigmentKey from './PigmentKey.astro';
 import PencilBox from './PencilBox.astro';
+import Facts from './Facts.astro';
+import { repoUrl, track } from '../lib/project';
 import { tornPolygon, pencilLine } from '../lib/rough';
 ---
 
@@ -9,6 +11,7 @@ import { tornPolygon, pencilLine } from '../lib/rough';
   <div class="wrap">
     <p class="mast">Essence</p>
     <h1>An AI that remembers who it is.</h1>
+    <Facts />
 
     <PigmentKey />
 
@@ -47,7 +50,7 @@ import { tornPolygon, pencilLine } from '../lib/rough';
             <PencilBox seed="hero-how" w={190} h={54} />
             How it works <span aria-hidden="true">↓</span>
           </a>
-          <a class="action-line" href="https://github.com/dpdanpittman/essence" target="_blank" rel="noopener">
+          <a class="action-line" href={repoUrl} target="_blank" rel="noopener" {...track('github', { where: 'hero' })}>
             github
             <svg viewBox="0 0 80 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
               <path d={pencilLine('hero-github', 80)} />

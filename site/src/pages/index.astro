@@ -13,9 +13,26 @@ import Ideas from '../components/Ideas.astro';
 import History from '../components/History.astro';
 import Story from '../components/Story.astro';
 import Limits from '../components/Limits.astro';
+import * as P from '../lib/project';
+
+// SoftwareSourceCode, matching the first screen: name, version, author, licence, update date, source.
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareSourceCode',
+  name: 'Essence',
+  description: 'A Claude Code agent starts every session with no memory. Essence is a small set of files and hooks that carries it across that gap.',
+  url: P.abs('/'),
+  codeRepository: P.repoUrl,
+  version: P.version,
+  dateModified: P.updated,
+  license: `https://spdx.org/licenses/${P.license.spdx}.html`,
+  programmingLanguage: ['Python', 'Shell'],
+  runtimePlatform: 'Claude Code',
+  ...(P.authorName ? { author: { '@type': 'Person', name: P.authorName, url: P.authorUrl } } : {}),
+};
 ---
 
-<Base>
+<Base jsonld={jsonld}>
   <Hero />
   <Gap />
   <Shape />

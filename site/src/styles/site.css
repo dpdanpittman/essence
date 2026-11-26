@@ -3,6 +3,67 @@
    one kind of file and means only that, everywhere on the page. Wood and brass
    are used for the cabinet drawing and nowhere else. */
 
+/* ---------- fonts ----------
+   Alegreya and Alegreya Sans, served from this site (public/fonts/), never from a font service.
+   Only the faces this stylesheet uses. Source, version, licence (SIL OFL 1.1) and the subset
+   command are in public/fonts/README.txt. */
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- tokens ---------- */
 
 :root {
@@ -324,6 +385,64 @@ h3 {
   line-height: 0.98;
   max-width: 11em;
   margin-bottom: var(--s5);
+}
+
+/* the first-screen facts: version, author, licence, update, install, source */
+.hero h1:has(+ .facts) {
+  margin-bottom: var(--s3);
+}
+
+.facts {
+  margin-bottom: var(--s5);
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  color: var(--graphite);
+  font-variant-numeric: lining-nums;
+}
+
+.facts a {
+  color: var(--graphite);
+}
+
+.install {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s2);
+  margin-top: var(--s1);
+}
+
+.install-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.install code {
+  background: var(--sheet);
+  color: var(--ink);
+  padding: 0.15rem 0.45rem;
+  overflow-wrap: anywhere;
+}
+
+.copy {
+  min-height: 24px;
+  min-width: 24px;
+  padding: 0.1rem 0.6rem;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.copy:hover {
+  background: var(--sheet);
+}
+
+.copy-status:empty {
+  display: none;
 }
 
 .key {
@@ -1414,6 +1533,61 @@ ul.leaf-body,
   display: flex;
   flex-wrap: wrap;
   gap: var(--s1) var(--s3);
+}
+
+.site-footer nav {
+  display: grid;
+  gap: var(--s1);
+}
+
+.site-footer [aria-current="page"] {
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- inner pages (privacy) ---------- */
+
+.page {
+  padding: var(--s4) 0 var(--s6);
+}
+
+.page h1 {
+  font-size: var(--t-h2);
+  margin-bottom: var(--s3);
+}
+
+.page h2 {
+  font-size: var(--t-h3);
+  margin: var(--s4) 0 var(--s2);
+}
+
+.page .prose {
+  max-width: var(--measure);
+}
+
+.page .prose ul {
+  padding-left: 1.2em;
+}
+
+.page .prose li + li {
+  margin-top: var(--s1);
+}
+
+.page .meta {
+  font-family: var(--sans);
+  font-size: var(--t-small);
+  color: var(--graphite);
+}
+
+.draft {
+  margin: var(--s3) 0;
+  padding: var(--s2) var(--s3);
+  border: 2px dashed var(--ink);
+  background: var(--sheet);
+}
+
+.draft > p:first-child {
+  font-family: var(--sans);
+  font-weight: 700;
 }
 
 /* ---------- no motion anywhere; print ---------- */

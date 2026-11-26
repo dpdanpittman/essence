@@ -34,7 +34,7 @@ Essence gives a Claude Code agent a memory of who it is and how to work with its
 - `examples/portrait-example.md`, `examples/landscape-example.md`, `examples/stroke-example.md`, `examples/brush-example.md`, `examples/cabinet-example.md`: invented, filled-in files (Sara, Max, a home economics class).
 - `tests/test_essence.py`: offline tests with a fake `claude` on PATH.
 - `docs/history/`: design notes of the retired version 1 and 2. Do not update them.
-- `site/`: the Astro website, with its own `package.json`. Plain CSS in `site/src/styles/site.css`, no Tailwind. One component per section in `site/src/components/`. The pigment colours are defined once, in that stylesheet; `site/src/lib/pigments.ts` says which kind of file each pigment marks, and `site/src/lib/rough.ts` draws the painted edges from a seed. Keep a pigment for its kind of file only. `npm run build` writes static files to `site/dist/`.
+- `site/`: the Astro website, with its own `package.json`. Plain CSS in `site/src/styles/site.css`, no Tailwind. One component per section in `site/src/components/`. The pigment colours are defined once, in that stylesheet; `site/src/lib/pigments.ts` says which kind of file each pigment marks, and `site/src/lib/rough.ts` draws the painted edges from a seed. Keep a pigment for its kind of file only. `site/src/lib/project.ts` reads the project facts (README, CHANGELOG, git) and the `ESSENCE_*` site build settings, listed in the README's "Site build settings". Anything that belongs to one deployment is a setting, never written in the source. `npm run build` writes static files to `site/dist/`, then `site/scripts/markdown.mjs` writes the Markdown copies and `site/scripts/check-hosts.mjs` fails the build on any load from another host.
 
 ## Commands
 

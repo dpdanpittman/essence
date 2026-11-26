@@ -1,0 +1,200 @@
+---
+// The privacy page, at /privacy/. Built only when ESSENCE_PRIVACY is "draft" or "live" (src/lib/project.ts).
+// Draft: noindex, marked Draft at the top, not linked from the footer, not in the sitemap.
+// Live: linked from the footer and in the sitemap. The build refuses "live" without the operator,
+// the contact, the date and the server-log sentence.
+//
+// Every sentence here must stay true for the deployment that builds it. The sentences about
+// Umami appear only when ESSENCE_UMAMI_ID is set, and describe Umami 3.5.0 run on the operator's
+// own server, as the site's tag expects (/u/m.js on the same origin).
+import Base from '../layouts/Base.astro';
+import * as P from '../lib/project';
+
+export function getStaticPaths() {
+  return P.privacy.mode === 'off' ? [] : [{ params: { legal: 'privacy' } }];
+}
+
+const draft = P.privacy.mode === 'draft';
+const pv = P.privacy;
+const analytics = Boolean(P.umamiId);
+const contactHref = pv.contact.includes('@') && !pv.contact.startsWith('mailto:') ? `mailto:${pv.contact}` : pv.contact;
+const contactText = pv.contact.replace(/^mailto:/, '');
+const historyUrl = P.repoUrl ? `${P.repoUrl}/commits/main/site/src/pages/%5Blegal%5D.astro` : '';
+const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
+---
+
+<Base
+  title="Privacy · Essence"
+  description={`What the Essence website at ${P.siteHost} collects when you read it, and what it sends to anyone else.`}
+  path="/privacy/"
+  noindex={draft}
+>
+  <article class="page">
+    <div class="wrap prose">
+      <p class="mast">Essence</p>
+      <h1>Privacy</h1>
+
+      {
+        draft && (
+          <div class="draft" role="note">
+            <p>Draft. Not linked from the site and not for search engines.</p>
+            <p>The boxes like this one hold wording that waits on a decision. They disappear when the page goes live.</p>
+          </div>
+        )
+      }
+
+      <p class="meta">
+        This page covers the website at {P.siteHost}.
+        {pv.date ? <> It took effect on <time datetime={pv.date}>{pv.date}</time>.</> : null}
+      </p>
+      {
+        draft && !pv.date && (
+          <div class="draft" role="note">
+            <p>Waiting: the date this page takes effect (ESSENCE_PRIVACY_DATE).</p>
+          </div>
+        )
+      }
+
+      <h2>Who runs this site</h2>
+      {pv.operator && <p>{pv.operator} runs this website.</p>}
+      {pv.contact && <p>Write to <a href={contactHref}>{contactText}</a> with any question about this page.</p>}
+      {
+        draft && (!pv.operator || !pv.contact) && (
+          <div class="draft" role="note">
+            {/* PENDING-DECISION(7): the contact address on the privacy page, and whether it names the operator. */}
+            <p>Waiting: decision 7, the contact address and the name (ESSENCE_PRIVACY_OPERATOR, ESSENCE_PRIVACY_CONTACT).</p>
+            <p>Variant A: "[Name] runs this website. Write to [a domain address] with any question about this page."</p>
+            <p>Variant B: "Write to [a domain address] with any question about this page."</p>
+          </div>
+        )
+      }
+
+      <h2>What your browser loads</h2>
+      <p>
+        The pages, styles, fonts and images all come from this site. Your browser contacts no other host when it
+        loads a page here. A check in the site's build fails if a page would load anything from another host.
+      </p>
+      <p>The site sets no cookies.</p>
+      {
+        analytics ? (
+          <p>It writes nothing to your browser's storage, unless you use the opt-out button below.</p>
+        ) : (
+          <p>It writes nothing to your browser's storage.</p>
+        )
+      }
+      <p>
+        Links to GitHub and to other sites take you to those sites. Their own privacy policies apply there.
+      </p>
+
+      {
+        analytics && (
+          <>
+            <h2>Counting visits</h2>
+            <p>
+              This site counts visits with Umami. Umami runs on the operator's own server, and the page loads it
+              from this site's own address.
+            </p>
+            <p>For each page you open, Umami stores:</p>
+            <ul>
+              <li>the page address and the page title. The address includes anything after a question mark, such as campaign tags.</li>
+              <li>the address of the page that sent you here, if your browser tells it.</li>
+              <li>your browser, operating system, device type, screen size and language.</li>
+              <li>
+                the country, region and city that your IP address points to. Umami looks this up in a database
+                file on its own server. The lookup sends nothing to anyone else.
+              </li>
+            </ul>
+            <p>Umami does not store your IP address or your browser's user agent string.</p>
+            <p>
+              Umami makes a visitor code from your IP address, your browser's user agent, a fixed secret and a
+              salt. The salt changes every {saltWord}. So for one {saltWord}, the same browser on the same network
+              counts as one visitor, and its page views on this site can be linked together.
+            </p>
+            <p>Umami sets no cookie and writes nothing to your browser's storage.</p>
+            {P.umamiRetention ? (
+              <p>Umami data is kept for {P.umamiRetention}.</p>
+            ) : (
+              !draft && <p>Umami keeps this data until the operator deletes it.</p>
+            )}
+            {draft && !P.umamiRetention && (
+              <div class="draft" role="note">
+                {/* PENDING-DECISION(6): retention for logs, Umami and backups. */}
+                <p>Waiting: decision 6, how long Umami data is kept (ESSENCE_UMAMI_RETENTION).</p>
+                <p>Variant A, today's server: "Umami keeps this data until the operator deletes it."</p>
+                <p>Variant B, the recommendation once a deletion job runs: "Umami data is kept for 25 months."</p>
+                <p>
+                  The salt changes every {saltWord} (ESSENCE_UMAMI_SALT). Umami's default is a month. Set
+                  "day" only after the Umami server runs with SALT_ROTATION=day.
+                </p>
+              </div>
+            )}
+
+            <h2>Your choices</h2>
+            <p>If your browser sends Do Not Track, the page sends nothing to Umami.</p>
+            <p>The site does not read the Global Privacy Control signal.</p>
+            <p>
+              You can also turn Umami off in this browser. The button saves one setting, umami.disabled, in this
+              site's local storage. Clearing the site's data in your browser undoes it.
+            </p>
+            <p class="install">
+              <button type="button" class="copy" id="umami-off" hidden>Turn off counting in this browser</button>
+              <span class="copy-status" role="status" aria-live="polite" id="umami-off-status"></span>
+            </p>
+            <noscript>
+              <p>The button needs JavaScript. With JavaScript off, the page sends nothing to Umami at all.</p>
+            </noscript>
+            <script is:inline>
+              (function () {
+                var btn = document.getElementById('umami-off');
+                var status = document.getElementById('umami-off-status');
+                var off = false;
+                try { off = Boolean(localStorage.getItem('umami.disabled')); } catch (e) { return; }
+                btn.hidden = false;
+                function show() {
+                  btn.textContent = off ? 'Turn counting back on in this browser' : 'Turn off counting in this browser';
+                }
+                show();
+                btn.addEventListener('click', function () {
+                  try {
+                    if (off) { localStorage.removeItem('umami.disabled'); } else { localStorage.setItem('umami.disabled', '1'); }
+                    off = !off;
+                    status.textContent = off ? 'Counting is off in this browser.' : 'Counting is on again.';
+                    show();
+                  } catch (e) {
+                    status.textContent = 'This browser blocked the setting.';
+                  }
+                });
+              })();
+            </script>
+          </>
+        )
+      }
+
+      <h2>The web server</h2>
+      {pv.logs && <p>{pv.logs}</p>}
+      {
+        draft && !pv.logs && (
+          <div class="draft" role="note">
+            {/* PENDING-DECISION(6): log retention. Not checked yet: whether the web server for this site logs addresses. */}
+            <p>
+              Waiting: what the web server for this site records, and for how long (ESSENCE_PRIVACY_LOGS). It has
+              not been checked yet. Pick the variant that is true once it is.
+            </p>
+            <p>Variant A, with access logs turned off: "The web server keeps no record of your visit."</p>
+            <p>
+              Variant B, with access logs on: "The web server writes one line for each request: your IP address,
+              the time, the page, the address of the page that sent you, and your browser's user agent. These
+              lines are deleted after 30 days."
+            </p>
+          </div>
+        )
+      }
+
+      <h2>Changes to this page</h2>
+      <p>
+        When this page changes, the date at the top changes.
+        {historyUrl && <> Its text and its history are public in the <a href={historyUrl}>project's repository</a>.</>}
+      </p>
+    </div>
+  </article>
+</Base>

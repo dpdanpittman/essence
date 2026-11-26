@@ -6,7 +6,17 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 ### Added
 
-- Site: optional analytics. When `ESSENCE_UMAMI_ID` is set at build time, every page loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected). `ESSENCE_UMAMI_DOMAINS` limits it to the named hosts. Unset, which is the default, the site has no client JavaScript, as before.
+- Site: the fonts are served from the site itself. Alegreya and Alegreya Sans 2.008, the seven faces the stylesheet uses, as woff2 cut to the Latin characters, with their SIL Open Font License files (`site/public/fonts/`). No request goes to a font service.
+- Site: a canonical link, complete social card tags with a 1200 by 630 image (`og.png`, drawn from the masthead, the title and the pigment key by `npm run og-image`), a favicon, `robots.txt` and `sitemap.xml`. The site address comes from the README's "Website" line, or `ESSENCE_SITE_URL`.
+- Site: `robots.txt` names the crawlers by purpose (search, fetchers that act for a person, AI training), with names checked against each vendor's page. `ESSENCE_AI_TRAINING` sets the training group.
+- Site: the first screen shows the version, the author, the licence, the last update, the install line with a copy button, and a link to the source. The values are read from the README, `CHANGELOG.md` and git when the site is built.
+- Site: `SoftwareSourceCode` structured data that matches the first screen.
+- Site: `llms.txt`, and a Markdown copy of every page made from the built HTML (`site/scripts/markdown.mjs`), linked from the page.
+- Site: a privacy page at `/privacy/`, off by default. `ESSENCE_PRIVACY=draft` builds it as a marked, unlinked draft. `live` links it from the footer and needs the operator, the contact, the date and a sentence on server logs.
+- Site: `ESSENCE_FOOTER_LINKS` (a row of related sites) and `ESSENCE_REL_ME` (profile links). Unset, a copy of the site has neither.
+- Site: with analytics on, click events on the install copy button (`install-copy`), the GitHub links (`github`) and the related-site links (`xsite`).
+- Site: `site/scripts/check-hosts.mjs` runs at the end of every build and fails it if a page would load anything from another host, or a local file it names is missing.
+- Site: optional analytics. When `ESSENCE_UMAMI_ID` is set at build time, every page loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected). `ESSENCE_UMAMI_DOMAINS` limits it to the named hosts. Unset, which is the default, the site loads no tracker.
 - The sketchbook, the sixth part of Essence: the agent's running notes, one file per month in `~/.claude/essence/sketchbook/` with `current.md` pointing at the current month. Sketches are one clock-stamped line each; the In flight block and the work list block are appended, and the newest wins. `scripts/note` appends a sketch under a lock. `scripts/sketchbook-rotate` starts a new month with an open items page carried from the old one, never changes an old month, warns past 400 KB and can add a compatibility link for old readers. `ESSENCE_SKETCHBOOK_SCOPE` (`work` by default, or `all`) says what it may hold besides work; never a secret. `docs/sketchbook.md`, `templates/sketchbook-month.md`, `examples/sketchbook-example.md`, `tests/test_sketchbook.py`.
 - The session-start hook names the sketchbook, the parts to read and the scope. The nudge hook says "the sketchbook" and adds the size warning. The installer copies the two commands, starts the first month and takes `--sketchbook-scope work|all`.
 - Site: a new section, "07 · The sketchbook". The sections after it are renumbered.
@@ -21,6 +31,7 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 ### Changed
 
+- Site: the footer links GitHub and `llms.txt`. The links to the author's other sites moved to `ESSENCE_FOOTER_LINKS`. The page has one small inline script, for the install copy button, which stays hidden without JavaScript. Pages are folders with a trailing slash (`/privacy/`).
 - The default landscape cap (`ESSENCE_LANDSCAPE_MAX`) is 60000 bytes, up from 30000. A landscape at its cap takes no more edits from the synthesis, so a busy area of work stopped learning. The landscape template, the synthesis prompt and the site say 60 KB.
 - Site: new design, "the studio notebook". Toned drawing paper, Alegreya and Alegreya Sans, and one pigment per kind of file that marks that kind in every diagram: ultramarine for the portrait, yellow ochre for the landscapes, vermilion for the strokes, lamp black for the brushes. The cabinet is drawn as a chest of four drawers, one pigment rule on each. The pull quote is a slip taped into the margin. Every painted edge is its own, drawn from a seed at build time. The text is unchanged.
 - Site: Tailwind is gone. The site is Astro with one plain stylesheet, `site/src/styles/site.css`, and no client JavaScript. The dark theme, Inter, Newsreader, JetBrains Mono and the breathing animation are removed.

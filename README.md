@@ -438,7 +438,41 @@ The author built Essence with a Claude Code agent of their own. That agent took 
 
 `site/` holds the website. Run `npm install` and `npm run build` in `site/`. The build is static files in `site/dist/`, built for the root of a domain. Serve them from any web server.
 
-The site is Astro with plain CSS. Each section is one component in `site/src/components/`. All styles are in `site/src/styles/site.css`. The four pigment colours are set once there, as custom properties: ultramarine is the portrait, yellow ochre the landscapes, vermilion the strokes, lamp black the brushes. Diagrams use only those properties. The painted edges come from `site/src/lib/rough.ts` at build time, so the page ships no images and no JavaScript.
+The site is Astro with plain CSS. Each section is one component in `site/src/components/`. All styles are in `site/src/styles/site.css`. The four pigment colours are set once there, as custom properties: ultramarine is the portrait, yellow ochre the landscapes, vermilion the strokes, lamp black the brushes. Diagrams use only those properties. The painted edges come from `site/src/lib/rough.ts` at build time, so the drawings ship as plain SVG.
+
+The page reads its facts from this repository when it is built (`site/src/lib/project.ts`): the website, repository and author lines at the top of this README, the newest version and its date from `CHANGELOG.md`, and the last update from the newest git commit. The first screen shows them with the install line.
+
+What the build writes besides the page:
+
+- `robots.txt`, with a rule group per purpose: search crawlers, fetchers that act for a person, and crawlers that collect for AI training. The crawler names were checked against each vendor's own page on 2026-11-26: OpenAI (developers.openai.com/api/docs/bots), Anthropic (support.claude.com, article 8896518), Perplexity (docs.perplexity.ai/guides/bots), Google (google-common-crawlers), Apple (support.apple.com/en-us/119829), Common Crawl (commoncrawl.org/ccbot), Microsoft Bing (its October 2026 post on training preferences) and the IETF draft for `__usage_ai-training`.
+- `sitemap.xml`, with the real date each page last changed.
+- `llms.txt` in the llmstxt.org format, and a Markdown copy of every page (`/index.md`), made from the built HTML by `site/scripts/markdown.mjs`, so it cannot drift from the page.
+- `og.png`, the social card (1200 by 630). It is committed. `npm run og-image` draws it again from the built page. It needs Chromium.
+
+The fonts, Alegreya and Alegreya Sans, are served from the site itself (`site/public/fonts/`, SIL Open Font License, with the licence files and a note on the source). The page loads nothing from another host. `site/scripts/check-hosts.mjs` runs at the end of every build and fails it if a page would load anything from another host, or a local file it names is missing. Paths served by the web server and not by the build, such as the analytics script `/u/m.js`, are listed in that script.
+
+### Site build settings
+
+Nothing here is needed for a working copy. Every setting is read when the site is built.
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `ESSENCE_SITE_URL` | the "Website" line at the top of this README | the site's address, used for the canonical link, the social card, the sitemap and robots.txt |
+| `ESSENCE_UPDATED` | the date of the newest git commit, else the newest release date | the "updated" date on the first screen and in the sitemap |
+| `ESSENCE_UMAMI_ID` | unset (no analytics) | loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected), and adds click events: `install-copy`, `github`, `xsite` |
+| `ESSENCE_UMAMI_DOMAINS` | unset | limits the tracker to the named hosts |
+| `ESSENCE_UMAMI_SALT` | `month` | what the privacy page says about how often the Umami server changes its salt: `month` (Umami's default) or `day` (only if the server runs with `SALT_ROTATION=day`) |
+| `ESSENCE_UMAMI_RETENTION` | unset | how long the Umami server keeps its data, in words ("25 months"). Unset, the privacy page says the data stays until the operator deletes it |
+| `ESSENCE_FOOTER_LINKS` | unset | a row of related sites in the footer: `Label=https://url;Label=https://url` |
+| `ESSENCE_REL_ME` | unset | profile URLs of the same person, as `<link rel="me">`, separated by spaces |
+| `ESSENCE_AI_TRAINING` | `allow` | `allow` or `disallow` for the training crawlers in robots.txt |
+| `ESSENCE_PRIVACY` | `off` | the privacy page at `/privacy/`: `off`, `draft` (built, marked Draft, noindex, not linked, not in the sitemap) or `live` (linked from the footer and in the sitemap) |
+| `ESSENCE_PRIVACY_OPERATOR` | unset | who runs this copy of the site, required for `live` |
+| `ESSENCE_PRIVACY_CONTACT` | unset | an email address or URL for privacy questions, required for `live` |
+| `ESSENCE_PRIVACY_DATE` | unset | the date the page took effect, `YYYY-MM-DD`, required for `live` |
+| `ESSENCE_PRIVACY_LOGS` | unset | one or two true sentences about what the web server records and for how long, required for `live` |
+
+The privacy page says only what the build knows to be true: no cookies, no request to another host, and, when analytics is on, what Umami stores. Everything about the server around the site comes from these settings. The build refuses `live` until all four are set.
 
 ## License
 

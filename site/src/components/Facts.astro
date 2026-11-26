@@ -1,0 +1,45 @@
+---
+// The first-screen facts: who made it, the version, the licence, the last update, the install line
+// and the source. Every value is read from the repository at build time (src/lib/project.ts).
+import { version, authorName, authorUrl, license, updated, repoUrl, installLine, track } from '../lib/project';
+
+const written = updated
+  ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(
+      new Date(`${updated}T00:00:00Z`),
+    )
+  : '';
+---
+
+<div class="facts">
+  <p class="facts-line">
+    Essence {version}
+    {authorName && <> · by <a href={authorUrl} target="_blank" rel="noopener">{authorName}</a></>}
+    · <a href={license.url} target="_blank" rel="noopener license">{license.name}</a>
+    {written && <> · updated <time datetime={updated}>{written}</time></>}
+    · <a href={repoUrl} target="_blank" rel="noopener" {...track('github', { where: 'facts' })}>source on GitHub</a>
+  </p>
+  <p class="install">
+    <span class="install-label">Install</span>
+    <code id="install-line">{installLine}</code>
+    <button type="button" class="copy" data-copy="install-line" hidden {...track('install-copy')}>copy</button>
+    <span class="copy-status" role="status" aria-live="polite"></span>
+  </p>
+</div>
+
+<script is:inline>
+  // The copy button needs JavaScript, so it stays hidden without it. It stores nothing.
+  (function () {
+    var btn = document.querySelector('button[data-copy]');
+    if (!btn || !navigator.clipboard) return;
+    var code = document.getElementById(btn.getAttribute('data-copy'));
+    var status = btn.parentNode.querySelector('.copy-status');
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      navigator.clipboard.writeText(code.textContent).then(
+        function () { status.textContent = 'Copied.'; },
+        function () { status.textContent = 'Copy failed. Select the line instead.'; }
+      );
+      setTimeout(function () { status.textContent = ''; }, 4000);
+    });
+  })();
+</script>

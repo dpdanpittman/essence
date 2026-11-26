@@ -1,25 +1,26 @@
 ---
 import '../styles/site.css';
 import Footer from '../components/Footer.astro';
+import * as P from '../lib/project';
 
 interface Props {
   title?: string;
   description?: string;
+  /** The page's path on the site, with a trailing slash: "/" or "/privacy/". */
+  path?: string;
+  /** A draft page: noindex, and left out of the sitemap by the page itself. */
+  noindex?: boolean;
+  /** Structured data for this page (one JSON-LD object). */
+  jsonld?: Record<string, unknown>;
 }
 
-const {
-  title = 'Essence · an AI that remembers who it is',
-  description = 'Essence is a small set of files and hooks that carries a Claude Code agent across the gap between sessions: who it is with its person, and the picture of each area of work.',
-} = Astro.props;
+const { title = P.title, description = P.description, path = '/', noindex = false, jsonld } = Astro.props;
 
-// Optional analytics. Off unless ESSENCE_UMAMI_ID is set when the site is built, so a copy of this site carries
-// no tracker. With it set, the page loads a self-hosted Umami tracker from the same origin (/u/m.js; no cookies).
-const umamiId = (process.env.ESSENCE_UMAMI_ID || '').trim();
-const umamiDomains = (process.env.ESSENCE_UMAMI_DOMAINS || '').trim();
-
-// Only the families, styles and weights the stylesheet uses.
-const fonts =
-  'https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;0,800;1,400&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400&display=swap';
+const canonical = P.abs(path);
+// The Markdown copy of each page is written next to it after the build (scripts/markdown.mjs).
+const markdown = `${path}index.md`;
+const ogImage = P.abs('/og.png');
+const ogAlt = 'Essence: an AI that remembers who it is. Four painted swatches: ultramarine, yellow ochre, vermilion and lamp black.';
 ---
 
 <!doctype html>
@@ -27,25 +28,44 @@ const fonts =
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/markdown" href={markdown} title="This page as Markdown" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/Alegreya-Regular.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/Alegreya-ExtraBold.woff2" as="font" type="font/woff2" crossorigin />
+    {P.relMe.map((href) => <link rel="me" href={href} />)}
+    <meta property="og:site_name" content="Essence" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={ogAlt} />
     <meta name="twitter:card" content="summary_large_image" />
-    <title>{title}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href={fonts} />
-    {umamiId && (
-      <script
-        is:inline
-        defer
-        src="/u/m.js"
-        data-website-id={umamiId}
-        data-domains={umamiDomains || undefined}
-        data-do-not-track="true"
-      ></script>
-    )}
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogAlt} />
+    {jsonld && <script type="application/ld+json" set:html={JSON.stringify(jsonld)} />}
+    {
+      P.umamiId && (
+        <script
+          is:inline
+          defer
+          src="/u/m.js"
+          data-website-id={P.umamiId}
+          data-domains={P.umamiDomains || undefined}
+          data-do-not-track="true"
+        />
+      )
+    }
   </head>
   <body>
     <a class="skip" href="#content">Skip to content</a>
