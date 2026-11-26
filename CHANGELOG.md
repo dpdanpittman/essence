@@ -6,6 +6,7 @@ All notable changes to Essence are documented here. Format based on [Keep a Chan
 
 ### Added
 
+- Site: optional analytics. When `ESSENCE_UMAMI_ID` is set at build time, every page loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected). `ESSENCE_UMAMI_DOMAINS` limits it to the named hosts. Unset, which is the default, the site has no client JavaScript, as before.
 - The sketchbook, the sixth part of Essence: the agent's running notes, one file per month in `~/.claude/essence/sketchbook/` with `current.md` pointing at the current month. Sketches are one clock-stamped line each; the In flight block and the work list block are appended, and the newest wins. `scripts/note` appends a sketch under a lock. `scripts/sketchbook-rotate` starts a new month with an open items page carried from the old one, never changes an old month, warns past 400 KB and can add a compatibility link for old readers. `ESSENCE_SKETCHBOOK_SCOPE` (`work` by default, or `all`) says what it may hold besides work; never a secret. `docs/sketchbook.md`, `templates/sketchbook-month.md`, `examples/sketchbook-example.md`, `tests/test_sketchbook.py`.
 - The session-start hook names the sketchbook, the parts to read and the scope. The nudge hook says "the sketchbook" and adds the size warning. The installer copies the two commands, starts the first month and takes `--sketchbook-scope work|all`.
 - Site: a new section, "07 · The sketchbook". The sections after it are renumbered.

@@ -12,6 +12,11 @@ const {
   description = 'Essence is a small set of files and hooks that carries a Claude Code agent across the gap between sessions: who it is with its person, and the picture of each area of work.',
 } = Astro.props;
 
+// Optional analytics. Off unless ESSENCE_UMAMI_ID is set when the site is built, so a copy of this site carries
+// no tracker. With it set, the page loads a self-hosted Umami tracker from the same origin (/u/m.js; no cookies).
+const umamiId = (process.env.ESSENCE_UMAMI_ID || '').trim();
+const umamiDomains = (process.env.ESSENCE_UMAMI_DOMAINS || '').trim();
+
 // Only the families, styles and weights the stylesheet uses.
 const fonts =
   'https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,700;0,800;1,400&family=Alegreya+Sans:ital,wght@0,400;0,700;1,400&display=swap';
@@ -31,6 +36,16 @@ const fonts =
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href={fonts} />
+    {umamiId && (
+      <script
+        is:inline
+        defer
+        src="/u/m.js"
+        data-website-id={umamiId}
+        data-domains={umamiDomains || undefined}
+        data-do-not-track="true"
+      ></script>
+    )}
   </head>
   <body>
     <a class="skip" href="#content">Skip to content</a>
