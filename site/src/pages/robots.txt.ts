@@ -1,45 +1,67 @@
-// robots.txt: who may crawl the site, by purpose. Tokens checked against each vendor's own
-// documentation on 2026-11-26 (the README's "The website" section lists the pages).
-// The training group follows ESSENCE_AI_TRAINING ("allow" by default, or "disallow").
-// PENDING-DECISION(5): the live site's answer for training crawlers. The recommendation is allow.
-import type { APIRoute } from 'astro';
-import { abs, aiTraining } from '../lib/project';
+// robots.txt: who may crawl the site, by purpose.
+//
+// ESSENCE_AI_TRAINING is "disallow" by default: search crawlers and fetchers that act for a person
+// stay under "*", and crawlers that collect pages to train AI models get their own groups with
+// "Disallow: /". The tokens were checked against each operator's own page on 2026-11-26 (the
+// README's "The website" section lists the operators).
+//
+// Search crawlers and fetchers get no named group on purpose. Under RFC 9309 a crawler obeys only
+// the most specific group that names it, so a named group would skip whatever "*" says.
+// "allow" writes the "*" group alone.
+import type { APIRoute } from "astro";
+import { abs, aiTraining } from "../lib/project";
 
-export const GET: APIRoute = () => {
-  const training = aiTraining === 'disallow' ? 'Disallow: /' : 'Allow: /';
-  const body = `# robots.txt for ${abs('/')}
+const policy = `# AI policy:
+#   Search crawlers: allowed under "*" (Googlebot, bingbot, OAI-SearchBot, Claude-SearchBot,
+#     PerplexityBot, Applebot, Amzn-SearchBot, meta-webindexer, MistralAI-Index, DuckAssistBot).
+#   Fetchers acting for a person who asked a question just now: allowed under "*"
+#     (ChatGPT-User, Claude-User, Perplexity-User, Google-Agent, MistralAI-User, Amzn-User,
+#     meta-externalfetcher).
+#   AI model training: not allowed. Groups below.
 
-# Search and answer engines that index the site: allowed.
-User-agent: Googlebot
-User-agent: bingbot
-User-agent: Applebot
-User-agent: OAI-SearchBot
-User-agent: Claude-SearchBot
-User-agent: PerplexityBot
-Allow: /
+`;
 
-# Fetchers that act for a person who asked about a page: allowed.
-User-agent: ChatGPT-User
-User-agent: Claude-User
-User-agent: Perplexity-User
-Allow: /
+const training = `
+# Shared training-preference token (IETF draft-kelley-00). A "*" group never counts for it.
+# Read by Anthropic since 2026-10-30, Microsoft from 2027-02-01, Google planned for early 2027.
+User-agent: __usage_ai-training
+Disallow: /
 
-# Collection for training AI models: ${aiTraining === 'disallow' ? 'not allowed' : 'allowed'}.
-# __usage_ai-training is the training preference token of an IETF draft. The "*" group does not cover it.
-# Google-Extended also covers grounding in Gemini apps. It does not change Google Search.
+# Training crawlers and training-control tokens, named by their operators:
+# OpenAI training (GPTBot); Anthropic training (ClaudeBot); Google Gemini training and
+# non-Search grounding, no effect on Google Search (Google-Extended); Apple training, no effect
+# on Apple search (Applebot-Extended); Common Crawl archive (CCBot); Meta training
+# (meta-externalagent); Amazon training (Amazonbot); Mistral training (MistralAI-Training);
+# Ai2 training (AI2Bot); ByteDance, undocumented by its operator (Bytespider).
 User-agent: GPTBot
 User-agent: ClaudeBot
 User-agent: Google-Extended
 User-agent: Applebot-Extended
 User-agent: CCBot
-User-agent: __usage_ai-training
-${training}
-
-# Everyone else.
-User-agent: *
-Allow: /
-
-Sitemap: ${abs('/sitemap.xml')}
+User-agent: meta-externalagent
+User-agent: Amazonbot
+User-agent: MistralAI-Training
+User-agent: AI2Bot
+User-agent: Bytespider
+Disallow: /
 `;
-  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+
+export const GET: APIRoute = () => {
+  const noTraining = aiTraining === "disallow";
+  const body = `# robots.txt for ${abs("/")}
+
+${noTraining ? policy : ""}User-agent: *
+Allow: /
+${
+  noTraining
+    ? `# IETF AIPREF draft vocabulary: no AI training (draft-ietf-aipref-attach-05; no confirmed reader yet)
+Content-Usage: train-ai=n
+${training}`
+    : ""
+}
+Sitemap: ${abs("/sitemap.xml")}
+`;
+  return new Response(body, {
+    headers: { "Content-Type": "text/plain; charset=utf-8" },
+  });
 };

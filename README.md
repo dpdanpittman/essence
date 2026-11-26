@@ -444,7 +444,8 @@ The page reads its facts from this repository when it is built (`site/src/lib/pr
 
 What the build writes besides the page:
 
-- `robots.txt`, with a rule group per purpose: search crawlers, fetchers that act for a person, and crawlers that collect for AI training. The crawler names were checked against each vendor's own page on 2026-11-26: OpenAI (developers.openai.com/api/docs/bots), Anthropic (support.claude.com, article 8896518), Perplexity (docs.perplexity.ai/guides/bots), Google (google-common-crawlers), Apple (support.apple.com/en-us/119829), Common Crawl (commoncrawl.org/ccbot), Microsoft Bing (its October 2026 post on training preferences) and the IETF draft for `__usage_ai-training`.
+- `robots.txt`. Search crawlers and fetchers that act for a person are allowed under `*`. They get no group of their own, because a crawler obeys only the most specific group that names it (RFC 9309). By default, crawlers that collect pages to train AI models are asked to stay out: a group for the `__usage_ai-training` token of an IETF draft, a group naming the training crawlers and training tokens, and a `Content-Usage: train-ai=n` line from the IETF AIPREF draft. The names were checked against each operator's own page on 2026-11-26: OpenAI, Anthropic, Google, Apple, Microsoft Bing, Perplexity, Meta, Amazon, Mistral, Common Crawl, DuckDuckGo and Ai2. ByteDance publishes no page for `Bytespider`; it is listed on a best-effort basis.
+- `feed.xml`, an RSS feed with one item per released version, read from `CHANGELOG.md`. The page head and the footer link to it.
 - `sitemap.xml`, with the real date each page last changed.
 - `llms.txt` in the llmstxt.org format, and a Markdown copy of every page (`/index.md`), made from the built HTML by `site/scripts/markdown.mjs`, so it cannot drift from the page.
 - `og.png`, the social card (1200 by 630). It is committed. `npm run og-image` draws it again from the built page. It needs Chromium.
@@ -459,18 +460,19 @@ Nothing here is needed for a working copy. Every setting is read when the site i
 | --- | --- | --- |
 | `ESSENCE_SITE_URL` | the "Website" line at the top of this README | the site's address, used for the canonical link, the social card, the sitemap and robots.txt |
 | `ESSENCE_UPDATED` | the date of the newest git commit, else the newest release date | the "updated" date on the first screen and in the sitemap |
-| `ESSENCE_UMAMI_ID` | unset (no analytics) | loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected), and adds click events: `install-copy`, `github`, `xsite` |
+| `ESSENCE_UMAMI_ID` | unset (no analytics) | loads a self-hosted Umami tracker from the same origin (`/u/m.js`, no cookies, Do Not Track respected), and adds click events: `install-copy`, `github`, `rss`, `xsite` |
 | `ESSENCE_UMAMI_DOMAINS` | unset | limits the tracker to the named hosts |
 | `ESSENCE_UMAMI_SALT` | `month` | what the privacy page says about how often the Umami server changes its salt: `month` (Umami's default) or `day` (only if the server runs with `SALT_ROTATION=day`) |
 | `ESSENCE_UMAMI_RETENTION` | unset | how long the Umami server keeps its data, in words ("25 months"). Unset, the privacy page says the data stays until the operator deletes it |
 | `ESSENCE_FOOTER_LINKS` | unset | a row of related sites in the footer: `Label=https://url;Label=https://url` |
 | `ESSENCE_REL_ME` | unset | profile URLs of the same person, as `<link rel="me">`, separated by spaces |
-| `ESSENCE_AI_TRAINING` | `allow` | `allow` or `disallow` for the training crawlers in robots.txt |
+| `ESSENCE_AI_TRAINING` | `disallow` | `disallow` asks AI training crawlers to stay out in robots.txt and says so on the privacy page; `allow` writes the `*` group alone |
 | `ESSENCE_PRIVACY` | `off` | the privacy page at `/privacy/`: `off`, `draft` (built, marked Draft, noindex, not linked, not in the sitemap) or `live` (linked from the footer and in the sitemap) |
 | `ESSENCE_PRIVACY_OPERATOR` | unset | who runs this copy of the site, required for `live` |
 | `ESSENCE_PRIVACY_CONTACT` | unset | an email address or URL for privacy questions, required for `live` |
 | `ESSENCE_PRIVACY_DATE` | unset | the date the page took effect, `YYYY-MM-DD`, required for `live` |
 | `ESSENCE_PRIVACY_LOGS` | unset | one or two true sentences about what the web server records and for how long, required for `live` |
+| `ESSENCE_PRIVACY_ANALYTICS` | unset | the operator's own sentences on the analytics server: how often the visitor ID changes and how long data is kept. Set, they replace the page's built-in sentences on the salt and retention |
 
 The privacy page says only what the build knows to be true: no cookies, no request to another host, and, when analytics is on, what Umami stores. Everything about the server around the site comes from these settings. The build refuses `live` until all four are set.
 

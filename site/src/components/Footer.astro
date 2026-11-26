@@ -15,6 +15,7 @@ const year = new Date().getFullYear();
     <nav aria-label="Elsewhere">
       <ul>
         <li><a href={repoUrl} target="_blank" rel="noopener" {...track('github', { where: 'footer' })}>github</a></li>
+        <li><a href="/feed.xml" {...track('rss', { where: 'footer' })}>rss</a></li>
         <li><a href="/llms.txt">llms.txt</a></li>
         {privacyLinked && <li><a href="/privacy/">privacy</a></li>}
       </ul>

@@ -7,6 +7,7 @@ export const GET: APIRoute = () => {
   const optional = [
     `- [Changelog](${repoUrl}/blob/main/CHANGELOG.md): every change, newest first`,
     `- [Licence](${license.url}): ${license.name}`,
+    `- [Releases feed](${abs('/feed.xml')}): RSS, one item per released version`,
   ];
   if (privacy.mode === 'live') optional.unshift(`- [Privacy](${abs('/privacy/index.md')}): what this site collects`);
   const body = `# Essence

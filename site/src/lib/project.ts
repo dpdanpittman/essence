@@ -71,6 +71,25 @@ const release = changelog.match(
 export const version = release ? release[1] : "";
 export const releaseDate = release ? release[2] : "";
 
+/** Every released version, newest first, with its changelog section as plain text (for feed.xml). */
+export const releases: { version: string; date: string; notes: string }[] = [];
+{
+  const heading = /^## \[(\d+\.\d+\.\d+)\]\s*[-–—]\s*(\d{4}-\d{2}-\d{2}).*$/gm;
+  const marks = [...changelog.matchAll(heading)];
+  marks.forEach((m) => {
+    const start = (m.index ?? 0) + m[0].length;
+    const next = changelog.slice(start).search(/^## /m);
+    const section = next === -1 ? changelog.slice(start) : changelog.slice(start, start + next);
+    const notes = section
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/`/g, "")
+      .replace(/\*\*/g, "")
+      .replace(/^#+\s*/gm, "")
+      .trim();
+    releases.push({ version: m[1], date: m[2], notes });
+  });
+}
+
 function gitDate(): string {
   try {
     const out = execFileSync("git", ["-C", ROOT, "log", "-1", "--format=%cs"], {
@@ -174,6 +193,8 @@ export const privacy = {
   contact: env("ESSENCE_PRIVACY_CONTACT"),
   date: env("ESSENCE_PRIVACY_DATE"),
   logs: env("ESSENCE_PRIVACY_LOGS"),
+  /** The operator's own sentences on the analytics salt and retention. Set, they replace the built-in ones. */
+  analytics: env("ESSENCE_PRIVACY_ANALYTICS"),
 };
 if (privacy.mode === "live") {
   const missing = (["operator", "contact", "date", "logs"] as const).filter(
@@ -189,6 +210,6 @@ if (privacy.mode === "live") {
 }
 export const privacyLinked = privacy.mode === "live";
 
-/** AI training crawlers in robots.txt: "allow" (default) or "disallow". */
+/** AI training crawlers in robots.txt: "disallow" (default) or "allow". */
 export const aiTraining: "allow" | "disallow" =
-  env("ESSENCE_AI_TRAINING") === "disallow" ? "disallow" : "allow";
+  env("ESSENCE_AI_TRAINING") === "allow" ? "allow" : "disallow";

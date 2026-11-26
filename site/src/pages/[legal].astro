@@ -61,10 +61,7 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
       {
         draft && (!pv.operator || !pv.contact) && (
           <div class="draft" role="note">
-            {/* PENDING-DECISION(7): the contact address on the privacy page, and whether it names the operator. */}
-            <p>Waiting: decision 7, the contact address and the name (ESSENCE_PRIVACY_OPERATOR, ESSENCE_PRIVACY_CONTACT).</p>
-            <p>Variant A: "[Name] runs this website. Write to [a domain address] with any question about this page."</p>
-            <p>Variant B: "Write to [a domain address] with any question about this page."</p>
+            <p>Waiting: the operator's name and the contact address (ESSENCE_PRIVACY_OPERATOR, ESSENCE_PRIVACY_CONTACT).</p>
           </div>
         )
       }
@@ -90,10 +87,14 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
         analytics && (
           <>
             <h2>Counting visits</h2>
-            <p>
-              This site counts visits with Umami. Umami runs on the operator's own server, and the page loads it
-              from this site's own address.
-            </p>
+            {pv.analytics ? (
+              <p>{pv.analytics}</p>
+            ) : (
+              <p>
+                This site counts visits with Umami. Umami runs on the operator's own server, and the page loads it
+                from this site's own address.
+              </p>
+            )}
             <p>For each page you open, Umami stores:</p>
             <ul>
               <li>the page address and the page title. The address includes anything after a question mark, such as campaign tags.</li>
@@ -104,24 +105,28 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
                 file on its own server. The lookup sends nothing to anyone else.
               </li>
             </ul>
-            <p>Umami does not store your IP address or your browser's user agent string.</p>
             <p>
-              Umami makes a visitor code from your IP address, your browser's user agent, a fixed secret and a
-              salt. The salt changes every {saltWord}. So for one {saltWord}, the same browser on the same network
-              counts as one visitor, and its page views on this site can be linked together.
+              When you click the copy button, a link to GitHub, the releases feed or a link to a related site, Umami
+              also stores the name of that click.
             </p>
+            <p>Umami does not store your IP address or your browser's user agent string.</p>
+            {!pv.analytics && (
+              <p>
+                Umami makes a visitor code from your IP address, your browser's user agent, a fixed secret and a
+                salt. The salt changes every {saltWord}. So for one {saltWord}, the same browser on the same network
+                counts as one visitor, and its page views on this site can be linked together.
+              </p>
+            )}
             <p>Umami sets no cookie and writes nothing to your browser's storage.</p>
-            {P.umamiRetention ? (
+            {pv.analytics ? null : P.umamiRetention ? (
               <p>Umami data is kept for {P.umamiRetention}.</p>
             ) : (
               !draft && <p>Umami keeps this data until the operator deletes it.</p>
             )}
-            {draft && !P.umamiRetention && (
+            {draft && !pv.analytics && !P.umamiRetention && (
               <div class="draft" role="note">
-                {/* PENDING-DECISION(6): retention for logs, Umami and backups. */}
-                <p>Waiting: decision 6, how long Umami data is kept (ESSENCE_UMAMI_RETENTION).</p>
-                <p>Variant A, today's server: "Umami keeps this data until the operator deletes it."</p>
-                <p>Variant B, the recommendation once a deletion job runs: "Umami data is kept for 25 months."</p>
+                {/* Umami itself deletes nothing. Set ESSENCE_UMAMI_RETENTION only once a deletion job runs on the server. */}
+                <p>Waiting: how long Umami data is kept (ESSENCE_UMAMI_RETENTION). Set it once the server deletes old data.</p>
                 <p>
                   The salt changes every {saltWord} (ESSENCE_UMAMI_SALT). Umami's default is a month. Set
                   "day" only after the Umami server runs with SALT_ROTATION=day.
@@ -175,10 +180,10 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
       {
         draft && !pv.logs && (
           <div class="draft" role="note">
-            {/* PENDING-DECISION(6): log retention. Not checked yet: whether the web server for this site logs addresses. */}
+            {/* What the web server records belongs to the deployment, not to this repository. */}
             <p>
-              Waiting: what the web server for this site records, and for how long (ESSENCE_PRIVACY_LOGS). It has
-              not been checked yet. Pick the variant that is true once it is.
+              Waiting: what the web server for this site records, and for how long (ESSENCE_PRIVACY_LOGS). Pick the
+              variant that is true for the server.
             </p>
             <p>Variant A, with access logs turned off: "The web server keeps no record of your visit."</p>
             <p>
@@ -187,6 +192,20 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
               lines are deleted after 30 days."
             </p>
           </div>
+        )
+      }
+
+      {
+        P.aiTraining === 'disallow' && (
+          <>
+            <h2>Search engines and AI crawlers</h2>
+            <p>
+              Search engines, and AI assistants that open a page because someone just asked them about it, are
+              welcome here. Crawlers that collect pages to train AI models are not: this site's{' '}
+              <a href="/robots.txt">robots.txt</a> asks every one we know of to stay out, because a model trained on
+              this work learns from it and gives no credit back.
+            </p>
+          </>
         )
       }
 
