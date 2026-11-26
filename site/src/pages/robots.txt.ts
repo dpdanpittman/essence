@@ -5,6 +5,10 @@
 // "Disallow: /". The tokens were checked against each operator's own page on 2026-11-26 (the
 // README's "The website" section lists the operators).
 //
+// Google-Extended is left out of the training group on purpose: Google uses that one token for Gemini
+// training and for grounding Gemini answers, so blocking it would also stop the site being cited there.
+// Google Search is unaffected either way. It falls under "*".
+//
 // Search crawlers and fetchers get no named group on purpose. Under RFC 9309 a crawler obeys only
 // the most specific group that names it, so a named group would skip whatever "*" says.
 // "allow" writes the "*" group alone.
@@ -18,6 +22,8 @@ const policy = `# AI policy:
 #     (ChatGPT-User, Claude-User, Perplexity-User, Google-Agent, MistralAI-User, Amzn-User,
 #     meta-externalfetcher).
 #   AI model training: not allowed. Groups below.
+#   One exception: Google-Extended (one token for Gemini training and Gemini grounding) is left
+#     allowed, so the site can still be cited in Gemini answers. Google Search is unaffected either way.
 
 `;
 
@@ -28,14 +34,12 @@ User-agent: __usage_ai-training
 Disallow: /
 
 # Training crawlers and training-control tokens, named by their operators:
-# OpenAI training (GPTBot); Anthropic training (ClaudeBot); Google Gemini training and
-# non-Search grounding, no effect on Google Search (Google-Extended); Apple training, no effect
-# on Apple search (Applebot-Extended); Common Crawl archive (CCBot); Meta training
-# (meta-externalagent); Amazon training (Amazonbot); Mistral training (MistralAI-Training);
-# Ai2 training (AI2Bot); ByteDance, undocumented by its operator (Bytespider).
+# OpenAI training (GPTBot); Anthropic training (ClaudeBot); Apple training, no effect on Apple
+# search (Applebot-Extended); Common Crawl archive (CCBot); Meta training (meta-externalagent);
+# Amazon training (Amazonbot); Mistral training (MistralAI-Training); Ai2 training (AI2Bot);
+# ByteDance, undocumented by its operator (Bytespider).
 User-agent: GPTBot
 User-agent: ClaudeBot
-User-agent: Google-Extended
 User-agent: Applebot-Extended
 User-agent: CCBot
 User-agent: meta-externalagent

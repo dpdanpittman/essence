@@ -202,8 +202,10 @@ const saltWord = P.umamiSalt === 'day' ? 'day' : 'month';
             <p>
               Search engines, and AI assistants that open a page because someone just asked them about it, are
               welcome here. Crawlers that collect pages to train AI models are not: this site's{' '}
-              <a href="/robots.txt">robots.txt</a> asks every one we know of to stay out, because a model trained on
-              this work learns from it and gives no credit back.
+              <a href="/robots.txt">robots.txt</a> asks the ones we know of to stay out, because a model trained on
+              this work learns from it and gives no credit back. One exception: Google-Extended is left allowed, so
+              this site can still be cited in Gemini answers. Google uses that one setting for Gemini training too,
+              so Gemini may train on these pages. Google Search is unaffected either way.
             </p>
           </>
         )
